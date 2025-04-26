@@ -28,11 +28,11 @@ function Navbar() {
   ];
 
   return (
-    <nav className="fixed w-full z-50 bg-gray-900 bg-opacity-80 backdrop-blur-md shadow-md">
-      <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+    <nav className="fixed w-full z-50 flex justify-center mt-4">
+      <div className="w-[95%] max-w-6xl flex justify-between items-center px-6 py-4 rounded-3xl bg-[#0f111a] text-cyan-400 shadow-[8px_8px_16px_#0a0a0a,-8px_-8px_16px_#1a1a1a] backdrop-blur-md">
         
         {/* Logo */}
-        <div className="text-3xl font-extrabold text-cyan-400">
+        <div className="text-3xl font-extrabold tracking-widest">
           F K
         </div>
 
@@ -61,7 +61,7 @@ function Navbar() {
 
         {/* Mobile Menu */}
         {menuOpen && (
-          <ul className="absolute top-16 left-0 w-full bg-gray-900 bg-opacity-95 backdrop-blur-md flex flex-col items-center py-8 space-y-8 text-gray-300 font-semibold md:hidden">
+          <ul className="absolute top-20 left-4 right-4 mx-auto w-[90%] bg-[#0f111a] rounded-3xl shadow-[8px_8px_16px_#0a0a0a,-8px_-8px_16px_#1a1a1a] p-8 flex flex-col items-center space-y-8 text-gray-300 font-semibold md:hidden">
             {navLinks.map(({ id, link }) => (
               <li key={id}>
                 <a
