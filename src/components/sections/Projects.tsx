@@ -57,7 +57,19 @@ export default function Projects() {
                                         {String(index + 1).padStart(2, "0")}
                                     </span>
 
-                                    <div className="grid grid-cols-12 gap-x-8 gap-y-5">
+                                    {/* No column gap below `sm`. A twelve-track
+                                        grid has eleven gaps in it whether or
+                                        not anything straddles them, and at
+                                        2rem each that is 352px the grid cannot
+                                        be narrower than — on a 360px phone the
+                                        gutters alone are wider than the column
+                                        the grid sits in, so every row pushed
+                                        its own text off the right of the
+                                        screen. Nothing here spans a partial
+                                        column until `lg`, so below that the
+                                        gap is buying nothing and costing the
+                                        layout. */}
+                                    <div className="grid grid-cols-12 gap-y-5 sm:gap-x-8">
                                         <div className="col-span-12 lg:col-span-6">
                                             <h3 className="display text-h2 leading-[1] text-ink">
                                                 {project.title}

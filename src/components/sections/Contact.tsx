@@ -127,7 +127,10 @@ export default function Contact() {
                 accentTitle="building."
             />
 
-            <div className="grid grid-cols-12 gap-x-8 gap-y-12">
+            {/* No column gap below `sm` — eleven 2rem gutters are a 352px
+                floor the grid cannot go under, which is wider than a phone's
+                whole column. See Projects. */}
+            <div className="grid grid-cols-12 gap-y-12 sm:gap-x-8">
                 <div className="col-span-12 lg:col-span-4">
                     <Reveal y={16} className="max-w-[38ch]">
                         <p className="text-body text-pretty text-ink-2">

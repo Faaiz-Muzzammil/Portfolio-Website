@@ -39,7 +39,10 @@ export default function Experience() {
                         delay={index * 0.07}
                         className="border-t border-line py-8 sm:py-9"
                     >
-                        <div className="grid grid-cols-12 gap-x-8 gap-y-5">
+                        {/* No column gap below `sm` — eleven 2rem gutters are
+                            a 352px floor the grid cannot go under, which is
+                            wider than a phone's whole column. See Projects. */}
+                        <div className="grid grid-cols-12 gap-y-5 sm:gap-x-8">
                             {/* The dates column. Scannable on its own, but
                                 kept to two columns — at three it sat a third
                                 of the measure away from the entry it dates,

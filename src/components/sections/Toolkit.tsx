@@ -26,7 +26,10 @@ export default function Toolkit() {
                 accentTitle="for."
             />
 
-            <Reveal stagger={0.06} className="grid grid-cols-12 gap-x-8 gap-y-12">
+            {/* No column gap below `sm` — eleven 2rem gutters are a 352px
+                floor the grid cannot go under, which is wider than a phone's
+                whole column. See Projects. */}
+            <Reveal stagger={0.06} className="grid grid-cols-12 gap-y-12 sm:gap-x-8">
                 {TOOL_CATEGORIES.map((category) => {
                     const items = tools.filter((t) => t.category === category);
                     if (items.length === 0) return null;
