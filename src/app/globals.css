@@ -1,26 +1,1444 @@
 @import "tailwindcss";
 
+/* ============================================================
+   ISSUE
+   ------------------------------------------------------------
+   The site is a printed magazine, set on one page.
+
+   It is not a stack of cards, panels or plates. It is a masthead,
+   a contents page, and four departments, laid on paper with
+   nothing floating above it. The devices are the ones print has
+   used for a century, and every one of them is doing a job:
+
+     THE GRID    — twelve columns. Content spans different numbers
+                   of them from section to section, and things are
+                   allowed to hang out into the margin. A layout
+                   that never breaks its own grid is a table.
+
+     RULES       — a 2px ink rule opens a department, hairlines
+                   separate entries and columns. On paper this is
+                   how a reader is told where one thing ends; it
+                   costs nothing and needs no box.
+
+     RUNNING     — every department carries its number and name in
+     HEADS         mono at the top. The matching folio line at the
+                   foot of each one is gone: two devices saying the
+                   same thing at both ends of a section is a book's
+                   solution to a problem a scroll does not have.
+
+     HANGING     — numbers, dates and labels sit out in the left
+     MARGINALIA    margin, clear of the text block, so the reading
+                   column keeps one clean edge all the way down.
+
+   There is no hue anywhere in this file. Black, white, and the
+   greys between them — so the two things colour used to say have
+   to be said another way, and both are stronger for it:
+
+     INTERACTIVE — inversion. A thing you can act on is a solid
+                   block of ink with paper-coloured type on it, or
+                   it inverts on hover. Contrast, not colour.
+
+     NOW         — moving noise. Anything genuinely live is filled
+                   with flickering grain: the "open to work" mark,
+                   the role currently held, the reading-progress
+                   bar. Since the page is otherwise still, movement
+                   alone marks a thing as live.
+
+   Emphasis anywhere on this site is a change of weight and
+   nothing else. A heading is set at 300 and the word it turns on
+   at 800: one typeface, one size, one colour, with the variable
+   axis carrying all of it. The cover does it, every department
+   head does it, and it is the reason this face was chosen —
+   emphasis that survives at 96px and at 30px because it is not
+   relying on a stroke, a rule or a second colour to be seen.
+   ============================================================ */
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  --paper: #FFFFFF;
+  --paper-2: #F1F1F1;
+  --surface: #FAFAFA;
+  --surface-2: #E9E9E9;
+  --surface-3: #D8D8D8;
+
+  --ink: #0A0A0A;
+  --ink-2: #3B3B3B;
+  --ink-3: #6E6E6E;
+  --ink-4: #A0A0A0;
+
+  --line: rgba(10, 10, 10, 0.14);
+  --line-2: rgba(10, 10, 10, 0.32);
+
+  /* "Accent" means maximum contrast — ink on paper. Emphasis is
+     carried by inversion, so these resolve to the ink itself. */
+  --accent: #0A0A0A;
+  --accent-fg: #FFFFFF;
+  --accent-ink: #0A0A0A;
+  --accent-soft: rgba(10, 10, 10, 0.06);
+  --accent-line: rgba(10, 10, 10, 0.30);
+
+  /* Kept as tokens so call sites need not care, but "live" is drawn
+     with grain now, not with a second colour. */
+  --signal: #0A0A0A;
+  --signal-fg: #FFFFFF;
+  --signal-ink: #0A0A0A;
+  --signal-soft: rgba(10, 10, 10, 0.06);
+  --signal-line: rgba(10, 10, 10, 0.32);
+
+  --ok: #0A0A0A;
+  --danger: #1A1A1A;
+  --danger-soft: rgba(10, 10, 10, 0.06);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-2: 0 12px 34px -14px rgba(0, 0, 0, 0.20);
+  --shadow-3: 0 34px 76px -28px rgba(0, 0, 0, 0.28);
+
+  /* How hard the texture bites.
+     ----------------------------------------------------------------
+     These were 0.05 and 0.05, set on the assumption that a light
+     ground needs less of both. It does not — it needs *more*, and the
+     reason is contrast, not taste. The grain is black either way. On
+     black it is drawn against a near-black ground, so 0.035 is
+     already legible; on white it is drawn against white, and 0.05 of
+     black on white is a difference of about thirteen levels out of
+     255 — technically present, invisible at arm's length. The light
+     theme was rendering as flat paper while the dark one had weather.
+
+     0.09 and 0.075 put the same amount of visible texture on both,
+     which is what "the same site in two themes" has to mean. Both
+     layers are fixed over the full viewport, so all three columns of
+     the shell — rail, measure, rail — sit on the same ground. */
+  --grain-opacity: 0.09;
+  --haze-opacity: 0.075;
+
+  /* The masses that fill the outer margins. Ink in water on paper. */
+  --edge-glow: rgba(10, 10, 10, 0.075);
+
+  /* The pool of light behind the opening line. On white it is a shadow
+     rather than a glow — light ground, so depth has to come from the
+     dark end — and it is kept under a tenth so it reads as the page
+     being lit unevenly rather than as a shape someone drew. */
+  --hero-glow: rgba(10, 10, 10, 0.085);
+
+  /* Frosted panels. On white, glass has to be a touch *more* opaque
+     than instinct suggests or the body copy loses its footing. */
+  --glass-fill: rgba(255, 255, 255, 0.55);
+  --glass-fill-alt: rgba(244, 244, 244, 0.62);
+  --glass-line: rgba(10, 10, 10, 0.10);
+  --glass-edge: rgba(255, 255, 255, 0.85);
+
+  /* Ink in water. Dense at the core, gone well before the edge, so
+     three of them can overlap without turning into one grey wash. */
+  --blob-tint: radial-gradient(
+    circle at 36% 34%,
+    rgba(10, 10, 10, 0.22),
+    rgba(10, 10, 10, 0.07) 48%,
+    rgba(10, 10, 10, 0) 72%
+  );
+
+  /* The opening plate's sweep. A seamless studio backdrop: one pool of
+     light off the centre, falling away to a soft grey at every edge.
+     Three stops, no hue, no hard boundary anywhere in it. */
+  --sweep-core: #FFFFFF;
+  --sweep-mid: #F2F2F2;
+  --sweep-edge: #D4D4D4;
+  --sweep-sheen: rgba(255, 255, 255, 0.75);
+
+  /* The fixed chrome, described once so nothing has to guess at it.
+     `--nav-top` is the gap above the bar, `--nav-h` is the bar itself
+     (h-10 plus its 1px-of-padding frame), and `--scroll-offset` is
+     everything the bar occupies plus a clear margin under it. That
+     last one is what both the scroll-anchor offset and the opening
+     plate's top padding read, so the space under the nav can only ever
+     be changed in one place.
+
+     The bar floats, so the gap above it is not a margin — it is the
+     thing that tells you it is floating. At 1.25rem it read as a bar
+     that had been pushed slightly away from the top edge rather than
+     one sitting over the page; 1.75rem is enough air to be read as
+     deliberate. The clearance beneath went to 2.5rem with it, because
+     a floating object needs the same room on both sides or it looks
+     stuck to whichever edge it is nearer. */
+  --nav-top: 1.75rem;
+  --nav-h: 48px;
+  --scroll-offset: calc(var(--nav-top) + var(--nav-h) + 2.5rem);
+
+  /* The band of visible ground above and below every plate. It is the
+     only thing separating one section from the next, so it is declared
+     once here and read by both the section's padding and the plate's
+     own height — which is how a plate can fill the viewport exactly
+     rather than floating in the middle of it. */
+  --plate-gap: 2rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@media (min-width: 640px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --plate-gap: 3.5rem;
   }
 }
 
+/* The rails appear only where there is genuinely width to give them,
+   and take more of it the more there is. On a large display the outer
+   columns are what stop the measure running to a punishing length; on
+   a laptop they would eat the content, so they stay narrow. */
+@media (min-width: 1280px) {
+  :root {
+    --rail-w: 6rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  :root {
+    --rail-w: 9rem;
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    --rail-w: 12rem;
+  }
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper: #000000;
+  --paper-2: #080808;
+  --surface: #0D0D0D;
+  --surface-2: #171717;
+  --surface-3: #242424;
+
+  --ink: #FFFFFF;
+  --ink-2: #B3B3B3;
+  --ink-3: #808080;
+  --ink-4: #575757;
+
+  --line: rgba(255, 255, 255, 0.14);
+  --line-2: rgba(255, 255, 255, 0.30);
+
+  --accent: #FFFFFF;
+  --accent-fg: #000000;
+  --accent-ink: #FFFFFF;
+  --accent-soft: rgba(255, 255, 255, 0.08);
+  --accent-line: rgba(255, 255, 255, 0.32);
+
+  --signal: #FFFFFF;
+  --signal-fg: #000000;
+  --signal-ink: #FFFFFF;
+  --signal-soft: rgba(255, 255, 255, 0.08);
+  --signal-line: rgba(255, 255, 255, 0.32);
+
+  --ok: #FFFFFF;
+  --danger: #EDEDED;
+  --danger-soft: rgba(255, 255, 255, 0.08);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.7);
+  --shadow-2: 0 12px 34px -14px rgba(0, 0, 0, 0.85);
+  --shadow-3: 0 34px 76px -28px rgba(0, 0, 0, 0.95);
+
+  /* Texture reads far more strongly on black, so the grain is dialled
+     back while the haze is pushed up — soft cloud is what keeps a pure
+     black page from looking like a switched-off screen. */
+  --grain-opacity: 0.035;
+  --haze-opacity: 0.09;
+
+  /* Light in fog rather than ink in water — carried harder, because a
+     pure black margin swallows anything gentler. */
+  --edge-glow: rgba(255, 255, 255, 0.085);
+
+  /* Now genuinely a light, and carried further: on black a pool this
+     soft is the only thing keeping the opening screen from reading as
+     a switched-off display. */
+  --hero-glow: rgba(255, 255, 255, 0.14);
+
+  --glass-fill: rgba(20, 20, 20, 0.42);
+  --glass-fill-alt: rgba(32, 32, 32, 0.46);
+  --glass-line: rgba(255, 255, 255, 0.10);
+  --glass-edge: rgba(255, 255, 255, 0.10);
+
+  /* Light in fog rather than ink in water — same shape, inverted. */
+  --blob-tint: radial-gradient(
+    circle at 36% 34%,
+    rgba(255, 255, 255, 0.17),
+    rgba(255, 255, 255, 0.05) 48%,
+    rgba(255, 255, 255, 0) 72%
+  );
+
+  /* The same sweep with the lamp turned down rather than the colours
+     flipped: a soft pool of charcoal that reaches true black at the
+     edges, so the plate still has a lit centre to read type against. */
+  --sweep-core: #232323;
+  --sweep-mid: #131313;
+  --sweep-edge: #000000;
+  --sweep-sheen: rgba(255, 255, 255, 0.07);
+}
+
+/* Legacy aliases — the voice assistant reads the older token names. */
+:root,
+[data-theme="dark"] {
+  --bg: var(--paper);
+  --bg-2: var(--paper-2);
+  --text: var(--ink);
+  --text-2: var(--ink-2);
+  --muted: var(--ink-3);
+  --muted-2: var(--ink-4);
+  --border: var(--line);
+  --border-2: var(--line-2);
+  --ring: var(--accent-line);
+  --shadow: var(--shadow-2);
+  --shadow-soft: var(--shadow-1);
+}
+
+/* ============================================================
+   TOKENS
+   `@theme inline` inlines values into utilities. Hand-written CSS
+   below uses the RAW names — var(--accent), never var(--color-accent).
+   ============================================================ */
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+
+  --color-signal: var(--signal);
+  --color-signal-fg: var(--signal-fg);
+  --color-signal-ink: var(--signal-ink);
+  --color-signal-soft: var(--signal-soft);
+  --color-signal-line: var(--signal-line);
+
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
+  /* Corners are square by default. A map has no rounded plots; the
+     only radii here are for genuinely round things — dots, pills,
+     the nav capsule. */
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+
+  --shadow-e1: var(--shadow-1);
+  --shadow-e2: var(--shadow-2);
+  --shadow-e3: var(--shadow-3);
+
+  --font-display: var(--font-heading), "Helvetica Neue", sans-serif;
+  --font-sans: var(--font-text), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-code), ui-monospace, "SF Mono", monospace;
+
+  /* ---- The scale ------------------------------------------------
+     Retuned for the new faces. Two things changed everywhere:
+
+     Body went up to a full 16px. Fifteen was a compromise made for a
+     wider body face; Instrument Sans is narrow enough that 16 sets the
+     same measure in the same space and is simply easier to read.
+
+     Tracking came back toward zero at every size above body. Archivo
+     needed to be pulled hard — down to -0.045em — before large settings
+     stopped looking gappy. Manrope is drawn tight already, so the same
+     numbers here would have closed the counters up and made a headline
+     read as one long word. -0.035em is the floor now. ---------------- */
+
+  --text-coord: 0.6875rem;
+  --text-coord--line-height: 1.1;
+  --text-coord--letter-spacing: 0.05em;
+  --text-coord--font-weight: 500;
+
+  --text-eyebrow: 0.75rem;
+  --text-eyebrow--line-height: 1.2;
+  --text-eyebrow--letter-spacing: 0.14em;
+  --text-eyebrow--font-weight: 500;
+
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.55;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.65;
+  --text-body--letter-spacing: -0.004em;
+
+  --text-lead: clamp(1.125rem, 1.5vw, 1.3125rem);
+  --text-lead--line-height: 1.55;
+  --text-lead--letter-spacing: -0.012em;
+
+  --text-h3: clamp(1.25rem, 1.9vw, 1.5rem);
+  --text-h3--line-height: 1.22;
+  --text-h3--letter-spacing: -0.02em;
+
+  /* Entry titles. Six of them at department size was the loudest thing
+     on the page, and the department they sit inside has to out-rank
+     them. */
+  --text-h2: clamp(1.875rem, 3.6vw, 2.75rem);
+  --text-h2--line-height: 1.04;
+  --text-h2--letter-spacing: -0.028em;
+
+  /* Department titles. A clear step above the entries, not a nudge. */
+  --text-h1: clamp(2.5rem, 6vw, 4.5rem);
+  --text-h1--line-height: 1;
+  --text-h1--letter-spacing: -0.035em;
+
+  --text-display: clamp(2.75rem, 8.4vw, 7rem);
+  --text-display--line-height: 0.94;
+  --text-display--letter-spacing: -0.035em;
+
+  /* The page is three columns at `xl` and above: a rail, the measure,
+     a rail. `--rail-w` is the width of the outer two and is 0 below
+     that breakpoint, where there is no room for them — which is what
+     lets one padding rule serve both cases.
+
+     The measure then fills whatever is left, up to a ceiling that only
+     an ultrawide ever reaches. It is deliberately not narrower than
+     that: the rails already provide the margin, and a capped measure
+     inside them was leaving a second, emptier margin on top. */
+  --rail-w: 0px;
+  --container-site: min(100%, 1760px);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+
+html {
+  /* `clip`, not `hidden` — `hidden` makes this a scroll container and
+     silently kills every `position: sticky` on the page. */
+  overflow-x: clip;
+  font-family: var(--font-text), ui-sans-serif, system-ui, sans-serif;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* `text-rendering: optimizeLegibility` was set here and has been removed.
+   It is the one font property that is a known performance trap: it forces
+   the engine to load and apply the full kerning and ligature tables before
+   it can lay out a single line, which delays first paint and makes every
+   reflow more expensive. Every browser this site supports already applies
+   kerning and standard ligatures by default, so it was buying nothing and
+   charging for it on every layout pass. */
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---- The ground --------------------------------------------------
+   Two fixed layers, both static, both below every section.
+
+   `--haze` is low-frequency turbulence blown up large: soft cloudy
+   variation that stops a black page reading as a flat void and, more
+   importantly, gives the frosted panels something with structure to
+   refract. Blur applied to nothing looks like nothing.
+
+   `--grain` is the fine stuff. It is declared once and reused by the
+   live marks, which are the only things on the page allowed to move
+   and therefore the only things that read as happening now. --------- */
+
+:root {
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+
+  --haze: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 700 700'%3E%3Cfilter id='h'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.006' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23h)'/%3E%3C/svg%3E");
+}
+
+.haze {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--haze-opacity);
+  background-image: var(--haze);
+  background-size: cover;
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: var(--grain);
+}
+
+/* ---- The three-column shell --------------------------------------
+   Everything that scrolls is inset by the width of the two rails, so
+   the rails own their strip of the viewport outright and nothing in
+   the document can reach into it. Below `xl`, `--rail-w` is 0 and this
+   rule quietly does nothing. ---------------------------------------- */
+
+.page-inset {
+  padding-inline: var(--rail-w);
+}
+
+/* ---- Edge glow ---------------------------------------------------
+   Two soft masses bleeding in from the left and right edges, sized in
+   viewport units so they always sit in the margin beside the measure
+   rather than under the type. They give the outer thirds of a wide
+   screen some weather instead of leaving them as flat void.
+
+   Their centres are pushed off-canvas on purpose: what you see is the
+   shoulder of each one, never the core, which is what stops them
+   reading as two grey circles stuck to the sides. ------------------ */
+
+.edge-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(42vw 68vh at -8vw 28%, var(--edge-glow) 0%, transparent 72%),
+    radial-gradient(38vw 62vh at 108vw 76%, var(--edge-glow) 0%, transparent 72%);
+}
+
+/* ---- Live marks --------------------------------------------------
+   Grain is how this site says "now". Anything wearing this class is
+   currently true; nothing else may wear it. It is the one place the
+   noise moves, which is exactly why it reads as alive against an
+   otherwise static page. ------------------------------------------ */
+
+.live-mark {
+  position: relative;
+  background-color: var(--ink);
+  overflow: hidden;
+  /* Confines the grain's blend to this element's own ink.
+     `mix-blend-mode` composites against everything painted beneath it in
+     the nearest stacking context, which without this is the page — so a
+     6px dot running an infinite animation was forcing the browser to
+     read back and re-blend a region of the document sixty times a
+     second. `isolation` makes the dot its own stacking context, so the
+     grain blends with the one thing it was ever meant to blend with. It
+     is also the correct rendering: the speckle is *in* the ink, not over
+     whatever the ink happens to be sitting on. */
+  isolation: isolate;
+}
+
+.live-mark::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background-image: var(--grain);
+  opacity: 0.85;
+  mix-blend-mode: screen;
+  animation: grain-flicker 480ms steps(1) infinite;
+}
+
+[data-theme="dark"] .live-mark::after {
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+}
+
+/* Whole jumps, not a smooth slide — grain that eases looks like a
+   moving texture rather than like static. */
+@keyframes grain-flicker {
+  0% { transform: translate3d(0, 0, 0); }
+  20% { transform: translate3d(-8%, 3%, 0); }
+  40% { transform: translate3d(5%, -7%, 0); }
+  60% { transform: translate3d(-3%, 8%, 0); }
+  80% { transform: translate3d(7%, 2%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+/* ---- Glass -------------------------------------------------------
+   Sections are frosted panels floating on the noise rather than
+   opaque bands butting up against one another. The inset highlight
+   on the top edge is what sells it as a sheet with thickness; without
+   it, a translucent box just looks faded. ------------------------- */
+
+/* 16px of blur, not 26. A backdrop filter is recomputed every frame the
+   element moves relative to what is behind it, and the cost scales with
+   the radius — so on a scrolling page a frosted panel is one of the few
+   things that gets more expensive the longer you look at it. Past about
+   16px the difference is academic: the ground behind this is grain and
+   haze, which has no structure left to lose by the time it is blurred
+   that far. */
+.glass {
+  background-color: var(--glass-fill);
+  backdrop-filter: blur(16px) saturate(118%);
+  -webkit-backdrop-filter: blur(16px) saturate(118%);
+  border: 1px solid var(--glass-line);
+  box-shadow:
+    var(--shadow-2),
+    inset 0 1px 0 0 var(--glass-edge);
+}
+
+/* Alternate panels sit a step deeper so two in a row never read as
+   one continuous sheet. */
+.glass-alt {
+  background-color: var(--glass-fill-alt);
+}
+
+/* No blur at all on a phone. A mobile GPU pays several times what a
+   laptop does for the same backdrop pass, and it is being asked for it
+   on the one device where the panel fills most of the screen. The fill
+   goes opaque in exchange, so the copy on it keeps its footing — a
+   translucent panel with nothing blurred behind it is just washed-out
+   text over noise.
+
+   It has to sit below `.glass-alt` and not beside `.glass`. A media
+   query adds no specificity, so an equally-specific rule further down
+   the file beats it at every width — put this above `.glass-alt` and
+   the alternate panels would quietly keep their translucent fill on
+   phones with nothing blurred behind them, which is the one combination
+   this is here to prevent. */
+@media (max-width: 767px) {
+  .glass,
+  .glass-alt {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-color: var(--surface);
+  }
+}
+
+
+/* ---- Lit, not frosted ---------------------------------------------
+   A seamless studio sweep: one pool of light sitting off centre,
+   falling away to a soft edge on all four sides, with a sheen down the
+   top few percent so it reads as a surface catching light rather than
+   as a gradient. Every stop is a percentage of the element, so the
+   same three lines light a full-height plate and a 48px bar.
+
+   Worn by the two objects that have to make their own light — the
+   opening section, which has nothing above it to take character from,
+   and the nav, which floats over everything and would otherwise be the
+   one smooth object on a textured page.
+
+   It is opaque, so the backdrop blur inherited from `.glass` has
+   nothing left to do and is switched off: a blur with nothing behind
+   it costs a compositor layer and buys nothing. The border and the
+   shadow stay, which is what keeps both recognisably the same family
+   of object as the frosted panels between them. ------------------- */
+
+.plate-sweep {
+  background-color: var(--sweep-edge);
+  background-image:
+    linear-gradient(180deg, var(--sweep-sheen) 0%, transparent 18%),
+    radial-gradient(
+      108% 128% at 28% 46%,
+      var(--sweep-core) 0%,
+      var(--sweep-mid) 44%,
+      var(--sweep-edge) 100%
+    );
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+@media print {
+  .haze,
+  .grain {
+    display: none;
+  }
+
+  .glass,
+  .glass-alt {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+
+/* The display voice. Manrope carries a 200–800 weight axis, so the three
+   cuts below are one typeface behaving three ways rather than three
+   fonts — and the axis is continuous, which is what lets the home page
+   animate a word up it. */
+.display {
+  font-family: var(--font-heading), "Helvetica Neue", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+/* Heavier and tighter, for the lines that have to hold a width. */
+.display-tight {
+  font-family: var(--font-heading), "Helvetica Neue", sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.042em;
+}
+
+/* A department heading, and the word it turns on.
+   ------------------------------------------------------------------
+   This was solid-against-hollow: the emphasised word set at 500 with a
+   0.022em stroke and no fill. It looked like a drawing of a word in a
+   specimen sheet and like a mistake everywhere else. Two things were
+   wrong with it and neither was fixable by adjusting the stroke.
+
+   A stroke is centred on the outline, so half of it grows inward and
+   eats the counters. In "paperwork." the bowls of p, a, e, o and r
+   close up first and the word turns to grey mush from a metre away,
+   which is the distance a heading is actually read from. Worse, the
+   crossbar of the e and the join of the r sat close enough to the
+   stroke's inner edge to read as a line struck through the word.
+
+   The second problem was that the site already had a way of stressing
+   a word and this was not it. The cover sets its sentence at 300 and
+   its two verbs at 800 — one face, one size, one colour, the weight
+   axis carrying every bit of the emphasis. A department heading that
+   solves the same problem a different way is a second system to learn
+   for no gain, so the headings now do exactly what the cover does.
+   The axis is continuous and the counters stay open at every weight
+   on it, which is the whole reason this typeface is here. */
+.display-axis {
+  font-family: var(--font-heading), "Helvetica Neue", sans-serif;
+  font-weight: 300;
+  letter-spacing: -0.035em;
+}
+
+/* Tighter as well as heavier — at 800 the letterforms claim more room
+   on their own, and holding the light setting's tracking would leave
+   the stressed word looking loose rather than solid. */
+.display-axis strong {
+  font-weight: 800;
+  letter-spacing: -0.045em;
+}
+
+/* ============================================================
+   HOME
+   ------------------------------------------------------------
+   The opening screen carries no running head — the numbering
+   below earns its keep across four departments of dense content,
+   and a cover that numbers itself 00 is a contents page with a
+   big name on it.
+
+   It is three lines of type, a line of copy under them and two
+   buttons — nothing else on the screen, and no rule anywhere on
+   it:
+
+         Engineers Build It.
+         Marketers Sell It.
+         I Do Both.
+
+     THE FIGURE   Two flat statements about other people, then a
+                  third that is about the person whose site this
+                  is. The setting says the same thing as the words:
+                  the first two lines stay light and grey — a
+                  premise that fights for attention is a premise
+                  nobody accepts — and the third is heavier,
+                  larger, and struck through with a block of ink
+                  carrying paper type. The block wipes in from the
+                  left a beat after the line lands, inverting the
+                  letters as its edge passes them. It does not
+                  appear emphasised, it *becomes* emphasised, which
+                  is the difference between stating the joke and
+                  landing it.
+
+     SCALE        The three lines are set at about seven eighths of
+                  the measure — roughly 165px on a 1920 display,
+                  eight times the size of anything else on the
+                  screen. That is not excess, it is the brief: this
+                  sentence is the only claim the cover makes, so it
+                  is given the whole cover to make it in. The
+                  figure is arithmetic rather than taste — see
+                  `.hero-line`.
+
+     ONE BLOCK    Statement, copy, actions: one left edge, gaps
+                  closing as the type gets smaller. Nothing is
+                  pinned to the foot of the screen and no rule runs
+                  through the middle of it. It is one statement, so
+                  it is set as one object.
+
+     TWO VOICES   Display for the statement, body for the copy and
+                  the two buttons. No mono here at all: mono is
+                  this site's voice for data, and a cover carrying
+                  no counts, no badges and no dates has no data on
+                  it to set. The wordmark that used to open the
+                  screen is gone with them — the nav sits a few
+                  pixels above where it stood, and a cover with a
+                  name at the top and a statement in the middle is
+                  a page introducing itself twice.
+
+     ARRIVAL      The three lines are clipped and slide up from
+                  below their own baselines, 0.1s apart; the copy
+                  and the buttons fade up twelve pixels behind
+                  them. Big type is never faded in — at this size a
+                  crossfade shows half-drawn letterforms and reads
+                  as a font that has not loaded. It is CSS, so it
+                  is right on the first paint rather than after
+                  hydration, and it is the same reveal the
+                  department headings get from GSAP further down.
+
+     DEPTH        Two layers leaving at different speeds as the
+                  cover scrolls away — the statement at a seventh
+                  of a screen, the copy and buttons at half that,
+                  both fading. Parallax is a difference, so one
+                  layer would be nothing and four would be a
+                  slideshow. It is a thing you feel rather than
+                  watch, and it is off entirely under
+                  `prefers-reduced-motion`.
+
+     THE EMPTY    Whatever the type does not use is left empty. A
+     SPACE        blob, a portrait, a grid of cards, a circle of
+                  light, a row of counts and an availability badge
+                  have each been tried here and each been cut:
+                  anything with a shape of its own is something to
+                  look at instead of the sentence. The margin is
+                  the loudest thing a page can give a headline.
+
+     LIGHT        One soft pool behind the type instead of a
+                  panel, a border or a card. It gives the screen
+                  depth without drawing a single edge.
+   ============================================================ */
+
+/* The screen fills the window exactly, so the rule that opens Work
+   lands on the fold rather than peeking above it. `svh`, not `vh`, so
+   a phone's collapsing address bar can only ever leave this shorter
+   than the window rather than pushing the button off the bottom.
+
+   The subtracted values are the opening section's own padding: the
+   chrome offset it clears at the top, and `pb-14` / `sm:pb-20` at the
+   foot. They are the one thing in this file that has to be kept in
+   step with a component. */
+.hero-stage {
+  min-height: calc(100svh - var(--scroll-offset) - 3.5rem);
+}
+
+@media (min-width: 640px) {
+  .hero-stage {
+    min-height: calc(100svh - var(--scroll-offset) - 5rem);
+  }
+}
+
+/* The statement measures itself against its own column, not against
+   the viewport. `vw` was the wrong ruler: the rails open at 1280 and
+   take 6rem a side before they have any spare width to give, so a 1280
+   screen leaves the type *less* room per vw than a 1024 one does, and
+   no single vw figure could serve both. `cqw` reads the column the type
+   is actually set in.
+
+   8.8% of that column sets the longest of the three lines to about two
+   thirds of the measure at every width — roughly 125px on a 1920
+   display. It has come down twice: 11.7% filled the page to within
+   300px of the right rail, 10.4% to within 350, and both read as a
+   statement crammed onto a page rather than set on one. Two thirds
+   leaves a full third of the measure as margin, and margin is what
+   tells the eye that the size was chosen rather than reached.
+
+   Big type does not need to be as big as it can be. Past a certain
+   point the reader stops reading the sentence and starts reading the
+   letters, and the sentence is the whole cover.
+
+   `15vh` guards the other axis. Three lines of 8.8cqw on a 1920×800
+   display would still be most of a 570px stage, so on anything short
+   the height decides the size instead of the width.
+
+   Leading is 0.98. Solid or tighter would have the descender of the
+   "g" in "Engineers" sitting in the cap-height of "Marketers" on the
+   line below — 0.98 leaves 0.26em of clearance against a 0.22em
+   descender, which is as close as this sentence can be set without
+   the two lines touching. Checked against these words, not assumed.
+
+   IT IS A FLEX COLUMN, and that is load-bearing rather than
+   stylistic. Each line is wrapped in a mask that pads itself 0.16em
+   at the top and 0.26em at the bottom and takes the same amounts back
+   as negative margins, so the clip has room for ascenders and
+   descenders without costing the layout a pixel. Between two normal
+   block siblings those negative margins *collapse* — the browser
+   keeps the more negative of the pair and discards the other, which
+   quietly handed every gap in the block an extra 0.16em and set the
+   sentence at an effective 1.14 instead of 0.98. Flex items do not
+   collapse their margins. The padding and the pull now cancel exactly,
+   which is the only reason the leading you read here is the leading
+   that renders.
+
+   The negative left margin is optical, not layout: at 150px the left
+   sidebearing of a cap E is several pixels of air, and without the
+   correction the sentence sits visibly indented from the wordmark and
+   the buttons that share its edge. */
+.hero-line {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-heading), "Helvetica Neue", sans-serif;
+  font-size: clamp(2rem, min(8.8cqw, 15vh), 9rem);
+  font-weight: 300;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  margin-left: -0.03em;
+  text-wrap: balance;
+}
+
+/* Narrow screens get a larger share of their column, not the same one.
+   ------------------------------------------------------------------
+   `cqw` holds the type at a fixed *proportion* of the measure, which is
+   right on a wide screen and wrong on a narrow one. A 393px phone has a
+   353px measure and no rails to give away; 8.8% of it is 31px. Type
+   that reads as enormous across a laptop reads as body copy on a phone,
+   because the thing that made it enormous was the width it had to
+   itself, and a phone has none to spare.
+
+   12.5% is a ceiling rather than a preference. The longest line is
+   7.5em as drawn, so it would fill its column exactly at 13.3%; 12.5
+   leaves about 6% as right margin, which is the least a line this size
+   can end on without looking like it ran out of room. The height guard
+   drops to 12vh over the same range, for the landscape phone this would
+   otherwise fill twice over.
+
+   THE BREAKPOINT IS 1024, NOT 640. It was `sm`, which meant a 700 or
+   800px window — a small laptop, a tablet, a phone in landscape, a
+   desktop browser dragged narrow — got the wide-screen proportion in a
+   column with none of the width that proportion assumes.
+
+   ONLY THE SIZE CHANGES. This was briefly centred below the breakpoint
+   too and it is not any more: the cover is one left edge from the
+   phone to the ultrawide, and the statement, the copy and the buttons
+   all hang off it. Centring made the block a shape rather than a
+   statement, and it broke the one alignment the whole screen is built
+   on. The optical corrections stay in place with it — they are what
+   holds that edge true. */
+@media (max-width: 1023px) {
+  .hero-line {
+    font-size: clamp(1.75rem, min(12.5cqw, 12vh), 7rem);
+  }
+}
+
+/* The turn.
+   ------------------------------------------------------------------
+   The copy is a rhetorical figure: two flat statements about other
+   people, then a third that is about the person whose site this is.
+   The setting says the same thing, so the first two lines are set
+   light and grey and the third arrives light and grey with them — then
+   climbs to 800 and to full ink over a second while you are reading
+   it. The line does not appear emphasised; it *becomes* emphasised,
+   which is the difference between a design that states the joke and
+   one that lands it.
+
+   It runs on the weight axis, so nothing reflows around it but the
+   line's own width — and it is the last line, so nothing below it
+   moves at all.
+
+   CSS rather than GSAP on purpose: it is above the fold on the first
+   paint and cannot wait for a bundle to hydrate. `both` fill holds it
+   light through the delay, and leaves it at 800 under
+   `prefers-reduced-motion`, where the duration is crushed to nothing
+   and the line simply is where it ends up.
+
+   The delay waits for the line to finish sliding in. Starting the
+   climb underneath the entrance puts two movements on one line and the
+   reader sees neither. */
+/* The turning line is set a tenth larger than the two above it. Two
+   jobs, one adjustment. It is a crescendo — light and small, light and
+   small, heavy and large — so the payoff is physically the biggest
+   thing on the page and not merely the boldest. And it is ballast:
+   "I Do Both." is barely three fifths the width of the lines above it,
+   so at a single size the block tapers away at the bottom and reads as
+   a paragraph running out rather than as a statement landing.
+
+   Its mask is given more clearance than the other two, because this
+   line carries a filled block that stands proud of the type on all
+   four sides, and the pull at the top is 0.06em short of the padding
+   on purpose — that is the gap that keeps the block's top edge clear
+   of the baseline of "Marketers Sell It." above it. */
+.hero-line-turn {
+  font-size: 1.1em;
+  padding-block: 0.26em 0.3em;
+  margin-block: -0.2em -0.3em;
+}
+
+/* The mark.
+   ------------------------------------------------------------------
+   A block of ink with paper-coloured type in it — the site's own
+   inversion, at headline size. It is square where the buttons are
+   pills and it is 160px where they are 15px, which is what keeps a
+   filled shape in the middle of a headline from reading as something
+   you can click.
+
+   It hangs left by exactly its own left padding, so the block bleeds
+   into the margin and the *letters* stay on the same edge as the two
+   lines above and the buttons below. Aligning the block instead would
+   indent the sentence at the one line that has to look most certain
+   of itself.
+
+   THE WIPE. The bar does not fade in and it does not scale: a second
+   copy of the line, ink-filled and paper-lettered, is laid exactly
+   over the first and revealed left to right with `clip-path`. Text
+   and background arrive together at the wipe's edge, so the words
+   invert as it passes rather than the block landing first and the
+   letters changing colour under it a moment later. It is why there
+   are two copies of these three words in the markup — the second is
+   `aria-hidden` and unselectable, and exists only to be wiped in.
+
+   The delay lets the line finish sliding up. Wiping a bar across a
+   line that is still moving is two gestures at once, and the reader
+   resolves neither. */
+.hero-mark {
+  position: relative;
+  display: inline-block;
+  padding: 0.1em 0.14em 0.12em;
+  margin-left: -0.14em;
+  color: var(--ink);
+  font-variation-settings: "wght" 800;
+  letter-spacing: -0.05em;
+  /* Both copies, not just the overlay. If the underlying line ever
+     wrapped while the wiped copy did not, the two would be a line
+     apart and the mark would paint over the wrong words. It has room
+     at every width the site supports; this is the guarantee, not the
+     expectation. */
+  white-space: nowrap;
+}
+
+.hero-mark-flip {
+  position: absolute;
+  inset: 0;
+  padding: inherit;
+  background: var(--ink);
+  color: var(--paper);
+  white-space: nowrap;
+  user-select: none;
+  clip-path: inset(0 100% 0 0);
+  animation: mark-wipe 0.72s cubic-bezier(0.76, 0, 0.24, 1) 1.05s both;
+}
+
+@keyframes mark-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+/* One soft pool of light, set well off centre and pushed past the edges
+   of its box so what shows is the shoulder of it rather than a grey
+   circle sitting behind the words. */
+.hero-light {
+  position: absolute;
+  z-index: -1;
+  inset: -25% -40% 5% -45%;
+  pointer-events: none;
+  background-image: radial-gradient(
+    46% 46% at 34% 44%,
+    var(--hero-glow) 0%,
+    transparent 72%
+  );
+}
+
+/* The measure the sentence is set against. Declaring the query
+   container here rather than at the call site keeps the two facts
+   together: this is the width, and `.hero-line` is the thing measured
+   against it. */
+.hero-col {
+  container-type: inline-size;
+}
+
+/* An orb lived here: two rotating masses of `--blob-tint` filling the
+   right half of the cover. It is gone, and the empty half is the
+   design rather than a gap in it — a mass of light with no edge is
+   still a shape, and a shape opposite a sentence is something to look
+   at instead of it. Nothing has replaced it. If this space ever needs
+   filling again, it is worth remembering that it did not. */
+
+/* ---- The entrance ------------------------------------------------
+   Two movements, and which one a thing gets is decided by its size.
+
+   BIG TYPE DOES NOT FADE. A headline at 100px crossfading up from
+   nothing reads as a rendering fault: the eye catches the half-drawn
+   letterforms and thinks the font has not loaded. So each line of the
+   sentence sits in a clipped box and slides up from below its own
+   baseline — full weight, full colour, in every frame it is visible
+   in. It is the same reveal `AnimatedText` runs on every department
+   heading further down the page, done in CSS instead of GSAP because
+   this one is above the fold and cannot wait for a bundle to hydrate
+   before it starts. The cover and the departments arrive the same
+   way, which is the point.
+
+   EVERYTHING ELSE FADES UP. Twelve pixels and an opacity, on the
+   wordmark, the paragraph and the actions. Small type has no
+   letterforms big enough to catch, and a mask on a 16px line is a
+   trick nobody can see.
+
+   The order is the reading order and the gaps close as it goes —
+   0.12s between the two lines of the sentence, then the paragraph and
+   the actions following about a fifth of a second apart. A stagger
+   with even gaps reads as a machine dealing cards.
+
+   Both curves are expo-out, which is GSAP's `expo.out` written as a
+   bezier: the one curve the whole site shares.
+   ------------------------------------------------------------------ */
+
+.rise {
+  animation: rise 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The clipped box. Padded top and bottom and pulled back by the same
+   amount, so the mask has room for the ascenders and the tail of the
+   "g" in "grow." without adding a pixel to the layout — at
+   `line-height: 1` the line box is exactly one em and would otherwise
+   shear the descender straight off. */
+.line-mask-display {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.16em 0.26em;
+  margin-block: -0.16em -0.26em;
+}
+
+.line-up {
+  display: block;
+  animation: line-up 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 130%, not 110%, for the same reason `AnimatedText` uses 130: the mask
+   is deliberately taller than the line it clips so descenders survive,
+   which means a line parked at 110% of its own height still shows its
+   top edge through the bottom of the box before it moves. */
+@keyframes line-up {
+  from {
+    transform: translateY(130%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ---- Held at the gate --------------------------------------------
+   A CSS animation starts counting from the moment its element is
+   parsed, not from the moment anyone can see it. On a cold load —
+   webfont still swapping, a slow connection, a phone — the cover's
+   1.05s delay and 0.72s wipe could be spent and finished before the
+   first useful paint, and the visitor arrives at a hero that is
+   already assembled and never appeared to do anything. Which is
+   exactly the report this is fixing.
+
+   So the sequence is held. An inline script at the top of `<body>`
+   adds `js-loading` to the root before any of this is parsed, these
+   rules pin every animated element to its first frame, and the class
+   comes off once `document.fonts.ready` resolves — at which point the
+   page is on screen and set in its real typeface, and the whole
+   sequence runs from zero where it can be seen.
+
+   `animation: none` rather than `animation-play-state: paused`,
+   because pausing resumes mid-flight and this has to be able to start
+   over: a back-button restore out of the bfcache re-shows the document
+   without re-parsing it, so nothing would replay at all. Re-adding the
+   class and dropping it a frame later restarts every animation from
+   its own delay.
+
+   NOTHING HERE DEPENDS ON REACT. The class is added by an inline
+   script and removed on a 2.5s timer inside that same script, so a
+   failed bundle, a hydration error or a blocked chunk cannot leave the
+   cover blank — the worst case is that it plays late. And if scripts
+   are off entirely the class is never added, these rules never match,
+   and the animations simply run at parse time as they always did. ---- */
+
+.js-loading .rise {
+  animation: none;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.js-loading .line-up {
+  animation: none;
+  transform: translateY(130%);
+}
+
+.js-loading .hero-mark-flip {
+  animation: none;
+  clip-path: inset(0 100% 0 0);
+}
+
+/* A reader who has asked for no motion should not be shown a blank
+   cover for a second while the gate waits on a webfont. There is no
+   entrance to hold for them, so there is nothing to hold. */
+@media (prefers-reduced-motion: reduce) {
+  .js-loading .rise,
+  .js-loading .line-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .js-loading .hero-mark-flip {
+    animation: none !important;
+    clip-path: inset(0) !important;
+  }
+}
+
+/* ============================================================
+   EDITORIAL
+   The print devices. Each is one rule doing one job.
+   ============================================================ */
+
+/* Opens a department. Heavier than a hairline because it is a
+   change of subject, not a change of entry.
+
+   The masthead and the dropped capital that used to live here went
+   with the cover that used them. Neither had a second call site, and
+   a design system carrying rules nothing obeys is just a museum. */
+.rule-heavy {
+  border-top: 2px solid var(--ink);
+}
+
+/* Entries in an index: the number hangs in the margin so the titles
+   keep one clean left edge the whole way down the list. */
+.hang {
+  padding-left: 3.25rem;
+}
+
+.hang > .hang-mark {
+  position: absolute;
+  left: 0;
+  width: 3.25rem;
+}
+
+@media (max-width: 639px) {
+  .hang {
+    padding-left: 2.5rem;
+  }
+
+  .hang > .hang-mark {
+    width: 2.5rem;
+  }
+}
+
+/* Coordinates, sector codes, counts, timestamps. */
+.coord {
+  font-family: var(--font-code), ui-monospace, monospace;
+  font-feature-settings: "tnum", "zero";
+  text-transform: uppercase;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   MOTION PRIMITIVES
+   ============================================================ */
+
+/* Split-text lines. GSAP animates `.line-inner`; these rules hold the
+   resting state so nothing flashes before the first trigger fires.
+
+   THE DESCENDER FIX. SplitText's `mask: "lines"` wraps every line in a
+   box with `overflow: clip` sized to the line box — and a line box at
+   `line-height: 1` is exactly one em, so anything hanging below the
+   baseline is sheared off. That is the "g" in "Six things I" losing its
+   tail, and it was happening on the first line of all four department
+   heads and every project title, because the first line is the only one
+   with a line beneath it to clip against.
+
+   Manrope's descender is 0.22em. The allowance here was 0.08em, which
+   is why it looked *nearly* right: enough for a comma, not enough for a
+   "g". 0.26em clears the deepest glyph in the family with a little to
+   spare, and the matching negative margin takes every pixel of it back
+   out of the layout.
+
+   The wrapper is selected three ways because its class is an
+   implementation detail of the plugin — it derives the name from
+   `linesClass`, so it moves if that prop ever does. The `:has()` rule
+   is the one that cannot go stale: whatever the mask ends up called, it
+   is the element with a `.line-inner` as its direct child. */
+.line-mask,
+.line-inner-mask,
+[data-animate="lines"] :has(> .line-inner) {
+  overflow: hidden;
+  display: block;
+  padding-bottom: 0.26em;
+  margin-bottom: -0.26em;
+}
+
+[data-animate="lines"]:not([data-ready]) .line-inner {
+  opacity: 0;
+}
+
+[data-animate="fade"]:not([data-ready]) {
+  opacity: 0;
+}
+
+/* Progressive enhancement: if JS never runs, show everything. */
+.no-js [data-animate] .line-inner,
+.no-js [data-animate] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* ---- Plate corners ---------------------------------------------
+   Each section plate is bracketed at its corners rather than boxed.
+   A survey marker, not a card. --------------------------------- */
+
+.plate-mark {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-color: var(--line-2);
+  pointer-events: none;
+}
+
+/* ---- Live pulse — attached only to things that are actually live -- */
+
+/* ---- Underline that draws in on hover ---------------------------
+   With no accent hue left, a link cannot announce itself by changing
+   colour — ink is already ink. It draws a rule instead. ----------- */
+
+.rule-draw {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition: background-size 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rule-draw:hover,
+.rule-draw:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* ---- Voice assistant waveform (mobile CSS path) ----------------- */
+
+@keyframes wave {
+  0%,
+  100% {
+    height: 4px;
+  }
+  50% {
+    height: 16px;
+  }
+}
+
+.animate-wave-1 {
+  animation: wave 1s ease-in-out infinite;
+}
+
+.animate-wave-2 {
+  animation: wave 1s ease-in-out infinite;
+  animation-delay: 0.2s;
+}
+
+@keyframes halo {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.animate-halo {
+  animation: halo 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Theme icons swap in CSS so the nav needs no `mounted` guard and
+   therefore never pops in after hydration. */
+.icon-when-light {
+  display: none;
+}
+
+[data-theme="light"] .icon-when-light {
+  display: block;
+}
+
+[data-theme="light"] .icon-when-dark {
+  display: none;
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    /* Delays go too, not just durations. The opening screen's entrance
+       holds each element at `opacity: 0` through its own delay, so
+       leaving the delays in place would blank the hero for the better
+       part of a second and then pop it in — which is precisely the
+       thing the reader asked not to be shown. `!important` beats the
+       inline delays set at the call site. */
+    animation-delay: 0s !important;
+  }
+
+  [data-animate] .line-inner,
+  [data-animate] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* The grain stays — it is the texture of the page — but it stops
+     shuffling, which is the part that moves. */
+  .grain,
+  .live-mark::after {
+    animation: none !important;
+  }
 }
