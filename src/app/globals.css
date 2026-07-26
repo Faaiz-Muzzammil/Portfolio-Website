@@ -117,6 +117,18 @@
   /* The masses that fill the outer margins. Ink in water on paper. */
   --edge-glow: rgba(10, 10, 10, 0.075);
 
+  /* The rails. Declared per theme rather than derived from the paper,
+     because the two themes have to move in opposite directions to get
+     the same result. On white there is room below the ground, so the
+     rails take a wash of ink and sit *under* the measure. On black there
+     is none — `--paper` is #000000, and nothing is darker than that — so
+     they take a breath of light and sit fractionally above it instead.
+     Either way the middle third reads as the lit surface and the outer
+     two as the margins it is printed on, which is the only thing this
+     is for. It is kept translucent so the grain still carries through:
+     an opaque rail would be the one dead surface on a textured page. */
+  --rail-fill: rgba(10, 10, 10, 0.05);
+
   /* The pool of light behind the opening line. On white it is a shadow
      rather than a glow — light ground, so depth has to come from the
      dark end — and it is kept under a tenth so it reads as the page
@@ -248,6 +260,11 @@
   /* Light in fog rather than ink in water — carried harder, because a
      pure black margin swallows anything gentler. */
   --edge-glow: rgba(255, 255, 255, 0.085);
+
+  /* Up, not down — see the note in `:root`. Held to a third of the light
+     theme's figure because a lift off pure black is far more visible
+     than a wash over white. */
+  --rail-fill: rgba(255, 255, 255, 0.032);
 
   /* Now genuinely a light, and carried further: on black a pool this
      soft is the only thing keeping the opening screen from reading as
@@ -515,6 +532,28 @@ body {
 
 .page-inset {
   padding-inline: var(--rail-w);
+}
+
+/* ---- The rails ---------------------------------------------------
+   The outer two of the page's three columns, given a surface of their
+   own so the division reads without having to be pointed at.
+
+   They were a hairline and nothing else, which meant three columns that
+   were identical in every respect but the rule between them — and a
+   rule alone is a seam, not a division. A wash of tone is what turns
+   the middle third into the lit page and the outer two into the margins
+   it sits on.
+
+   Both changes are deliberately small. The rails carry no content the
+   document does not already state, so anything strong enough to draw
+   the eye out there would be taking it away from the thing that
+   matters. The fill is 5% ink on white and 3% light on black; the rule
+   goes from 14% to 30%, which is the difference between a line you have
+   to look for and one you simply see. ------------------------------ */
+
+.rail {
+  background-color: var(--rail-fill);
+  border-color: var(--line-2);
 }
 
 /* ---- Edge glow ---------------------------------------------------
