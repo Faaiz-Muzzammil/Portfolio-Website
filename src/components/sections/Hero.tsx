@@ -116,18 +116,24 @@ export default function Hero() {
                 itself against. The full measure, because the statement is
                 the cover and there is nothing beside it to leave room for.
 
-                Ranged left at every width. The statement, the copy and both
-                buttons hang off one edge from a phone to an ultrawide, and
-                that edge is the only alignment on the screen — there is no
-                grid here to belong to, so it does all the work a grid would.
-                Only the type size changes below `lg`.
+                Ranged left everywhere except a phone. The statement, the copy
+                and both buttons hang off one edge, and that edge is the only
+                alignment on the screen — there is no grid here to belong to,
+                so it does all the work a grid would.
+
+                Below 640px it centres instead. A phone column is 310px wide
+                and the three lines come out at 100%, 94% and 62% of it; hung
+                off the left, that last line reads as the sentence trailing
+                away rather than landing. There is not enough measure down
+                there for a left edge to be an alignment rather than just
+                where the text happens to start.
 
                 The padding is tight on purpose. Three lines at this size plus
                 copy plus buttons is about 670px on a 900px-tall laptop, where
                 the stage is 672 — every gap on this screen is spent, and a
                 generous `py` here is what pushes the buttons under the fold
                 on exactly the machine most people will open this on. */}
-            <div className="hero-col my-auto w-full py-8 sm:py-10">
+            <div className="hero-col my-auto w-full py-8 text-center sm:py-10 sm:text-left">
                 <Parallax depth={0.14} fade>
                     <h1
                         id="home-title"
@@ -193,7 +199,7 @@ export default function Hero() {
                         read as one group, but on a phone the old figures were
                         crowding three elements that had a screen of room. */}
                     <p
-                        className="rise mt-10 max-w-[42ch] text-lead leading-[1.62] text-pretty text-ink-3 sm:mt-11"
+                        className="rise mx-auto mt-10 max-w-[42ch] text-lead leading-[1.62] text-balance text-ink-3 sm:mx-0 sm:mt-11 sm:text-pretty"
                         style={{ animationDelay: "0.5s" }}
                     >
                         <span className="text-ink">Full-stack apps and AI agents</span>
@@ -209,7 +215,7 @@ export default function Hero() {
                         two optional actions into a form. They wrap rather
                         than overflow on anything narrower. */}
                     <div
-                        className="rise mt-9 flex flex-wrap items-center gap-3 sm:gap-4"
+                        className="rise mt-9 flex flex-wrap items-center justify-center gap-3 sm:justify-start sm:gap-4"
                         style={{ animationDelay: "0.6s" }}
                     >
                         <Button

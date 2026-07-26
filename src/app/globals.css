@@ -1015,6 +1015,27 @@ body {
 @media (max-width: 639px) {
   .hero-line {
     line-height: 1.06;
+
+    /* Centred, on a phone and nowhere else. Everything above 640px
+       keeps the left edge, because above 640px there is enough measure
+       for a left edge to be an alignment rather than just where the
+       text happens to start. A phone column is 310px wide: the three
+       lines come out at 100%, 94% and 62% of it, and hung off the left
+       that last line reads as the sentence trailing away rather than
+       landing. Centred, the three lengths make a shape.
+
+       Both optical corrections come off with the alignment. The cap
+       sidebearing pull and the mark's hang exist to hold a left edge
+       true, and on a centred block they would only push the whole
+       thing a few pixels off the axis. `align-items: center` also
+       shrinks each mask to the width of its own line, which is what
+       keeps the clip tight around three lines of three lengths. */
+    align-items: center;
+    margin-left: 0;
+  }
+
+  .hero-mark {
+    margin-left: 0;
   }
 }
 
