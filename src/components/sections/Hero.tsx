@@ -181,9 +181,19 @@ export default function Hero() {
                         above is the position; this is the work. The two halves
                         of "both" are lifted to full ink out of a grey line —
                         the only highlight on the cover, and it is doing the
-                        same job the headline is, one size down. */}
+                        same job the headline is, one size down.
+
+                        Leading is 1.62 rather than the scale's 1.55. This is
+                        the only paragraph on the site that has to hold its own
+                        directly under display type, and next to a block set at
+                        1.06 it needs the contrast to read as prose rather than
+                        as a fourth line of the headline. The rhythm below it
+                        is 40 / 36 rather than 36 / 28 — the gaps still close
+                        as the type gets smaller, which is what makes a stack
+                        read as one group, but on a phone the old figures were
+                        crowding three elements that had a screen of room. */}
                     <p
-                        className="rise mt-9 max-w-[42ch] text-lead text-pretty text-ink-3 sm:mt-11"
+                        className="rise mt-10 max-w-[42ch] text-lead leading-[1.62] text-pretty text-ink-3 sm:mt-11"
                         style={{ animationDelay: "0.5s" }}
                     >
                         <span className="text-ink">Full-stack apps and AI agents</span>
@@ -199,7 +209,7 @@ export default function Hero() {
                         two optional actions into a form. They wrap rather
                         than overflow on anything narrower. */}
                     <div
-                        className="rise mt-7 flex flex-wrap items-center gap-3 sm:mt-9 sm:gap-4"
+                        className="rise mt-9 flex flex-wrap items-center gap-3 sm:gap-4"
                         style={{ animationDelay: "0.6s" }}
                     >
                         <Button

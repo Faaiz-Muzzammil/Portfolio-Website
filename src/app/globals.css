@@ -448,6 +448,27 @@ body {
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* A second clip, on the element that actually holds the content.
+     `overflow-x: clip` on the root is the primary guard and it stays,
+     but its behaviour on the root element specifically has been
+     unreliable in Safari, which is the one browser where a stray
+     overflow is not merely ugly — it rescales the whole page. `clip`
+     rather than `hidden` for the same reason it is `clip` on the root:
+     `hidden` would make this a scroll container and silently kill every
+     `position: sticky` on the site. Belt and braces; the real fix is
+     that nothing overflows in the first place. */
+  overflow-x: clip;
+
+  /* The notch, in landscape. `viewportFit: "cover"` in the layout lets
+     the page paint under the hardware cutouts — which is what makes the
+     ground reach every edge — so the content has to be inset back out
+     of them by hand. Zero in portrait and on every device without them,
+     so this costs nothing anywhere else. The fixed layers are
+     positioned against the viewport rather than against this, so the
+     grain, the haze and the edge glow still cover the full screen. */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* `text-rendering: optimizeLegibility` was set here and has been removed.
@@ -977,6 +998,26 @@ body {
   }
 }
 
+/* Leading opens up on a phone, and only on a phone.
+   ------------------------------------------------------------------
+   0.98 is set for display type: at 120px the lines want to lock into
+   one block with an edge, and any air between them reads as a gap.
+   At 39px — which is what 12.5% of a 310px column comes to — the same
+   figure is simply cramped. The eye is no longer reading a shape, it
+   is reading three lines of text, and three lines of text set solid on
+   a small screen look like a paragraph that has been squeezed.
+
+   1.06 is still tighter than any body setting on the site. It adds
+   about fourteen pixels across the block, which is also fourteen
+   pixels of the vertical slack the cover has going spare at this
+   width — the type gets easier to read and the block sits better in
+   the screen, from one number. */
+@media (max-width: 639px) {
+  .hero-line {
+    line-height: 1.06;
+  }
+}
+
 /* The turn.
    ------------------------------------------------------------------
    The copy is a rhetorical figure: two flat statements about other
@@ -1083,13 +1124,32 @@ body {
   }
 }
 
-/* One soft pool of light, set well off centre and pushed past the edges
-   of its box so what shows is the shoulder of it rather than a grey
-   circle sitting behind the words. */
+/* One soft pool of light, set well off centre so what shows is the
+   shoulder of it rather than a grey circle sitting behind the words.
+   ------------------------------------------------------------------
+   THE HORIZONTAL BLEED IS GONE, and it had to be. This was
+   `inset: -25% -40% 5% -45%` — 45% of the stage past the left edge and
+   40% past the right, on an element inside a stage that clips nothing.
+   That made the document about 1.85 times the width of the viewport.
+
+   On a desktop it was invisible, because `overflow-x: clip` on the root
+   swallowed it. On a phone it was the whole problem: iOS resolves the
+   layout viewport against the widest thing on the page and then scales
+   the result down to fit the screen, so one decorative gradient was
+   giving the entire site a horizontal scroller *and* rendering every
+   other element at roughly half the size it was designed at. Two
+   symptoms, one cause, neither of them looking like a gradient.
+
+   Nothing is lost by squaring it off. The gradient's core sits at 34%
+   with a 46% radius and fades out at 72% of that, so it has already
+   reached full transparency 74% of the way to the left edge — the bleed
+   was never showing anything. The vertical overflow stays: content above
+   the origin is not scrollable, and the bottom inset is positive, so
+   neither end can extend the page. */
 .hero-light {
   position: absolute;
   z-index: -1;
-  inset: -25% -40% 5% -45%;
+  inset: -25% 0 5% 0;
   pointer-events: none;
   background-image: radial-gradient(
     46% 46% at 34% 44%,
