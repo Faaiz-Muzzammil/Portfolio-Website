@@ -50,7 +50,16 @@ export default function Footer() {
                 makes a strip read as closed rather than as abandoned. */}
             <div className="border-t border-line-2 pt-8 pb-[calc(env(safe-area-inset-bottom)+2rem)] sm:pt-10 sm:pb-10">
                 <div className="mx-auto w-full max-w-site px-5 sm:px-8 xl:px-14">
-                    <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                    {/* Centred on a phone, split to the two edges from `sm`.
+                        Stacked and ranged left, the colophon line and the
+                        icon strip were two objects hugging the same margin
+                        with the width of the screen empty beside them — the
+                        line has nothing to its right and the icons have
+                        nothing to theirs, so neither reads as placed. On one
+                        row that emptiness is the space between them and it is
+                        doing a job; stacked, it is just a gap. Centring gives
+                        the pair an axis to share instead. */}
+                    <div className="flex flex-col items-center gap-7 text-center sm:flex-row sm:justify-between sm:gap-6 sm:text-left">
                         <p className="coord text-coord text-ink-3">
                             © {year} {personalInfo.name} · {personalInfo.location}
                         </p>
