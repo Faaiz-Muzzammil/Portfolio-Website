@@ -39,10 +39,17 @@
                    it inverts on hover. Contrast, not colour.
 
      NOW         — moving noise. Anything genuinely live is filled
-                   with flickering grain: the "open to work" mark,
-                   the role currently held, the reading-progress
-                   bar. Since the page is otherwise still, movement
-                   alone marks a thing as live.
+                   with flickering grain: the "open to work" mark and
+                   the role currently held. Nothing else on the page
+                   flickers, which is what lets those two read as
+                   live rather than as decoration.
+
+     WHERE       — the margins. The two rails carry the colour of
+                   whatever department is being read and a ruled
+                   scale that travels against the scroll. It is the
+                   only hue on the site and it is kept out at the
+                   edges of vision, where it can report position
+                   without a bar pinned over the page to do it.
 
    Emphasis anywhere on this site is a change of weight and
    nothing else. A heading is set at 300 and the word it turns on
@@ -117,6 +124,44 @@
   /* The masses that fill the outer margins. Ink in water on paper. */
   --edge-glow: rgba(10, 10, 10, 0.075);
 
+  /* ---- The department inks --------------------------------------------
+     The only hue on the site, and the two themes get different sets of
+     it rather than one set at two strengths.
+
+     BOTH SETS ARE LIGHT, and that is the correction that mattered most.
+     These were deep pigments — an oxblood, a bottle green, a near-navy —
+     on the reasoning that a margin should sit *under* the page and
+     therefore ought to be dark. It is the wrong reasoning, for a reason
+     specific to this site: the margins are grained. Grain is fine dark
+     speckle, and dark speckle over a dark colour has nothing to be
+     speckle against, so the texture disappeared into the ink and both
+     rails went flat and heavy — a painted bar where a sheet of tinted,
+     textured paper was wanted. A light tint keeps the noise legible in
+     it, and the noise is what stops the colour looking printed on.
+
+     THEY STILL DIFFER PER THEME, because a tint does opposite things on
+     the two grounds. On white it removes light, so the ink is diluted
+     into the paper and needs enough chroma left after that dilution to
+     read as a hue rather than as a warm or cool grey. On black it adds
+     light, and the same colour has nothing to borrow from — chroma is
+     the only thing separating a soft blue from a soft grey — so the dark
+     set is a touch brighter and a touch more saturated than the light
+     one. Written down that sounds backwards. On screen it is the only
+     way either set reads as a colour on its own ground.
+
+     Both stay under the measure. On the light theme the margins land
+     around 90% lightness against #FFFFFF paper; on the dark theme they
+     land at roughly two thirds the luminance of body copy and a little
+     over a third of a heading. The page remains the brightest thing on
+     the screen at every point in the scroll, in both themes, which is
+     the one rule none of this is allowed to break.
+
+     `home` has no entry in either set. The cover is not a colour. */
+  --tint-work: #CFA76B;
+  --tint-experience: #8DC5AE;
+  --tint-toolkit: #A79AD6;
+  --tint-contact: #D89BA5;
+
   /* The rails. Declared per theme rather than derived from the paper,
      because the two themes have to move in opposite directions to get
      the same result. On white there is room below the ground, so the
@@ -129,11 +174,11 @@
      an opaque rail would be the one dead surface on a textured page. */
   --rail-fill: rgba(10, 10, 10, 0.05);
 
-  /* The pool of light behind the opening line. On white it is a shadow
-     rather than a glow — light ground, so depth has to come from the
-     dark end — and it is kept under a tenth so it reads as the page
-     being lit unevenly rather than as a shape someone drew. */
-  --hero-glow: rgba(10, 10, 10, 0.085);
+  /* A `--hero-glow` lived here, lighting a pool behind the opening
+     line. It went with the cover's redesign: a soft mass of light
+     behind a headline is the one thing every dark template does, and
+     the cover now gets its depth from the type alone. Both themes'
+     declarations are gone rather than left unused. */
 
   /* Frosted panels. On white, glass has to be a touch *more* opaque
      than instinct suggests or the body copy loses its footing. */
@@ -257,6 +302,15 @@
   --grain-opacity: 0.035;
   --haze-opacity: 0.09;
 
+  /* A shade brighter and a shade more saturated than the light set, not
+     darker. See the note beside that set: on black a tint adds light,
+     and chroma is the only thing separating a soft colour from a soft
+     grey. */
+  --tint-work: #DCA96E;
+  --tint-experience: #8FD2BB;
+  --tint-toolkit: #B0A0E6;
+  --tint-contact: #E6A0AB;
+
   /* Light in fog rather than ink in water — carried harder, because a
      pure black margin swallows anything gentler. */
   --edge-glow: rgba(255, 255, 255, 0.085);
@@ -265,11 +319,6 @@
      theme's figure because a lift off pure black is far more visible
      than a wash over white. */
   --rail-fill: rgba(255, 255, 255, 0.032);
-
-  /* Now genuinely a light, and carried further: on black a pool this
-     soft is the only thing keeping the opening screen from reading as
-     a switched-off display. */
-  --hero-glow: rgba(255, 255, 255, 0.14);
 
   --glass-fill: rgba(20, 20, 20, 0.42);
   --glass-fill-alt: rgba(32, 32, 32, 0.46);
@@ -439,8 +488,38 @@ html {
      silently kills every `position: sticky` on the page. */
   overflow-x: clip;
   font-family: var(--font-text), ui-sans-serif, system-ui, sans-serif;
-  scrollbar-width: thin;
-  scrollbar-color: var(--line-2) transparent;
+
+  /* NO SCROLLBAR. The page is a printed sheet and a scrollbar is the one
+     piece of browser furniture that lands inside the composition — on a
+     wide screen it sits directly on top of the right-hand margin, which
+     is now carrying the colour, so it reads as a line drawn down the
+     department's own ink.
+
+     Firefox and old Edge take a property; Chrome, Safari and current
+     Edge take the pseudo-element below. Both are needed — neither one
+     covers every engine on its own. Nothing about scrolling itself
+     changes: the wheel, the trackpad, the keyboard, touch and
+     `scroll-behavior` all work exactly as they did, and the document is
+     still a normal scrolling document.
+
+     What is genuinely lost is the position and length cue a scrollbar
+     gives for free, and it is worth being clear that nothing replaces it
+     one-for-one. The margins report which department you are in by
+     colour and the nav bar marks the active section, so "where am I" is
+     still answered — but "how much is left" now is not. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Chrome, Safari, Edge. `width`/`height` as well as `display`, because a
+   bare `display: none` is ignored by some WebKit builds once any other
+   `::-webkit-scrollbar` rule exists on the page — and one does, a few
+   rules down, for the scroll containers inside the layout. */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 body {
@@ -565,17 +644,300 @@ body {
    the middle third into the lit page and the outer two into the margins
    it sits on.
 
-   Both changes are deliberately small. The rails carry no content the
-   document does not already state, so anything strong enough to draw
-   the eye out there would be taking it away from the thing that
-   matters. The fill is 5% ink on white and 3% light on black; the rule
-   goes from 14% to 30%, which is the difference between a line you have
-   to look for and one you simply see. ------------------------------ */
+   The neutral base is deliberately small: 5% ink on white and 3% light
+   on black, with the rule going from 14% to 30%, which is the difference
+   between a line you have to look for and one you simply see. It is what
+   the margins are before anything has been read, and on the cover it is
+   all they ever are.
+
+   The colour on top of it is not small, and that is the one place these
+   columns are allowed to be loud. There is no type out here to compete
+   with — see the note further down about what used to be — so the
+   margins can carry two-thirds of an ink without taking a single point
+   of contrast off anything anyone is reading.
+
+   HOW THEY OPEN. The page does not begin as three columns; it becomes
+   them, in two beats that do not overlap.
+
+     THE LINE      A hairline appears at the top of the inside edge of
+                   each rail and draws all the way down, over about a
+                   second and an eighth. Nothing else is on screen yet
+                   in the margins — this is the first mark the page
+                   makes out here, and it is the page ruling itself.
+
+     THE SURFACE   Half a second later, once the line has most of its
+                   length, the margin itself rises into place behind it:
+                   the neutral wash, the grain and the colour together,
+                   coming up forty-eight pixels and fading as they
+                   arrive.
+
+   THE ORDER IS THE ARGUMENT. A rule drawn first is a boundary being
+   set, and a surface arriving into a space that has already been
+   bounded is a margin. Reverse it — surface first, then a line down its
+   edge — and you get a grey bar that is retrospectively given an edge,
+   which is a panel, and this site does not have panels. It is also why
+   the line draws from the top and not from its own centre: a rule is
+   ruled, in one direction, with a straightedge.
+
+   IT MOVES RATHER THAN WIPING. The surface used to clip in horizontally
+   from the outer edge of the screen. It read as a shutter, which is
+   almost the opposite of what is wanted: a shutter is something closing
+   over the page, and this is a page settling onto its ground. Rising
+   and fading is the same movement the cover's own copy makes — see
+   `.rise` — and using it here is what makes the shell and the sentence
+   read as one arrival rather than two effects that happen to start at
+   the same moment. Same gate, same expo-out curve, same vocabulary.
+
+   The ground is drawn forty-eight pixels taller than the rail at both
+   ends so that it has somewhere to rise *from*. Without the overhang
+   the slide would open a gap at the bottom edge for the length of the
+   animation.
+
+   WHY THE SURFACE IS AN ELEMENT AND THE RULE IS NOT. The fill and the
+   rule used to be this element's `background-color` and its border, and
+   they could not stay there: a background and a border on one box can
+   only ever arrive together, and the sequence is the whole effect.
+
+   The rule is a pseudo-element — it is one flat hairline that only ever
+   draws. The surface is a real element, `.rail-ground`, because it is no
+   longer one thing: it is a neutral base, a colour that changes as the
+   page is read, and the page's own grain over both. The colour is driven
+   from JavaScript and has to be a node something can write to. See
+   `RailWash`.
+
+   BOTH ANIMATIONS FILL `backwards`, NOT `both`. `both` leaves the last
+   keyframe applied for the life of the page, and both last keyframes
+   are transforms — which means every subsequent scroll composites two
+   permanently promoted layers per rail to hold a transform that is
+   doing nothing. `backwards` holds the opening frame through the delay,
+   which is all that is needed, and lets the properties fall away
+   entirely once the sequence has run.
+
+   The ground sits at `z-index: -1`. `.rail` is fixed with a `z-index` of
+   its own, so it is a stacking context and the ground cannot escape it —
+   it is simply held behind the rule rather than painted over it, which
+   a positioned layer otherwise would be.
+   ------------------------------------------------------------------ */
 
 .rail {
-  background-color: var(--rail-fill);
-  border-color: var(--line-2);
+  /* A fixed, full-height strip painting several transformed children.
+     This site has produced a document-wide horizontal scroller from
+     exactly that shape before; the clip costs nothing and closes it off,
+     and it is also what lets the layers inside be drawn oversized so
+     they can drift without exposing an edge. */
+  overflow: hidden;
 }
+
+/* ---- The ground --------------------------------------------------
+   Three layers:
+
+     BASE    The neutral wash that makes the middle third read as the
+             lit page. Flat, fixed, and the only one of the three that
+             is there before anything has been read.
+
+     WASH    The section's colour, crossfading from one to the next as
+             the page is scrolled, and drifting slowly against it. The
+             one moving part, set from `RailWash`.
+
+     GRAIN   The site's own grain, over the top. Grey, exactly as it is
+             everywhere else, and static.
+
+   THE GRAIN IS NOT COLOURED AND DOES NOT MOVE, and both halves of that
+   are deliberate. Colouring the speckle itself was tried and it is the
+   wrong instrument: at this pitch the eye resolves the individual
+   coloured pixels instead of the texture, so the margin stops reading
+   as a tinted surface and starts reading as a display fault. The colour
+   belongs in the wash *under* the grain — a deep ink with the page's
+   ordinary noise sitting in it — which is also how the thing works on
+   paper. And grain that moves is how this page says "now"; that signal
+   is spent on the live marks and cannot also mean "you are scrolling".
+
+   The rails need their own copy of it because they sit at `z-20` and
+   the document's grain layer is at `z-1` — the margins paint over it,
+   and at the strength the wash is now carried at there would be no
+   texture left showing through from underneath. ------------------- */
+
+.rail-ground {
+  position: absolute;
+  /* Taller than the rail at both ends, so the rise has somewhere to come
+     from and never opens a gap at the bottom edge. `.rail` clips. */
+  inset: -48px 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--rail-fill);
+  animation: rail-ground-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s backwards;
+}
+
+@keyframes rail-ground-in {
+  from {
+    opacity: 0;
+    transform: translateY(48px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The grain, laid over the colour. Same image and same strength as the
+   document's own, so the two rails and the measure between them are
+   demonstrably the same paper. */
+.rail-ground::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--grain);
+  opacity: var(--grain-opacity);
+}
+
+/* Carried harder here than on the rest of the dark page. `--grain-opacity`
+   is 0.035 on this theme because the grain is dark speckle and the ground
+   is #000000, where there is almost nothing for it to be speckle against —
+   the figure is tuned for a surface that cannot show it. The margins are
+   no longer that surface: they are a lit colour now, which is the one
+   place on the dark theme where dark grain has something to read against,
+   and at the page's own figure it was being wasted. Doubling it is what
+   puts the texture back *in* the ink instead of over it. */
+[data-theme="dark"] .rail-ground::after {
+  opacity: 0.07;
+}
+
+/* ---- The tint ----------------------------------------------------
+   The two cross-fading colour layers, held together so `TintStack` can
+   swap them without either of them having to know the theme's strength.
+   It arrives with the ground it sits in — the rise carries all three
+   layers at once, which is the point of them being one element.
+
+   The strengths, on top of two sets of inks already chosen per theme.
+   Light lands the margins around 90% lightness — a clear tint that is
+   still plainly paper, with the grain still visible in it. Dark lands
+   them at roughly two thirds the luminance of body copy: lit enough to
+   be a colour, and far enough under the type that the measure is never
+   competing with its own margin. */
+.rail-tint {
+  position: absolute;
+  inset: 0;
+  opacity: 0.3;
+}
+
+[data-theme="dark"] .rail-tint {
+  opacity: 0.58;
+}
+
+/* Two of these at a time, cross-faded by `TintStack`. The ink arrives as
+   `color` and is written once when the pair changes; everything that
+   makes it a shape rather than a bar is in the gradient below and is
+   painted once at mount.
+
+   NO MASK, AND THAT IS THE POINT. This shape was a `mask-image` on the
+   parent, which is the obvious way to write it and the reason the page
+   stopped scrolling smoothly. A mask forces its element into its own
+   render surface and re-applies on every composite where the contents
+   change — and the contents here are an opacity animating on every
+   frame of every scroll. Baked into the layer's own gradient it costs
+   one paint and then nothing, forever.
+
+   The shape is doing two jobs. It falls off from the outer edge of the
+   screen toward the rule, so the colour is heaviest where there is only
+   margin and lightest where it meets the measure. And its core sits
+   high on the outer side rather than in the middle, which is what gives
+   the ink a light in it instead of laying it on flat — that used to be
+   a second drifting layer, and this is all that was ever visible of it.
+
+   `color-mix` rather than four hand-written rgba stops, because the ink
+   is `currentColor` and is not known until the pair changes. */
+.rail-tint-layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* The upper of the two — the only one whose opacity moves. See the note in
+   `TintStack` for why this is on one layer and not both. */
+.rail-tint-layer-over,
+.page-tint-layer-over {
+  will-change: opacity;
+}
+
+.rail-left .rail-tint-layer {
+  background-image: radial-gradient(
+    135% 62% at 0% 34%,
+    currentColor 0%,
+    color-mix(in srgb, currentColor 74%, transparent) 58%,
+    color-mix(in srgb, currentColor 52%, transparent) 100%
+  );
+}
+
+.rail-right .rail-tint-layer {
+  background-image: radial-gradient(
+    135% 62% at 100% 34%,
+    currentColor 0%,
+    color-mix(in srgb, currentColor 74%, transparent) 58%,
+    color-mix(in srgb, currentColor 52%, transparent) 100%
+  );
+}
+
+/* A RULED SCALE LIVED HERE. A fine tick every 56px down the outer edge
+   with a longer one every fifth, travelling against the scroll — the one
+   thing in the margin you could actually see moving, and the thing that
+   made the colour read as being *on* something rather than just being
+   there.
+
+   It is gone for the plainest possible reason: it was a tall tiled
+   background under a mask, transformed on every frame, in a fixed column
+   running the full height of the viewport beside body copy. Promoting it
+   helped and did not help enough. A moving ruler in the corner of the
+   eye is not worth a visible cost in scroll smoothness — the colour
+   changing as the page moves is the effect that was asked for, and it
+   does not need a second thing moving to prove that it is moving.
+
+   If it ever comes back it should come back as something that is drawn
+   once and translated, with the fade on a static parent rather than on
+   the element that moves — the mask travelling with the ticks was a bug
+   in the version that was here. */
+
+/* The rule down the inside edge, and the first mark the page makes out
+   here. It draws from the top and only from the top: a rule is ruled, in
+   one direction, with a straightedge — one that grows out of its own
+   middle is a bar opening, which is a different gesture entirely and not
+   one that means "boundary".
+
+   It leads the surface by half a second, which is most of its own length.
+   The line is finished, or nearly, before there is anything either side
+   of it for it to divide. */
+.rail::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  pointer-events: none;
+  width: 1px;
+  background-color: var(--line-2);
+  transform-origin: top center;
+  animation: rail-rule 1.15s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
+}
+
+.rail-left::after {
+  right: 0;
+}
+
+.rail-right::after {
+  left: 0;
+}
+
+@keyframes rail-rule {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+/* THERE IS NO MARGINALIA LEFT TO STYLE. Each rail carried a line of
+   vertical mono — name and role down the left, year and place down the
+   right — with an entrance and a drift of its own. All of it is gone.
+   Those labels existed to stop the outer thirds being empty, and the
+   outer thirds are now a colour that changes as the page is read and a
+   scale that moves while you read it. Two lines of 11px type in the
+   middle of that were the one thing in the margin asking to be *read*,
+   in the one column the eye should never be reading in. See
+   `PageFurniture`. */
 
 /* ---- Edge glow ---------------------------------------------------
    Two soft masses bleeding in from the left and right edges, sized in
@@ -585,7 +947,21 @@ body {
 
    Their centres are pushed off-canvas on purpose: what you see is the
    shoulder of each one, never the core, which is what stops them
-   reading as two grey circles stuck to the sides. ------------------ */
+   reading as two grey circles stuck to the sides.
+
+   IT DOES NOT MOVE, and it was briefly wrong about that. These drifted
+   on two long prime-numbered periods, on the argument that this file
+   calls them weather everywhere and stopped weather is a photograph. The
+   argument is fine and the cost was not: two viewport-sized gradient
+   layers, permanently promoted and animating whether or not anyone was
+   scrolling, competing for the compositor with the one thing on this
+   page that genuinely has to stay smooth. A background effect nobody can
+   consciously perceive does not get to take frames off the scroll.
+
+   The colour in the margins is the movement now. It is driven by the
+   reader rather than by a clock, which was always the better answer to
+   "the page should feel alive" — and it costs nothing when the page is
+   still, which a loop by definition cannot. ------------------------ */
 
 .edge-glow {
   position: fixed;
@@ -595,6 +971,73 @@ body {
   background-image:
     radial-gradient(42vw 68vh at -8vw 28%, var(--edge-glow) 0%, transparent 72%),
     radial-gradient(38vw 62vh at 108vw 76%, var(--edge-glow) 0%, transparent 72%);
+}
+
+/* ---- The department's colour on the ground -----------------------
+   The same ink the two margins are carrying, laid over the full
+   viewport behind everything that scrolls. `PageTint` drives the
+   colour; the strength and the shape are here.
+
+   A FIFTH OF WHAT THE RAILS TAKE. The margins can hold two-thirds of
+   an ink because nothing is read out there. This is behind body copy,
+   and every point of tint is a point of contrast off the text.
+
+   MASKED OUT OF THE MIDDLE. Weakest across the centre of the viewport,
+   full at the edges, so it pools around the measure instead of lying
+   under it. With the rails masked the same way from the outside in, the
+   colour ends up framing the reading column from every side at once —
+   which is what makes the page read as enclosed by the colour rather
+   than painted with it.
+
+   `z-index: 0` puts it over the haze and under both the grain and the
+   content, so the page's texture reads across the colour exactly as it
+   reads across the paper. ------------------------------------------ */
+
+/* A FIFTH OF WHAT THE MARGINS TAKE, and dark takes more than twice what
+   light does even after the inks have already been chosen per theme.
+   Both figures are set by the same test: the ground may shift far enough
+   that you can name the colour if you look for it, and not so far that
+   body copy loses contrast against it. On white the paper is the
+   brightest thing on the screen and any tint at all is spending its
+   contrast; on black the ground has nowhere to go but up, and a seventh
+   of an ink over #000000 is still a very dark surface. */
+.page-tint {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.09;
+}
+
+[data-theme="dark"] .page-tint {
+  opacity: 0.17;
+}
+
+/* Two at a time, cross-faded by `TintStack`.
+
+   THE MIDDLE IS EMPTY, and that is both the design and the optimisation.
+   The gradient starts at a fifth of the ink across the centre of the
+   viewport and reaches full only out at the edges, so the colour pools
+   around the measure rather than lying under it — the same instinct the
+   rails follow from the outside in, and between the two of them the
+   reading column ends up framed by the colour rather than painted with
+   it. It also means the region of the screen that is doing the most
+   work, the one with all the text in it, has almost nothing composited
+   over it.
+
+   This was a `mask-image` on the parent. See the note on
+   `.rail-tint-layer` for why it is a gradient now: a mask over a
+   viewport-sized element with an opacity animating inside it is a
+   full-screen render surface rebuilt on every frame of every scroll,
+   and it was the most expensive thing on the page. */
+.page-tint-layer {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    115% 80% at 50% 46%,
+    color-mix(in srgb, currentColor 20%, transparent) 0%,
+    currentColor 82%
+  );
 }
 
 /* ---- Live marks --------------------------------------------------
@@ -803,396 +1246,38 @@ body {
 /* ============================================================
    HOME
    ------------------------------------------------------------
-   The opening screen carries no running head — the numbering
-   below earns its keep across four departments of dense content,
-   and a cover that numbers itself 00 is a contents page with a
-   big name on it.
+   The opening screen. Almost nothing lives here any more, and
+   that is the design rather than an omission.
 
-   It is three lines of type, a line of copy under them and two
-   buttons — nothing else on the screen, and no rule anywhere on
-   it:
+   The cover used to own several hundred lines of this file: a
+   stage, a grid, a query column, a display scale with three
+   breakpoint overrides, a filled inversion mark with a wiped
+   second copy of its own text laid over it, a photographic frame
+   with an offset block behind it, a hand-drawn stroke, a set of
+   corner registration ticks, a rotating roundel and a caption.
 
-         Engineers Build It.
-         Marketers Sell It.
-         I Do Both.
+   All of it is gone. The cover is now a headline, a line of copy,
+   one button, one link and three marks — and every size, space
+   and colour it uses is declared as a token at the top of
+   `Hero.tsx`, so the whole screen can be retuned in one place
+   without opening this file at all.
 
-     THE FIGURE   Two flat statements about other people, then a
-                  third that is about the person whose site this
-                  is. The setting says the same thing as the words:
-                  the first two lines stay light and grey — a
-                  premise that fights for attention is a premise
-                  nobody accepts — and the third is heavier,
-                  larger, and struck through with a block of ink
-                  carrying paper type. The block wipes in from the
-                  left a beat after the line lands, inverting the
-                  letters as its edge passes them. It does not
-                  appear emphasised, it *becomes* emphasised, which
-                  is the difference between stating the joke and
-                  landing it.
+   WHAT IS LEFT HERE is the part that genuinely cannot live in a
+   component: the masked row and the two keyframes the entrance
+   runs on, both further down under THE ENTRANCE, and both shared
+   with the department headings anyway. Everything else the cover
+   needs it now expresses in tokens and utilities.
 
-     SCALE        The three lines are set at about seven eighths of
-                  the measure — roughly 165px on a 1920 display,
-                  eight times the size of anything else on the
-                  screen. That is not excess, it is the brief: this
-                  sentence is the only claim the cover makes, so it
-                  is given the whole cover to make it in. The
-                  figure is arithmetic rather than taste — see
-                  `.hero-line`.
+   THE ONE HUE. The turn — "I Do Both." — is set in vermilion, the
+   second ink of two-colour letterpress, and it is the only hue on
+   any screen of this site outside the margins. It is declared in
+   `Hero.tsx` with `light-dark()` so it follows `color-scheme`, and
+   it comes out darker on paper than on the dark ground: 5.15:1
+   and 6.01:1 respectively, both clear of AA.
 
-     ONE BLOCK    Statement, copy, actions: one left edge, gaps
-                  closing as the type gets smaller. Nothing is
-                  pinned to the foot of the screen and no rule runs
-                  through the middle of it. It is one statement, so
-                  it is set as one object.
-
-     TWO VOICES   Display for the statement, body for the copy and
-                  the two buttons. No mono here at all: mono is
-                  this site's voice for data, and a cover carrying
-                  no counts, no badges and no dates has no data on
-                  it to set. The wordmark that used to open the
-                  screen is gone with them — the nav sits a few
-                  pixels above where it stood, and a cover with a
-                  name at the top and a statement in the middle is
-                  a page introducing itself twice.
-
-     ARRIVAL      The three lines are clipped and slide up from
-                  below their own baselines, 0.1s apart; the copy
-                  and the buttons fade up twelve pixels behind
-                  them. Big type is never faded in — at this size a
-                  crossfade shows half-drawn letterforms and reads
-                  as a font that has not loaded. It is CSS, so it
-                  is right on the first paint rather than after
-                  hydration, and it is the same reveal the
-                  department headings get from GSAP further down.
-
-     DEPTH        Two layers leaving at different speeds as the
-                  cover scrolls away — the statement at a seventh
-                  of a screen, the copy and buttons at half that,
-                  both fading. Parallax is a difference, so one
-                  layer would be nothing and four would be a
-                  slideshow. It is a thing you feel rather than
-                  watch, and it is off entirely under
-                  `prefers-reduced-motion`.
-
-     THE EMPTY    Whatever the type does not use is left empty. A
-     SPACE        blob, a portrait, a grid of cards, a circle of
-                  light, a row of counts and an availability badge
-                  have each been tried here and each been cut:
-                  anything with a shape of its own is something to
-                  look at instead of the sentence. The margin is
-                  the loudest thing a page can give a headline.
-
-     LIGHT        One soft pool behind the type instead of a
-                  panel, a border or a card. It gives the screen
-                  depth without drawing a single edge.
-   ============================================================ */
-
-/* The screen fills the window exactly, so the rule that opens Work
-   lands on the fold rather than peeking above it. `svh`, not `vh`, so
-   a phone's collapsing address bar can only ever leave this shorter
-   than the window rather than pushing the button off the bottom.
-
-   The subtracted values are the opening section's own padding: the
-   chrome offset it clears at the top, and `pb-14` / `sm:pb-20` at the
-   foot. They are the one thing in this file that has to be kept in
-   step with a component. */
-.hero-stage {
-  min-height: calc(100svh - var(--scroll-offset) - 3.5rem);
-}
-
-@media (min-width: 640px) {
-  .hero-stage {
-    min-height: calc(100svh - var(--scroll-offset) - 5rem);
-  }
-}
-
-/* The statement measures itself against its own column, not against
-   the viewport. `vw` was the wrong ruler: the rails open at 1280 and
-   take 6rem a side before they have any spare width to give, so a 1280
-   screen leaves the type *less* room per vw than a 1024 one does, and
-   no single vw figure could serve both. `cqw` reads the column the type
-   is actually set in.
-
-   8.8% of that column sets the longest of the three lines to about two
-   thirds of the measure at every width — roughly 125px on a 1920
-   display. It has come down twice: 11.7% filled the page to within
-   300px of the right rail, 10.4% to within 350, and both read as a
-   statement crammed onto a page rather than set on one. Two thirds
-   leaves a full third of the measure as margin, and margin is what
-   tells the eye that the size was chosen rather than reached.
-
-   Big type does not need to be as big as it can be. Past a certain
-   point the reader stops reading the sentence and starts reading the
-   letters, and the sentence is the whole cover.
-
-   `15vh` guards the other axis. Three lines of 8.8cqw on a 1920×800
-   display would still be most of a 570px stage, so on anything short
-   the height decides the size instead of the width.
-
-   Leading is 0.98. Solid or tighter would have the descender of the
-   "g" in "Engineers" sitting in the cap-height of "Marketers" on the
-   line below — 0.98 leaves 0.26em of clearance against a 0.22em
-   descender, which is as close as this sentence can be set without
-   the two lines touching. Checked against these words, not assumed.
-
-   IT IS A FLEX COLUMN, and that is load-bearing rather than
-   stylistic. Each line is wrapped in a mask that pads itself 0.16em
-   at the top and 0.26em at the bottom and takes the same amounts back
-   as negative margins, so the clip has room for ascenders and
-   descenders without costing the layout a pixel. Between two normal
-   block siblings those negative margins *collapse* — the browser
-   keeps the more negative of the pair and discards the other, which
-   quietly handed every gap in the block an extra 0.16em and set the
-   sentence at an effective 1.14 instead of 0.98. Flex items do not
-   collapse their margins. The padding and the pull now cancel exactly,
-   which is the only reason the leading you read here is the leading
-   that renders.
-
-   The negative left margin is optical, not layout: at 150px the left
-   sidebearing of a cap E is several pixels of air, and without the
-   correction the sentence sits visibly indented from the wordmark and
-   the buttons that share its edge. */
-.hero-line {
-  display: flex;
-  flex-direction: column;
-  font-family: var(--font-heading), "Helvetica Neue", sans-serif;
-  font-size: clamp(2rem, min(8.8cqw, 15vh), 9rem);
-  font-weight: 300;
-  line-height: 0.98;
-  letter-spacing: -0.045em;
-  margin-left: -0.03em;
-  text-wrap: balance;
-}
-
-/* Narrow screens get a larger share of their column, not the same one.
-   ------------------------------------------------------------------
-   `cqw` holds the type at a fixed *proportion* of the measure, which is
-   right on a wide screen and wrong on a narrow one. A 393px phone has a
-   353px measure and no rails to give away; 8.8% of it is 31px. Type
-   that reads as enormous across a laptop reads as body copy on a phone,
-   because the thing that made it enormous was the width it had to
-   itself, and a phone has none to spare.
-
-   12.5% is a ceiling rather than a preference. The longest line is
-   7.5em as drawn, so it would fill its column exactly at 13.3%; 12.5
-   leaves about 6% as right margin, which is the least a line this size
-   can end on without looking like it ran out of room. The height guard
-   drops to 12vh over the same range, for the landscape phone this would
-   otherwise fill twice over.
-
-   THE BREAKPOINT IS 1024, NOT 640. It was `sm`, which meant a 700 or
-   800px window — a small laptop, a tablet, a phone in landscape, a
-   desktop browser dragged narrow — got the wide-screen proportion in a
-   column with none of the width that proportion assumes.
-
-   ONLY THE SIZE CHANGES. This was briefly centred below the breakpoint
-   too and it is not any more: the cover is one left edge from the
-   phone to the ultrawide, and the statement, the copy and the buttons
-   all hang off it. Centring made the block a shape rather than a
-   statement, and it broke the one alignment the whole screen is built
-   on. The optical corrections stay in place with it — they are what
-   holds that edge true. */
-@media (max-width: 1023px) {
-  .hero-line {
-    font-size: clamp(1.75rem, min(12.5cqw, 12vh), 7rem);
-  }
-}
-
-/* Leading opens up on a phone, and only on a phone.
-   ------------------------------------------------------------------
-   0.98 is set for display type: at 120px the lines want to lock into
-   one block with an edge, and any air between them reads as a gap.
-   At 39px — which is what 12.5% of a 310px column comes to — the same
-   figure is simply cramped. The eye is no longer reading a shape, it
-   is reading three lines of text, and three lines of text set solid on
-   a small screen look like a paragraph that has been squeezed.
-
-   1.06 is still tighter than any body setting on the site. It adds
-   about fourteen pixels across the block, which is also fourteen
-   pixels of the vertical slack the cover has going spare at this
-   width — the type gets easier to read and the block sits better in
-   the screen, from one number. */
-@media (max-width: 639px) {
-  .hero-line {
-    line-height: 1.06;
-
-    /* Centred, on a phone and nowhere else. Everything above 640px
-       keeps the left edge, because above 640px there is enough measure
-       for a left edge to be an alignment rather than just where the
-       text happens to start. A phone column is 310px wide: the three
-       lines come out at 100%, 94% and 62% of it, and hung off the left
-       that last line reads as the sentence trailing away rather than
-       landing. Centred, the three lengths make a shape.
-
-       Both optical corrections come off with the alignment. The cap
-       sidebearing pull and the mark's hang exist to hold a left edge
-       true, and on a centred block they would only push the whole
-       thing a few pixels off the axis. `align-items: center` also
-       shrinks each mask to the width of its own line, which is what
-       keeps the clip tight around three lines of three lengths. */
-    align-items: center;
-    margin-left: 0;
-  }
-
-  .hero-mark {
-    margin-left: 0;
-  }
-}
-
-/* The turn.
-   ------------------------------------------------------------------
-   The copy is a rhetorical figure: two flat statements about other
-   people, then a third that is about the person whose site this is.
-   The setting says the same thing, so the first two lines are set
-   light and grey and the third arrives light and grey with them — then
-   climbs to 800 and to full ink over a second while you are reading
-   it. The line does not appear emphasised; it *becomes* emphasised,
-   which is the difference between a design that states the joke and
-   one that lands it.
-
-   It runs on the weight axis, so nothing reflows around it but the
-   line's own width — and it is the last line, so nothing below it
-   moves at all.
-
-   CSS rather than GSAP on purpose: it is above the fold on the first
-   paint and cannot wait for a bundle to hydrate. `both` fill holds it
-   light through the delay, and leaves it at 800 under
-   `prefers-reduced-motion`, where the duration is crushed to nothing
-   and the line simply is where it ends up.
-
-   The delay waits for the line to finish sliding in. Starting the
-   climb underneath the entrance puts two movements on one line and the
-   reader sees neither. */
-/* The turning line is set a tenth larger than the two above it. Two
-   jobs, one adjustment. It is a crescendo — light and small, light and
-   small, heavy and large — so the payoff is physically the biggest
-   thing on the page and not merely the boldest. And it is ballast:
-   "I Do Both." is barely three fifths the width of the lines above it,
-   so at a single size the block tapers away at the bottom and reads as
-   a paragraph running out rather than as a statement landing.
-
-   Its mask is given more clearance than the other two, because this
-   line carries a filled block that stands proud of the type on all
-   four sides, and the pull at the top is 0.06em short of the padding
-   on purpose — that is the gap that keeps the block's top edge clear
-   of the baseline of "Marketers Sell It." above it. */
-.hero-line-turn {
-  font-size: 1.1em;
-  padding-block: 0.26em 0.3em;
-  margin-block: -0.2em -0.3em;
-}
-
-/* The mark.
-   ------------------------------------------------------------------
-   A block of ink with paper-coloured type in it — the site's own
-   inversion, at headline size. It is square where the buttons are
-   pills and it is 160px where they are 15px, which is what keeps a
-   filled shape in the middle of a headline from reading as something
-   you can click.
-
-   It hangs left by exactly its own left padding, so the block bleeds
-   into the margin and the *letters* stay on the same edge as the two
-   lines above and the buttons below. Aligning the block instead would
-   indent the sentence at the one line that has to look most certain
-   of itself.
-
-   THE WIPE. The bar does not fade in and it does not scale: a second
-   copy of the line, ink-filled and paper-lettered, is laid exactly
-   over the first and revealed left to right with `clip-path`. Text
-   and background arrive together at the wipe's edge, so the words
-   invert as it passes rather than the block landing first and the
-   letters changing colour under it a moment later. It is why there
-   are two copies of these three words in the markup — the second is
-   `aria-hidden` and unselectable, and exists only to be wiped in.
-
-   The delay lets the line finish sliding up. Wiping a bar across a
-   line that is still moving is two gestures at once, and the reader
-   resolves neither. */
-.hero-mark {
-  position: relative;
-  display: inline-block;
-  padding: 0.1em 0.14em 0.12em;
-  margin-left: -0.14em;
-  color: var(--ink);
-  font-variation-settings: "wght" 800;
-  letter-spacing: -0.05em;
-  /* Both copies, not just the overlay. If the underlying line ever
-     wrapped while the wiped copy did not, the two would be a line
-     apart and the mark would paint over the wrong words. It has room
-     at every width the site supports; this is the guarantee, not the
-     expectation. */
-  white-space: nowrap;
-}
-
-.hero-mark-flip {
-  position: absolute;
-  inset: 0;
-  padding: inherit;
-  background: var(--ink);
-  color: var(--paper);
-  white-space: nowrap;
-  user-select: none;
-  clip-path: inset(0 100% 0 0);
-  animation: mark-wipe 0.72s cubic-bezier(0.76, 0, 0.24, 1) 1.05s both;
-}
-
-@keyframes mark-wipe {
-  from {
-    clip-path: inset(0 100% 0 0);
-  }
-  to {
-    clip-path: inset(0);
-  }
-}
-
-/* One soft pool of light, set well off centre so what shows is the
-   shoulder of it rather than a grey circle sitting behind the words.
-   ------------------------------------------------------------------
-   THE HORIZONTAL BLEED IS GONE, and it had to be. This was
-   `inset: -25% -40% 5% -45%` — 45% of the stage past the left edge and
-   40% past the right, on an element inside a stage that clips nothing.
-   That made the document about 1.85 times the width of the viewport.
-
-   On a desktop it was invisible, because `overflow-x: clip` on the root
-   swallowed it. On a phone it was the whole problem: iOS resolves the
-   layout viewport against the widest thing on the page and then scales
-   the result down to fit the screen, so one decorative gradient was
-   giving the entire site a horizontal scroller *and* rendering every
-   other element at roughly half the size it was designed at. Two
-   symptoms, one cause, neither of them looking like a gradient.
-
-   Nothing is lost by squaring it off. The gradient's core sits at 34%
-   with a 46% radius and fades out at 72% of that, so it has already
-   reached full transparency 74% of the way to the left edge — the bleed
-   was never showing anything. The vertical overflow stays: content above
-   the origin is not scrollable, and the bottom inset is positive, so
-   neither end can extend the page. */
-.hero-light {
-  position: absolute;
-  z-index: -1;
-  inset: -25% 0 5% 0;
-  pointer-events: none;
-  background-image: radial-gradient(
-    46% 46% at 34% 44%,
-    var(--hero-glow) 0%,
-    transparent 72%
-  );
-}
-
-/* The measure the sentence is set against. Declaring the query
-   container here rather than at the call site keeps the two facts
-   together: this is the width, and `.hero-line` is the thing measured
-   against it. */
-.hero-col {
-  container-type: inline-size;
-}
-
-/* An orb lived here: two rotating masses of `--blob-tint` filling the
-   right half of the cover. It is gone, and the empty half is the
-   design rather than a gap in it — a mass of light with no edge is
-   still a shape, and a shape opposite a sentence is something to look
-   at instead of it. Nothing has replaced it. If this space ever needs
-   filling again, it is worth remembering that it did not. */
+   It marks one line and nothing else. The moment a second thing
+   on this page takes it, it stops being emphasis and becomes a
+   palette. ==================================================== */
 
 /* ---- The entrance ------------------------------------------------
    Two movements, and which one a thing gets is decided by its size.
@@ -1238,10 +1323,17 @@ body {
 }
 
 /* The clipped box. Padded top and bottom and pulled back by the same
-   amount, so the mask has room for the ascenders and the tail of the
-   "g" in "grow." without adding a pixel to the layout — at
-   `line-height: 1` the line box is exactly one em and would otherwise
-   shear the descender straight off. */
+   amount, so the mask has room for the ascenders and the tail of a
+   "g" without adding a pixel to the layout — at this leading the line
+   box is close enough to one em that it would otherwise shear the
+   descender straight off.
+
+   ON THE COVER IT MASKS A BEAT, NOT A LINE, and that is the whole
+   structure of the headline. The two setups share one of these
+   because they are one unit of the rhythm; the turn gets its own.
+   Above 1024px the pair is a single line inside its mask and below it
+   the pair wraps to two — either way it slides in as one object,
+   because it is one object. */
 .line-mask-display {
   display: block;
   overflow: hidden;
@@ -1308,9 +1400,20 @@ body {
   transform: translateY(130%);
 }
 
-.js-loading .hero-mark-flip {
+/* The shell is held at the same gate as the cover, and for the same
+   reason. It is the more important of the two to hold: a visitor who
+   arrives after the wipe has already run has not merely missed an
+   animation, they have missed the page explaining its own layout, and
+   three columns that were simply always there say nothing. */
+.js-loading .rail-ground {
   animation: none;
-  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+  transform: translateY(48px);
+}
+
+.js-loading .rail::after {
+  animation: none;
+  transform: scaleY(0);
 }
 
 /* A reader who has asked for no motion should not be shown a blank
@@ -1324,9 +1427,14 @@ body {
     transform: none !important;
   }
 
-  .js-loading .hero-mark-flip {
+  /* The shell too. There is no arrival to hold for a reader who has
+     asked not to be shown one, so the three columns are simply already
+     three columns. */
+  .js-loading .rail-ground,
+  .js-loading .rail::after {
     animation: none !important;
-    clip-path: inset(0) !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 
@@ -1421,8 +1529,36 @@ body {
   opacity: 0;
 }
 
+/* ---- Rules that draw ---------------------------------------------
+   A hairline that fades up is a hairline appearing. A hairline that
+   draws from its left edge is a hairline being ruled, which is what the
+   device actually is on paper — and it is the same gesture `.rule-draw`
+   already makes under a link on hover, so the page has one idea about
+   what a rule does rather than two.
+
+   It works at every width, which is the other reason it is here. The
+   rails are the ones that open, and they exist only above 1280px; this
+   runs four times down the page on a phone.
+
+   `transform-origin` is declared unconditionally so the resting state
+   and the tween cannot disagree about which end it grows from — GSAP
+   sets `scaleX` but inherits the origin from the cascade, and a rule
+   drawing from its centre is a rule that looks like it is being pulled
+   apart. The resting state only has to cover the window before the
+   tween exists; once `Reveal` has run, its `from` state holds the
+   element and this stops mattering. ------------------------------- */
+
+[data-sweep] {
+  transform-origin: left center;
+}
+
+[data-animate]:not([data-ready]) [data-sweep] {
+  transform: scaleX(0);
+}
+
 /* Progressive enhancement: if JS never runs, show everything. */
 .no-js [data-animate] .line-inner,
+.no-js [data-animate] [data-sweep],
 .no-js [data-animate] {
   opacity: 1 !important;
   transform: none !important;
@@ -1550,6 +1686,7 @@ body {
   }
 
   [data-animate] .line-inner,
+  [data-animate] [data-sweep],
   [data-animate] {
     opacity: 1 !important;
     transform: none !important;

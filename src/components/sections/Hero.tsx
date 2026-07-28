@@ -1,250 +1,354 @@
-import { ArrowDown, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import type { CSSProperties } from "react";
+import Image from "next/image";
+import {
+    ArrowDown,
+    ArrowUpRight,
+    EnvelopeSimple,
+    GithubLogo,
+    LinkedinLogo,
+} from "@phosphor-icons/react/dist/ssr";
 
-import { cn } from "@/lib/cn";
+import { personalInfo, socialLinks } from "@/data";
 import Button from "@/components/ui/Button";
-import Parallax from "@/components/motion/Parallax";
+
+/* ══════════════════════════════════════════════════════════════════════
+   TOKENS
+   Everything tunable lives here. Nothing below this block carries a
+   hard-coded size, space or colour, so the hero can be retuned without
+   touching a line of markup.
+   ══════════════════════════════════════════════════════════════════════
+
+   TYPE SCALE — major third, ratio 1.25, from a 16px base.
+
+     1.00rem  16px     body            ← base
+     1.25rem  20px     lead
+     1.56rem  25px     —
+     1.95rem  31px     display floor (375px)
+     3.05rem  49px     —
+     4.25rem  68px     display ceiling, single column
+     6.50rem  104px    display ceiling, two column
+
+   The display sizes are fluid between real rungs of that same ladder;
+   `cqw` interpolates along it. Two figures, because the headline sits in
+   the full measure below 1024px and in a column narrowed by the photo
+   above it.
+
+   THE PHOTO MADE THE HEADLINE BIGGER, which is the opposite of what
+   adding an image to a hero usually does, and it is the whole reason
+   this layout works. Going from two lines to three halves the longest
+   line from 32 characters to 16 — so even after the photo takes a
+   quarter of the measure, the type is sized against an 8em line instead
+   of a 16em one. 9.5cqw of the narrowed column comes out around 90px
+   where the two-line version was 82px in the full measure.
+
+   SPACE SCALE — 4px base: 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64.
+
+   COLOUR — the page's ink tokens, plus exactly one hue.
+
+   THE ACCENT is vermilion, the second ink of two-colour letterpress: on
+   a page built as a black-and-white printed sheet it is the one hue that
+   reads as printing rather than as a framework's primary. `light-dark()`
+   follows the `color-scheme` the theme already sets, darker on paper and
+   brighter on the dark ground, so both clear AA — 5.15:1 on white,
+   6.01:1 on black.
+
+   It marks the turn and nothing else. */
+const TOKENS = {
+    /* Type */
+    "--t-body": "1rem",
+    "--t-lead": "1.25rem",
+    "--t-display": "clamp(1.95rem, 11.5cqw, 4.25rem)",
+    "--t-display-wide": "clamp(2.5rem, 9.5cqw, 6.5rem)",
+
+    /* Space */
+    "--s-1": "0.25rem",
+    "--s-2": "0.5rem",
+    "--s-3": "0.75rem",
+    "--s-4": "1rem",
+    "--s-6": "1.5rem",
+    "--s-8": "2rem",
+    "--s-12": "3rem",
+
+    /* The figure's column. Floor and ceiling, so it can never thin into a
+       strip too narrow to carry a person, nor widen far enough to start
+       wrapping the setup lines. */
+    "--fig-min": "15rem",
+    "--fig-max": "24rem",
+
+    /* Where the picture stops being a picture. Solid to 58%, gone by the
+       foot — the shirt and the balcony wall are already near-black, so
+       the grade finishes a dissolve the photograph starts on its own. */
+    "--fig-fade": "58%",
+
+    /* Colour — one hue, and only on the turn. */
+    "--hero-accent": "light-dark(#C43F1B, #E85C33)",
+
+    /* Motion. Longest path = 140ms delay + 440ms = 580ms. */
+    "--m-line": "440ms",
+    "--m-fade": "380ms",
+    "--m-fig": "280ms",
+
+    /* THE STAGE. 72svh is a floor, not a height: the text block is three
+       beats tall now and the figure stretches to meet it, so on most
+       screens the content sets the height and this never applies. It
+       exists so the cover cannot collapse into a band on a very short
+       window. It also leaves the Work rule just above the fold, which —
+       with no proof block on this screen — is the only thing telling a
+       stranger there is something behind the claim. */
+    "--stage": "calc(72svh - var(--scroll-offset))",
+} as CSSProperties;
+
+const SOCIAL_ICONS = {
+    github: GithubLogo,
+    linkedin: LinkedinLogo,
+    mail: EnvelopeSimple,
+} as const;
+
+/* One beat per line. Three masked rows, one for each beat of the figure,
+   and the same three at every width — the responsive line-break that used
+   to sit inside the setup is gone, because three lines is right on a
+   phone and right on a 1920 alike.
+
+   `turns` marks the payoff. It is the only row that takes the accent and
+   the accent is the only thing that distinguishes it: same face, same
+   weight, same size, same left edge. */
+const BEATS = [
+    { text: "Engineers Build.", turns: false, delay: "0ms" },
+    { text: "Marketers Sell.", turns: false, delay: "70ms" },
+    { text: "I Do Both.", turns: true, delay: "140ms" },
+];
 
 /**
  * The cover.
  *
- *     Engineers Build It.
- *     Marketers Sell It.
- *     ▓▓▓▓▓▓▓▓▓▓▓▓▓
- *     ▓ I Do Both. ▓
- *     ▓▓▓▓▓▓▓▓▓▓▓▓▓
+ *     Engineers Build.          ┌──────────────┐
+ *     Marketers Sell.           │              │
+ *     I Do Both.        ← hue   │   [FIGURE]   │
+ *                               │              │
+ *     I ship full-stack apps…   │              │
+ *                               │   ░░░░░░░░   │  ← graded out
+ *     [ View Work ↓ ]  Read CV  └──────────────┘
+ *     ○ ○ ○
  *
- *     Full-stack apps and AI agents, then the growth work
- *     that gets them used.
+ * ── THE THREE BEATS ───────────────────────────────────────────────────
  *
- *     [ View Work ↓ ]  [ Read CV ↗ ]
+ * Setup, setup, turn — one line each, and the structure is carried by the
+ * line breaks rather than by decoration. The two setups are 16 and 15
+ * characters: stacked flush left in one weight and one colour they form a
+ * matched rectangle, and the eye reads them as a pair because they are
+ * the same shape. The turn separates by being the only hue on the screen
+ * and the only short line. That is one emphasis device, and position and
+ * brevity — both free — do the rest.
  *
- * THE FIGURE. The copy is a rhetorical turn: two flat statements about other
- * people, then a third about the person whose site this is. The setting says
- * the same thing the words do. The first two lines are light, grey and
- * unremarkable — they are the premise, and a premise that fights for
- * attention is a premise nobody accepts. The third is heavier, larger, and
- * struck through with a block of ink carrying paper-coloured type: the
- * site's own inversion, at headline size.
+ * "Engineers Build." over "Engineers Build It." — the setups come out at
+ * four syllables each against the turn's three, so the pair scans
+ * identically and the turn lands short. "It" also refers forward to
+ * nothing, which is a stumble on the most-read line of the site.
  *
- * The block is not there when the line arrives. A second copy of the words,
- * ink-filled and paper-lettered, is laid exactly over the first and wiped in
- * from the left a beat later, so the letters invert as the edge passes them.
- * The line does not appear emphasised — it *becomes* emphasised, in front of
- * you, which is the difference between a design that states the joke and one
- * that lands it.
+ * ── THE FIGURE ────────────────────────────────────────────────────────
  *
- * SCALE. The two setup lines run to about two thirds of the measure — around
- * 125px on a 1920 display — and the turn is set a tenth larger again. It is
- * measured in `cqw` against its own column rather than in `vw`, because the
- * rails open at 1280 and eat width the viewport does not know it has lost.
- * The figure has come down twice from seven eighths: big type does not need
- * to be as big as it can be, and the third of the measure left over as
- * margin is what tells the eye the size was chosen rather than reached.
+ * It is anchored, not floated. Its top edge is the top edge of the first
+ * masked row and its bottom edge is the bottom of the social row — the
+ * grid stretches it between the two, so both anchors are structural and
+ * neither can drift when the copy changes. The top stays hard because it
+ * *is* an alignment; only the foot is graded.
  *
- * The crescendo does two things at once. It makes the payoff physically the
- * biggest thing on the page rather than merely the boldest, and it stops the
- * block tapering: "I Do Both." is barely three fifths the width of the lines
- * above it, so at a single size the sentence ran out at the bottom instead
- * of landing. A tenth gives it a base without turning it into a second
- * headline.
+ * IT DOES NOT COMPETE FOR FIRST FIXATION. Three things see to that: it is
+ * ranged right, where a left-to-right reader arrives last; it is
+ * greyscale on a page whose only colour event is the line beside it; and
+ * it enters 300ms after the headline has finished. The dissolve at its
+ * foot also costs it the hard rectangle that would otherwise make it the
+ * most object-like thing on the screen.
  *
- * HIGHLIGHT. One, in the line under the statement, where the two halves of
- * "both" are lifted to full ink out of a grey sentence. It says the same
- * thing the headline says, one size down, and it is the only place on this
- * screen where anything is picked out.
+ * ── WHAT IS NOT HERE ──────────────────────────────────────────────────
  *
- * WHAT IS NOT HERE. No rules, no badges, no counts, no cards, no blob. Each
- * of those was tried on this screen and cut. A cover makes one claim; every
- * additional object on it is something to look at instead of the claim.
- *
- * HOW IT ARRIVES. Each line is clipped and slides up from below its own
- * baseline, 0.1s apart; the copy and the buttons fade up twelve pixels
- * behind them. Nothing large ever fades — at this size a crossfade shows the
- * reader half-drawn letterforms and reads as a font that has not loaded. All
- * of it is CSS, so the cover is animating on the first paint instead of
- * waiting to hydrate, and it is the same masked reveal `AnimatedText` gives
- * every department heading below.
- *
- * HOW IT LEAVES. Two parallax layers: the statement gives up a seventh of a
- * screen as the cover scrolls out, the copy and buttons half of that, both
- * fading. Depth is a difference — one layer moving is not parallax, it is a
- * moving layer. It is off below 768px, where a phone viewport is barely
- * shorter than the section and the drift has no distance to happen over.
- *
- * BELOW 1024px only the size changes. The type takes a larger share of the
- * measure — `cqw` holds a fixed *proportion*, and the thing that makes this
- * type feel enormous on a laptop is the width it has to itself, which a
- * narrow screen has none of to give. 8.8% of a 353px phone column is 31px:
- * the same proportion that reads as a statement across a desktop reads as
- * body copy on a phone. 12.5% is the ceiling that column allows.
- *
- * The breakpoint is `lg`, not `sm`. At `sm` a 700 or 800px window — a small
- * laptop, a tablet, a phone in landscape, a desktop browser dragged narrow —
- * was getting the wide-screen proportion in a column with none of the width
- * that proportion assumes.
- *
- * IT DOES NOT CENTRE. It did briefly, and it was wrong: the cover is one
- * left edge from the phone to the ultrawide, with the statement, the copy
- * and both buttons hanging off it. There is no grid on this screen, so that
- * edge does all the work a grid would, and centring the narrow case broke
- * the only alignment the design has. The optical corrections stay in place
- * at every width for the same reason — they are what holds the edge true.
+ * No frame, border, offset block or shadow. No caption, registration
+ * mark, roundel or drawn stroke. No parallax, tilt, hover reveal or
+ * overlay. The graded foot is the only effect on the image and the
+ * accent is the only colour on the page.
  */
-
-/* The three lines, and which of them turns. Authored breaks rather than a
-   wrapped paragraph: the figure only works if the lines break exactly here,
-   and `text-wrap` has no opinion about rhetoric. */
-const LINES = [
-    { text: "Engineers Build It.", turns: false },
-    { text: "Marketers Sell It.", turns: false },
-    { text: "I Do Both.", turns: true },
-];
-
 export default function Hero() {
     return (
-        <div className="hero-stage relative isolate flex flex-col">
-            <div aria-hidden className="hero-light" />
+        <div
+            style={TOKENS}
+            className="flex flex-col justify-center min-h-(--stage) py-(--s-8)"
+        >
+            {/* The query container. The display type measures itself against
+                this grid in `cqw`, so it holds a fixed proportion of the
+                measure at every width. */}
+            <div
+                style={{ containerType: "inline-size" }}
+                className="grid w-full items-stretch gap-(--s-12) lg:grid-cols-[minmax(0,1fr)_minmax(var(--fig-min),var(--fig-max))] lg:gap-[clamp(2rem,4vw,4rem)]"
+            >
+                <div>
+                    {/* THE HEADLINE OPENS THE PAGE, with nothing above it.
+                        An eyebrow sat here and has been cut: it was the first
+                        thing the eye met on the site and it was a label, so
+                        the first act of the cover was to introduce itself in
+                        small grey mono before making its claim.
 
-            {/* The wordmark that used to sit above this is gone. It was the
-                one thing on the cover competing for the top of the screen
-                with the fixed nav a few pixels above it, and the name is
-                already carried by the rails, the footer and the title bar. A
-                cover with a name at the top and a statement in the middle is
-                a page introducing itself twice.
+                        The eye lands on the setup because the setup is full
+                        `--ink` at 21:1, the same weight and size as the turn.
+                        The accent is only noticed once you arrive at it,
+                        which is the order the rhythm needs.
 
-                `hero-col` is the query container the statement measures
-                itself against. The full measure, because the statement is
-                the cover and there is nothing beside it to leave room for.
-
-                Ranged left everywhere except a phone. The statement, the copy
-                and both buttons hang off one edge, and that edge is the only
-                alignment on the screen — there is no grid here to belong to,
-                so it does all the work a grid would.
-
-                Below 640px it centres instead. A phone column is 310px wide
-                and the three lines come out at 100%, 94% and 62% of it; hung
-                off the left, that last line reads as the sentence trailing
-                away rather than landing. There is not enough measure down
-                there for a left edge to be an alignment rather than just
-                where the text happens to start.
-
-                The padding is tight on purpose. Three lines at this size plus
-                copy plus buttons is about 670px on a 900px-tall laptop, where
-                the stage is 672 — every gap on this screen is spent, and a
-                generous `py` here is what pushes the buttons under the fold
-                on exactly the machine most people will open this on. */}
-            <div className="hero-col my-auto w-full py-8 text-center sm:py-10 sm:text-left">
-                <Parallax depth={0.14} fade>
+                        The full sentence is intact in the accessibility tree:
+                        three rows of plain text read straight through as
+                        "Engineers Build. Marketers Sell. I Do Both." */}
                     <h1
                         id="home-title"
-                        className="hero-line text-balance text-ink-2"
+                        className="font-display font-normal leading-[1.04] tracking-[-0.035em] text-(length:--t-display) lg:text-(length:--t-display-wide)"
                     >
-                        {LINES.map((line, index) => (
-                            <span
-                                key={line.text}
-                                /* The size lives on the mask, not on the text
-                                   inside it: the mask's clearance for
-                                   ascenders and descenders is set in `em`, so
-                                   scaling the text without scaling the box
-                                   would shear the tail off the "B". */
-                                className={cn(
-                                    "line-mask-display",
-                                    line.turns && "hero-line-turn",
-                                )}
-                            >
+                        {BEATS.map((beat) => (
+                            <span key={beat.text} className="line-mask-display">
                                 <span
-                                    className="line-up"
+                                    className={
+                                        beat.turns
+                                            ? "line-up text-(--hero-accent)"
+                                            : "line-up text-ink"
+                                    }
+                                    /* The gaps widen — 0, 70, 140 — so the
+                                       beat before the payoff is the longest.
+                                       The stagger states the rhythm rather
+                                       than emphasising the turn; the turn's
+                                       one device is still the hue. */
                                     style={{
-                                        animationDelay: `${0.1 + index * 0.1}s`,
+                                        animationDuration: "var(--m-line)",
+                                        animationDelay: beat.delay,
                                     }}
                                 >
-                                    {line.turns ? (
-                                        <span className="hero-mark">
-                                            {line.text}
-                                            {/* The wiped copy. Hidden from
-                                                assistive tech and from
-                                                selection — it is the same
-                                                three words, and nobody should
-                                                hear or copy them twice. */}
-                                            <span
-                                                aria-hidden
-                                                className="hero-mark-flip"
-                                            >
-                                                {line.text}
-                                            </span>
-                                        </span>
-                                    ) : (
-                                        line.text
-                                    )}
+                                    {beat.text}
                                 </span>
                             </span>
                         ))}
                     </h1>
-                </Parallax>
 
-                <Parallax depth={0.07} fade>
-                    {/* What "both" actually means, in one line. The statement
-                        above is the position; this is the work. The two halves
-                        of "both" are lifted to full ink out of a grey line —
-                        the only highlight on the cover, and it is doing the
-                        same job the headline is, one size down.
-
-                        Leading is 1.62 rather than the scale's 1.55. This is
-                        the only paragraph on the site that has to hold its own
-                        directly under display type, and next to a block set at
-                        1.06 it needs the contrast to read as prose rather than
-                        as a fourth line of the headline. The rhythm below it
-                        is 40 / 36 rather than 36 / 28 — the gaps still close
-                        as the type gets smaller, which is what makes a stack
-                        read as one group, but on a phone the old figures were
-                        crowding three elements that had a screen of room. */}
+                    {/* One weight, one colour. Its only job is to cash the
+                        "both" cheque with specifics — and "run the marketing"
+                        deliberately echoes "Marketers Sell.", so the subhead
+                        names the two halves in the headline's own words.
+                        `--ink-2` is 9.6:1 on black, 11.2:1 on paper. */}
                     <p
-                        className="rise mx-auto mt-10 max-w-[42ch] text-lead leading-[1.62] text-balance text-ink-3 sm:mx-0 sm:mt-11 sm:text-pretty"
-                        style={{ animationDelay: "0.5s" }}
+                        className="rise mt-(--s-6) max-w-[46ch] text-(length:--t-lead) leading-[1.55] text-pretty text-ink-2"
+                        style={{
+                            animationDuration: "var(--m-fade)",
+                            animationDelay: "200ms",
+                        }}
                     >
-                        <span className="text-ink">Full-stack apps and AI agents</span>
-                        , then the{" "}
-                        <span className="text-ink">growth work</span> that gets
-                        them used.
+                        I ship full-stack apps and AI agents, then run the
+                        marketing that gets them used.
                     </p>
 
-                    {/* Side by side, on the same left edge as everything
-                        above them. Two pills come to about 316px, which fits
-                        every phone from a 375 up with margin to spare — and
-                        full-width stacked bars, which is what this was, turn
-                        two optional actions into a form. They wrap rather
-                        than overflow on anything narrower. */}
+                    {/* One primary action. A filled button and a text link
+                        that draws its rule on hover — the hierarchy is
+                        unambiguous at a glance, and "Read CV" is still a real
+                        anchor with a visible focus state. */}
                     <div
-                        className="rise mt-9 flex flex-wrap items-center justify-center gap-3 sm:justify-start sm:gap-4"
-                        style={{ animationDelay: "0.6s" }}
+                        className="rise mt-(--s-8) flex flex-wrap items-center gap-(--s-6)"
+                        style={{
+                            animationDuration: "var(--m-fade)",
+                            animationDelay: "250ms",
+                        }}
                     >
                         <Button
                             href="#work"
                             variant="accent"
                             size="lg"
-                            className="rounded-full"
-                            iconRight={
-                                <ArrowDown size={16} weight="bold" aria-hidden />
-                            }
+                            iconRight={<ArrowDown size={16} weight="bold" aria-hidden />}
                         >
                             View Work
                         </Button>
 
-                        <Button
+                        <a
                             href="/cv.pdf"
                             target="_blank"
                             rel="noopener noreferrer"
-                            variant="outline"
-                            size="lg"
-                            className="rounded-full"
-                            iconRight={
-                                <ArrowUpRight size={16} weight="bold" aria-hidden />
-                            }
+                            className="rule-draw inline-flex items-center gap-2 text-(length:--t-body) font-medium text-ink-2 transition-colors hover:text-ink"
                         >
                             Read CV
-                        </Button>
+                            <ArrowUpRight size={15} weight="bold" aria-hidden />
+                        </a>
                     </div>
-                </Parallax>
+
+                    {/* `--ink-3`, not `--ink-4`. Four is 2.9:1 on black,
+                        which fails even the 3:1 floor for non-text; three is
+                        5.3:1 and clears the text threshold outright. */}
+                    <ul
+                        className="rise mt-(--s-12) flex items-center gap-(--s-4)"
+                        style={{
+                            animationDuration: "var(--m-fade)",
+                            animationDelay: "250ms",
+                        }}
+                    >
+                        {socialLinks.map((link) => {
+                            const Icon =
+                                SOCIAL_ICONS[link.icon as keyof typeof SOCIAL_ICONS];
+
+                            if (!Icon) return null;
+
+                            return (
+                                <li key={link.name}>
+                                    <a
+                                        href={link.url}
+                                        target={link.icon === "mail" ? undefined : "_blank"}
+                                        rel="noopener noreferrer"
+                                        aria-label={link.name}
+                                        className="block p-1 text-ink-3 transition-colors hover:text-ink focus-visible:text-ink"
+                                    >
+                                        <Icon size={19} aria-hidden />
+                                    </a>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
+
+                {/* THE FIGURE — 1024px AND UP ONLY.
+                    It drops out below that rather than stacking, and that is
+                    a decision rather than a shortcut. On a phone the cover is
+                    already spending every vertical pixel it has on three
+                    lines of display type, a subhead, two actions and a social
+                    row; a portrait inserted anywhere in that stack either
+                    pushes the primary action under the fold or forces the
+                    headline down a size. The photograph does no persuasive
+                    work the headline is not already doing, and it appears
+                    elsewhere on the site — so on a small screen it is the
+                    thing that gives way.
+
+                    `sizes` declares 1px below the breakpoint so that a
+                    browser which fetches it anyway takes the smallest
+                    candidate in the set rather than a desktop-width file. */}
+                <figure className="relative hidden lg:block">
+                    <Image
+                        src="/portrait.jpeg"
+                        alt={`${personalInfo.name} on a balcony in ${personalInfo.location}, the foothills and river valley behind him`}
+                        fill
+                        sizes="(min-width: 1024px) 24rem, 1px"
+                        priority
+                        /* `cover` against a container that is taller than the
+                           3:4 source, so the crop takes the sides and leaves
+                           the tonal split intact top to bottom — which is
+                           what the graded foot depends on. 30% keeps the head
+                           in the upper third and lets the near-black lower
+                           half fall into the fade. */
+                        className="rise object-cover object-[50%_30%] grayscale"
+                        /* The shared `.rise` class rather than an inline
+                           `animation`, so this inherits the two things that
+                           come with it for free: the `js-loading` gate, which
+                           holds the entrance until the page is actually on
+                           screen, and the reduced-motion override. Only the
+                           timing is set here — 300ms, so the figure arrives
+                           after the headline has finished, never with it. */
+                        style={{
+                            animationDuration: "var(--m-fig)",
+                            animationDelay: "300ms",
+                            maskImage:
+                                "linear-gradient(to bottom, #000 0%, #000 var(--fig-fade), transparent 100%)",
+                            WebkitMaskImage:
+                                "linear-gradient(to bottom, #000 0%, #000 var(--fig-fade), transparent 100%)",
+                        }}
+                    />
+                </figure>
             </div>
         </div>
     );

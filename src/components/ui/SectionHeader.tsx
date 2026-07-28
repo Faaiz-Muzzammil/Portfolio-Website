@@ -28,11 +28,17 @@ export default function SectionHeader({
 }: SectionHeaderProps) {
     return (
         <header className={cn("mb-14 sm:mb-18", className)}>
-            <Reveal className="flex items-center gap-4" y={0}>
+            {/* The plate line: name on the left, a rule across, the count on
+                the right. The rule is ruled rather than faded in — it draws
+                from the eyebrow out to the meta as the department arrives,
+                which is the one moving thing on this page that happens at
+                every width, and the gesture the site already makes under a
+                link on hover. */}
+            <Reveal className="flex items-center gap-4" y={0} sweep>
                 <span className="coord text-coord whitespace-nowrap text-ink">
                     {eyebrow}
                 </span>
-                <span aria-hidden className="h-px flex-1 bg-line" />
+                <span aria-hidden data-sweep className="h-px flex-1 bg-line" />
                 <span className="coord text-coord whitespace-nowrap text-ink-3">
                     {meta}
                 </span>

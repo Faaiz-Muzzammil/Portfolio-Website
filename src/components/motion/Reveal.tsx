@@ -14,6 +14,12 @@ type RevealProps = {
     stagger?: number;
     /** Also scale slightly — used for cards and imagery. */
     scale?: boolean;
+    /**
+     * Draw any descendant carrying `data-sweep` across from its left edge, on
+     * the same trigger. For rules: a hairline that fades up is a hairline
+     * appearing, and a hairline that draws is a hairline being ruled.
+     */
+    sweep?: boolean;
     className?: string;
     children: ReactNode;
 };
@@ -28,6 +34,7 @@ export default function Reveal({
     y = 28,
     stagger,
     scale = false,
+    sweep = false,
     className,
     children,
 }: RevealProps) {
@@ -65,8 +72,37 @@ export default function Reveal({
                     scrollTrigger: { trigger: el, start: "top 88%", once: true },
                 },
             );
+
+            if (!sweep) return;
+
+            const rules = el.querySelectorAll("[data-sweep]");
+            if (rules.length === 0) return;
+
+            /* Its own tween rather than a property on the one above, because
+               it has to outlast it. The rule is a hairline and the fade is
+               a fifth of a second of nothing; a rule drawing across the
+               measure over the same second the block fades in is finished
+               before the eye has arrived at it. 1.4s against 1s, started a
+               beat later, is what makes it read as a stroke rather than as
+               a width transition.
+
+               `fromTo` renders its `from` state at creation, so the rule is
+               already at zero width before the trigger fires and there is
+               nothing to hide in the meantime — the CSS resting state in
+               `globals.css` covers only the window before this runs at all. */
+            gsap.fromTo(
+                rules,
+                { scaleX: 0 },
+                {
+                    scaleX: 1,
+                    duration: 1.4,
+                    ease: EASE_OUT,
+                    delay: delay + 0.15,
+                    scrollTrigger: { trigger: el, start: "top 88%", once: true },
+                },
+            );
         },
-        { dependencies: [delay, y, stagger, scale] },
+        { dependencies: [delay, y, stagger, scale, sweep] },
     );
 
     /* createElement rather than <Tag>: @react-three/fiber augments
