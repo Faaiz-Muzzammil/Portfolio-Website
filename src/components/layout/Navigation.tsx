@@ -87,7 +87,17 @@ export default function Navigation({
         >
             {/* Solid paper with a hairline, not frosted glass. A magazine's
                 running nav is printed on the page, not floated above it. */}
-            <div className="flex items-center gap-1 border border-line-2 bg-paper p-1 shadow-e2 max-sm:w-full">
+            {/* The bar takes the department's ink diluted into paper, so it
+                shifts with the section the way the margins do — and on a
+                phone, where the margins do not exist at all, it is the only
+                thing carrying the colour.
+
+                A wash and not the ink itself: the active marker inside this
+                is the ink at full strength, and the two have to read as
+                ground and figure. `--tint-wash` resolves to plain paper on
+                the cover, which has no colour. Same 700ms as everything
+                else that changes with the section. */}
+            <div className="flex items-center gap-1 border border-line-2 bg-(--tint-wash) p-1 shadow-e2 transition-colors duration-700 ease-[cubic-bezier(0.33,1,0.68,1)] max-sm:w-full">
                 {/* On a phone the bar spans the plate width, so the sections
                     spread to fill it rather than packing left and leaving a
                     hole in the middle. The marker measures real geometry, so

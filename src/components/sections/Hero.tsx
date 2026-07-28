@@ -109,20 +109,14 @@ const TOKENS = {
     "--m-fade": "380ms",
     "--m-fig": "280ms",
 
-    /* `--band-h` is the height of the head margin the left rail becomes on
-       a narrow screen, and it is 0 above 1280px, so this expression is
-       correct at every width. Without it the cover would be a full stage
-       tall *inside* a body already inset by the band, and would overflow
-       the screen by exactly its height.
-
-       THE STAGE. 72svh is a floor, not a height: the text block is three
+    /* THE STAGE. 72svh is a floor, not a height: the text block is three
        beats tall now and the figure stretches to meet it, so on most
        screens the content sets the height and this never applies. It
        exists so the cover cannot collapse into a band on a very short
        window. It also leaves the Work rule just above the fold, which —
        with no proof block on this screen — is the only thing telling a
        stranger there is something behind the claim. */
-    "--stage": "calc(72svh - var(--scroll-offset) - var(--band-h))",
+    "--stage": "calc(72svh - var(--scroll-offset))",
 } as CSSProperties;
 
 const SOCIAL_ICONS = {

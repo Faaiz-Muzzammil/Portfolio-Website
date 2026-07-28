@@ -169,12 +169,6 @@
      lightness; dark at roughly two thirds the luminance of body copy. */
   --rail-tint-strength: 0.3;
 
-  /* The height the two margins take when they are lying down, and zero
-     whenever they are standing up. It is read in two places that must
-     agree — the bands' own height, and the padding the body reserves so
-     nothing scrolls underneath them — which is exactly the job
-     `--rail-w` does for the vertical case. */
-  --band-h: 0px;
 
   /* The rails. Declared per theme rather than derived from the paper,
      because the two themes have to move in opposite directions to get
@@ -367,11 +361,13 @@
    nav's active marker is 80 pixels wide and needs the ink itself, so it
    gets it here as a pair of tokens.
 
-   THEY ARE A PAIR AND THEY MOVE TOGETHER. `--tint` is the fill and
-   `--tint-fg` is whatever is legible on top of it, and neither is ever
-   set without the other. That is not tidiness — it is the only way this
-   can be correct, because the two ends move in opposite directions
-   depending on whether a department has an ink at all:
+   THEY ARE A SET AND THEY MOVE TOGETHER. `--tint` is the fill,
+   `--tint-fg` is whatever is legible on top of it, and `--tint-wash` is
+   the same ink diluted into paper for a surface that has to stay a
+   surface. None is ever set without the others. That is not tidiness —
+   it is the only way this can be correct, because the ends move in
+   opposite directions depending on whether a department has an ink at
+   all:
 
      home    no rule, so the marker falls back to solid ink with
              paper-coloured type — the cover has no colour, and the nav
@@ -386,31 +382,48 @@
    The literal is the same one the cover's turn block uses, and for the
    same reason: a tint is a *light* surface whichever theme is on, so
    the type on it has to be dark in both, and neither `--ink` nor
-   `--paper` stays dark in both. ---------------------------------- */
+   `--paper` stays dark in both.
+
+   `--tint-wash` IS SIXTEEN PER CENT, and that figure is doing one job:
+   keeping the nav bar a *sheet of paper that has been tinted* rather
+   than a coloured bar. The bar carries the active marker at full
+   `--tint`, so the wash has to sit far enough below it that the two
+   read as ground and figure — sixteen per cent against a hundred is
+   about a five-to-one step in saturation, which is the same relationship
+   the margins have with the measure. Push the wash much past a fifth
+   and the marker starts to disappear into its own bar.
+
+   On the cover it resolves to plain `--paper`, so the nav is untinted
+   there exactly as the margins are. ------------------------------- */
 
 :root {
   --tint: var(--accent);
   --tint-fg: var(--accent-fg);
+  --tint-wash: var(--paper);
 }
 
 [data-tint="work"] {
   --tint: var(--tint-work);
   --tint-fg: #12100e;
+  --tint-wash: color-mix(in srgb, var(--tint-work) 16%, var(--paper));
 }
 
 [data-tint="experience"] {
   --tint: var(--tint-experience);
   --tint-fg: #12100e;
+  --tint-wash: color-mix(in srgb, var(--tint-experience) 16%, var(--paper));
 }
 
 [data-tint="toolkit"] {
   --tint: var(--tint-toolkit);
   --tint-fg: #12100e;
+  --tint-wash: color-mix(in srgb, var(--tint-toolkit) 16%, var(--paper));
 }
 
 [data-tint="contact"] {
   --tint: var(--tint-contact);
   --tint-fg: #12100e;
+  --tint-wash: color-mix(in srgb, var(--tint-contact) 16%, var(--paper));
 }
 
 /* WHICH DEPARTMENT IS CURRENT is expressed as opacity on the margins.
@@ -862,103 +875,26 @@ body {
   }
 }
 
-/* Lying down: the bands. */
+/* ---- Below 1280px there are no margins at all ------------------
+   The rails were briefly laid down as horizontal bands across the top
+   and bottom of a narrow screen, then reduced to a single opaque head
+   margin. Both are gone.
+
+   A vertical rail works because it is an *empty* column beside the
+   measure — `.page-inset` reserves its width and nothing scrolls into
+   it. A phone has no width to spare for that, and the horizontal
+   version could not be made to behave: drawn behind the page, body copy
+   tracked across it and it read as a tint spilled on the text; drawn in
+   front and reserved, it took a tenth of the screen and read as a bar
+   clamped to the edge. A margin is empty, and a phone has no empty to
+   give.
+
+   So the colour reports position through the nav instead, which is
+   already on screen, already fixed, and already the thing a reader
+   looks at to answer "where am I". See the tint triple further up. */
 @media (max-width: 1279px) {
-  :root {
-    /* THE BAND IS THE NAV'S OWN MARGIN, DOUBLED. `--nav-top` is the gap
-       above the floating bar and `--nav-h` is the bar; taking the gap
-       twice and the bar once puts exactly as much air below the nav as
-       there is above it, and makes the band the smallest box that can
-       hold the bar with even space on all four sides.
-
-       It is a derived figure and not a chosen one, which is the point:
-       the two things cannot drift apart, and if the bar ever changes
-       height or lifts off the edge the margin follows it. */
-    --band-h: calc(var(--nav-top) * 2 + var(--nav-h));
-
-    /* THE BAND HAS ALREADY CLEARED THE NAV, so nothing below it needs to
-       clear the nav again. `--scroll-offset` exists to hold content out
-       from under a bar floating over the page; down here the bar is not
-       floating over anything — it is sitting in a margin whose height is
-       reserved by the body. Left at its full figure the cover paid for
-       the same clearance twice and opened on about 250px of nothing.
-
-       What is left is the gap between the band's hairline and the first
-       line of the page, and that is all it should ever have been. */
-    --scroll-offset: 1.25rem;
-  }
-
-  /* ONLY THE HEAD MARGIN SURVIVES DOWN HERE. The foot band is gone: it
-     had no occupant that needed it, and an opaque strip across the
-     bottom of a phone spends a tenth of the screen to repeat something
-     the top of the screen is already saying. One margin carries the
-     colour; the page runs to the bottom edge as pages do. */
-  .rail-right {
-    display: none;
-  }
-
-  /* The horizontal `.page-inset`, and it reserves the head only.
-     Everything that scrolls is inset by the band's height, so it owns
-     its strip of the viewport outright and nothing in the document can
-     reach into it — the same guarantee `--rail-w` gives the columns
-     above 1280px, and the reason the band can be opaque at all.
-
-     On `body` rather than on `main`, because the fixed chrome has to
-     clear it too. */
-  body {
-    padding-block: var(--band-h) 0;
-  }
-
-  /* An anchor jump lands at the top of a section, and the top of the
-     viewport is now behind a band. Without this, tapping "Work" puts the
-     department's opening rule underneath the head margin.
-
-     The band's height and nothing more: every section already carries
-     `scroll-mt-(--scroll-offset)` of its own, and adding that figure
-     here as well would offset the landing twice. */
-  html {
-    scroll-padding-top: var(--band-h);
-  }
-
   .rail {
-    inset-inline: 0;
-    height: var(--band-h);
-    /* Opaque. The band is a margin, and a margin the text shows through
-       is not a margin — it is a tint lying across the copy, which is
-       what this looked like when it was drawn behind the page. Paper
-       goes down first and the fill, the colour and the grain stack on
-       it, so whatever scrolls up to the edge is trimmed cleanly. */
-    background-color: var(--paper);
-  }
-
-  .rail-left {
-    top: 0;
-  }
-
-  /* The hairline turns with the band: a rule across its lower edge
-     rather than down its side. Same weight, same job — it is the
-     boundary between the margin and the measure, and it is what stops
-     an opaque band reading as a bar dropped on the page.
-
-     `scaleX` rather than `scaleY` for the draw, for the obvious reason. */
-  .rail::after {
-    width: auto;
-    height: 1px;
-    inset-inline: 0;
-    inset-block: auto;
-    bottom: 0;
-    right: auto;
-    transform-origin: left center;
-    animation-name: rail-rule-h;
-  }
-}
-
-@keyframes rail-rule-h {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
+    display: none;
   }
 }
 
@@ -1160,41 +1096,6 @@ body {
   );
 }
 
-/* Lying down, a different shape rather than the same one rotated.
-   ------------------------------------------------------------------
-   The vertical version ends at 52% of its ink against the rule, because
-   there is a rule there for it to end against. These end at nothing,
-   because there is body copy there instead and any residue at the inner
-   edge is a visible horizontal boundary lying across the measure —
-   which is exactly what made the first attempt read as two slabs.
-
-   LINEAR, NOT RADIAL. A radial gradient is brightest at a point, so its
-   falloff is uneven across the width of the screen and the band reads
-   heavier on one side than the other. Across a full-width band that
-   asymmetry is precisely what looks uneven. A linear gradient is
-   identical at every x, which is what lets the two bands mirror each
-   other exactly.
-
-   IT DOES NOT FADE TO NOTHING. The vertical rails end at about half
-   their ink against the rule, and these do the same against the
-   hairline at the inner edge. A band that faded out completely would
-   leave a strip of untinted paper along the boundary, which reads as
-   the colour having run out rather than as a margin that has been
-   ruled.
-
-   Written out twice rather than rotated with a transform, because a
-   transform on these would re-introduce the one thing this system has
-   spent five rewrites removing: a property that is not free to change. */
-@media (max-width: 1279px) {
-  .rail-left .rail-tint {
-    background-image: linear-gradient(
-      to bottom,
-      currentColor 0%,
-      color-mix(in srgb, currentColor 74%, transparent) 58%,
-      color-mix(in srgb, currentColor 52%, transparent) 100%
-    );
-  }
-}
 
 /* A RULED SCALE LIVED HERE. A fine tick every 56px down the outer edge
    with a longer one every fifth, travelling against the scroll — the one
