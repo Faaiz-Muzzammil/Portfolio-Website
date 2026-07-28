@@ -98,7 +98,13 @@ export default function Navigation({
                 >
                     <m.span
                         aria-hidden
-                        className="absolute inset-y-0 left-0 bg-accent"
+                        /* The marker takes the department's own ink, so the
+                           bar agrees with the margins about where you are
+                           instead of stating it a second way in black. It
+                           eases over the same 700ms the margins use, and it
+                           falls back to solid ink on the cover, which has no
+                           colour — see the token pair in `globals.css`. */
+                        className="absolute inset-y-0 left-0 bg-(--tint) transition-colors duration-700 ease-[cubic-bezier(0.33,1,0.68,1)]"
                         initial={false}
                         animate={{
                             x: marker.x,
@@ -132,8 +138,15 @@ export default function Navigation({
                                        theme toggle, a CTA and the mic all have
                                        to clear a 320px viewport. */
                                     "relative flex h-10 items-center justify-center gap-2 px-2.5 transition-colors duration-300 max-sm:min-w-0 max-sm:flex-1 sm:px-3.5",
+                                    /* `--tint-fg`, not `--accent-fg`. The
+                                       marker under this label is a light
+                                       tint on every section but the cover,
+                                       and paper-coloured type on a light
+                                       tint is 2.2:1. The pair is declared
+                                       together so the two can never
+                                       disagree. */
                                     isActive
-                                        ? "text-accent-fg"
+                                        ? "text-(--tint-fg)"
                                         : "text-ink-3 hover:text-ink",
                                 )}
                             >

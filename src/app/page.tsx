@@ -7,8 +7,7 @@ import Hero from "@/components/sections/Hero";
 import PageFurniture from "@/components/layout/PageFurniture";
 import Projects from "@/components/sections/Projects";
 import Toolkit from "@/components/sections/Toolkit";
-import PageTint from "@/components/layout/PageTint";
-import { TintProvider } from "@/providers/TintProvider";
+import TintController from "@/components/layout/TintController";
 import { personalInfo, projects, socialLinks } from "@/data";
 
 const SITE = "https://faaizmuzzammil.dev";
@@ -61,58 +60,60 @@ export default function Home() {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
 
-            {/* The colour, and everything that carries it. The provider works
-                out one ink from the scroll position and hands it to all three
-                readers — the two margins inside `PageFurniture` and the
-                ground behind the measure — so they cannot disagree about what
-                colour the page currently is. It has to wrap the sections
-                because it measures them.
+            {/* The colour. `TintController` renders nothing — it puts the
+                current department's name on the root element, and the
+                stylesheet maps that to an ink which both margins read from
+                one custom property.
 
-                It lives here rather than in the layout because the departments
-                do: a project page has none of these ids, and a provider that
-                cannot find its sections has nothing to interpolate between. */}
-            {/* The hairline reading-progress bar that used to run along the
-                top edge is gone. The margins now report the same thing better:
-                the colour tells you which department you are in and the ruled
-                scale in each rail tells you that you are moving through it,
-                continuously and at the edges of vision rather than as a bar
-                pinned over the top of the page. Two devices answering "where
-                am I" is one too many, which is the same argument that removed
-                the route rail this bar replaced. */}
-            <TintProvider>
-                <SiteChrome />
-                <PageTint />
-                <PageFurniture />
+                THE MARGINS ONLY. A matching wash used to sit over the full
+                viewport so the ground behind the measure changed with them.
+                It is gone: the colour belongs out at the edges of vision
+                where it can report position without touching anything anyone
+                is reading, and a tint over the measure was spending contrast
+                on every line of body copy to say what the two rails were
+                already saying.
 
-                {/* One issue: a cover, a contents page, four departments and a
-                    colophon. Nothing is boxed and nothing floats — the sections
-                    are bands of paper separated by their own margins, and each
-                    one is as tall as its content needs, which is what stops the
-                    page reading as five identical slides. */}
-                <main className="page-inset relative z-10">
-                    <Section id="home" labelledBy="home-title" first>
-                        <Hero />
-                    </Section>
+                It sits here rather than in the layout because the departments
+                do: a project page has none of these ids, so there is nothing
+                out there for it to report on.
 
-                    <Section id="work" labelledBy="work-title">
-                        <Projects />
-                    </Section>
+                The hairline reading-progress bar that used to run along the
+                top edge is gone with it. The margins answer "where am I"
+                better than a bar pinned over the page — which is the same
+                argument that removed the route rail the bar replaced. */}
+            <TintController />
 
-                    <Section id="experience" labelledBy="experience-title">
-                        <Experience />
-                    </Section>
+            <SiteChrome />
+            <PageFurniture />
 
-                    <Section id="toolkit" labelledBy="toolkit-title">
-                        <Toolkit />
-                    </Section>
+            {/* One issue: a cover, a contents page, four departments and a
+                colophon. Nothing is boxed and nothing floats — the sections
+                are bands of paper separated by their own margins, and each
+                one is as tall as its content needs, which is what stops the
+                page reading as five identical slides. */}
+            <main className="page-inset relative z-10">
+                <Section id="home" labelledBy="home-title" first>
+                    <Hero />
+                </Section>
 
-                    <Section id="contact" labelledBy="contact-title">
-                        <Contact />
-                    </Section>
-                </main>
+                <Section id="work" labelledBy="work-title">
+                    <Projects />
+                </Section>
 
-                <Footer />
-            </TintProvider>
+                <Section id="experience" labelledBy="experience-title">
+                    <Experience />
+                </Section>
+
+                <Section id="toolkit" labelledBy="toolkit-title">
+                    <Toolkit />
+                </Section>
+
+                <Section id="contact" labelledBy="contact-title">
+                    <Contact />
+                </Section>
+            </main>
+
+            <Footer />
         </>
     );
 }

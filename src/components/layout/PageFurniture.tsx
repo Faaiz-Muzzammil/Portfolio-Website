@@ -65,14 +65,14 @@ export default function PageFurniture() {
 
             <div
                 aria-hidden
-                className="rail rail-left pointer-events-none fixed inset-y-0 left-0 z-20 hidden w-(--rail-w) xl:block"
+                className="rail rail-left pointer-events-none fixed"
             >
                 <RailWash />
             </div>
 
             <div
                 aria-hidden
-                className="rail rail-right pointer-events-none fixed inset-y-0 right-0 z-20 hidden w-(--rail-w) xl:block"
+                className="rail rail-right pointer-events-none fixed"
             >
                 <RailWash />
             </div>

@@ -162,6 +162,20 @@
   --tint-toolkit: #A79AD6;
   --tint-contact: #D89BA5;
 
+  /* HOW HARD THE MARGINS CARRY IT. The active layer transitions to this
+     figure, so it has to be a property rather than a literal — the two
+     themes want different strengths and the transition has to end on
+     whichever one is in force. Light lands the margins around 90%
+     lightness; dark at roughly two thirds the luminance of body copy. */
+  --rail-tint-strength: 0.3;
+
+  /* The height the two margins take when they are lying down, and zero
+     whenever they are standing up. It is read in two places that must
+     agree — the bands' own height, and the padding the body reserves so
+     nothing scrolls underneath them — which is exactly the job
+     `--rail-w` does for the vertical case. */
+  --band-h: 0px;
+
   /* The rails. Declared per theme rather than derived from the paper,
      because the two themes have to move in opposite directions to get
      the same result. On white there is room below the ground, so the
@@ -306,6 +320,11 @@
      darker. See the note beside that set: on black a tint adds light,
      and chroma is the only thing separating a soft colour from a soft
      grey. */
+  /* Carried nearly twice as hard as on paper. A tint over white removes
+     light and is already a definite colour at a third; over #000000 it
+     is the only thing in the margin with any luminance at all. */
+  --rail-tint-strength: 0.58;
+
   --tint-work: #DCA96E;
   --tint-experience: #8FD2BB;
   --tint-toolkit: #B0A0E6;
@@ -341,6 +360,66 @@
   --sweep-edge: #000000;
   --sweep-sheen: rgba(255, 255, 255, 0.07);
 }
+
+/* ---- The current department, as a colour you can use ------------
+   The margins express "which department" as an opacity, because that is
+   the only form that transitions for free on a full-height surface. The
+   nav's active marker is 80 pixels wide and needs the ink itself, so it
+   gets it here as a pair of tokens.
+
+   THEY ARE A PAIR AND THEY MOVE TOGETHER. `--tint` is the fill and
+   `--tint-fg` is whatever is legible on top of it, and neither is ever
+   set without the other. That is not tidiness — it is the only way this
+   can be correct, because the two ends move in opposite directions
+   depending on whether a department has an ink at all:
+
+     home    no rule, so the marker falls back to solid ink with
+             paper-coloured type — the cover has no colour, and the nav
+             says so in the same breath the margins do.
+     others  a light tint with near-black type on it.
+
+   Reaching for `--accent-fg` on a tinted marker is the trap: it is
+   white on the light theme, and white on a 42%-luminance pastel is
+   2.2:1. The near-black below is 7.4:1 against the darkest ink in
+   either set, which is the violet. One value clears all eight.
+
+   The literal is the same one the cover's turn block uses, and for the
+   same reason: a tint is a *light* surface whichever theme is on, so
+   the type on it has to be dark in both, and neither `--ink` nor
+   `--paper` stays dark in both. ---------------------------------- */
+
+:root {
+  --tint: var(--accent);
+  --tint-fg: var(--accent-fg);
+}
+
+[data-tint="work"] {
+  --tint: var(--tint-work);
+  --tint-fg: #12100e;
+}
+
+[data-tint="experience"] {
+  --tint: var(--tint-experience);
+  --tint-fg: #12100e;
+}
+
+[data-tint="toolkit"] {
+  --tint: var(--tint-toolkit);
+  --tint-fg: #12100e;
+}
+
+[data-tint="contact"] {
+  --tint: var(--tint-contact);
+  --tint-fg: #12100e;
+}
+
+/* WHICH DEPARTMENT IS CURRENT is expressed as opacity on the margins.
+   A `--tint` custom property used to sit here, resolved per department
+   and read by every layer that carried the colour. It is gone with the
+   full-viewport wash that needed it: the rails now hold one permanently
+   painted layer per department and raise the matching one, which is the
+   only form of this that transitions without repainting. The selectors
+   that do it are beside the rails, with the shape they apply to. */
 
 /* Legacy aliases — the voice assistant reads the older token names. */
 :root,
@@ -719,13 +798,168 @@ body {
    a positioned layer otherwise would be.
    ------------------------------------------------------------------ */
 
+/* ---- The two margins, and which way they lie --------------------
+   At `xl` and up they are the outer columns of the page: two vertical
+   strips down the left and right edges, with the measure inset between
+   them by exactly their width.
+
+   BELOW `xl` THEY LIE DOWN. A narrow screen has no horizontal margin to
+   give — that is why `--rail-w` is 0 down there and the measure runs
+   edge to edge — but it has the same amount of *vertical* margin as any
+   other screen, above the first line and below the last. So the two
+   rails become a band across the top and a band across the bottom, and
+   the content sits in the middle exactly as it sits between them on a
+   desktop. The composition is the same three zones rotated ninety
+   degrees, which is the only way to keep the device at a width where a
+   column of it would be a stripe.
+
+   THEY ARE NOT THE SAME KIND OF OBJECT IN BOTH ORIENTATIONS, and
+   pretending they were is what made the first two attempts at this look
+   wrong. Standing up, a rail is an empty margin: `.page-inset` reserves
+   its width, nothing scrolls into it, and it can be an opaque strip
+   because there is genuinely nothing there. A phone has no such room to
+   give vertically — reserving two bands' worth of height took a third
+   of a small screen away from the content, and what was left read as
+   two coloured slabs clamped onto the page rather than as margins.
+
+   So lying down they stop being margins and become weather. They sit
+   BEHIND everything, they are carried at roughly two thirds the
+   strength, and they fade to nothing well before they meet the text
+   instead of ending on an edge. Nothing is reserved, nothing is
+   trimmed, and no line of copy ever has to cross a boundary — because
+   there is no boundary to cross. What the reader sees is the top and
+   bottom of the screen being lit in the colour of whatever they are
+   reading, which is the same thing the rails say on a desktop, said in
+   the only way a narrow screen has room to say it.
+
+   They are also deep, not shallow. A short band with a soft fade still
+   ends somewhere visible; a deep one never appears to end at all, and
+   costs nothing extra because it is a gradient either way.
+   ----------------------------------------------------------------- */
+
 .rail {
-  /* A fixed, full-height strip painting several transformed children.
-     This site has produced a document-wide horizontal scroller from
-     exactly that shape before; the clip costs nothing and closes it off,
-     and it is also what lets the layers inside be drawn oversized so
-     they can drift without exposing an edge. */
+  /* A fixed strip painting several children, drawn oversized so they
+     have room to arrive from. This site has produced a document-wide
+     horizontal scroller from exactly that shape before; the clip costs
+     nothing and closes it off. */
   overflow: hidden;
+  z-index: 20;
+}
+
+/* Standing: the outer columns. */
+@media (min-width: 1280px) {
+  .rail {
+    inset-block: 0;
+    width: var(--rail-w);
+  }
+
+  .rail-left {
+    left: 0;
+  }
+
+  .rail-right {
+    right: 0;
+  }
+}
+
+/* Lying down: the bands. */
+@media (max-width: 1279px) {
+  :root {
+    /* THE BAND IS THE NAV'S OWN MARGIN, DOUBLED. `--nav-top` is the gap
+       above the floating bar and `--nav-h` is the bar; taking the gap
+       twice and the bar once puts exactly as much air below the nav as
+       there is above it, and makes the band the smallest box that can
+       hold the bar with even space on all four sides.
+
+       It is a derived figure and not a chosen one, which is the point:
+       the two things cannot drift apart, and if the bar ever changes
+       height or lifts off the edge the margin follows it. */
+    --band-h: calc(var(--nav-top) * 2 + var(--nav-h));
+
+    /* THE BAND HAS ALREADY CLEARED THE NAV, so nothing below it needs to
+       clear the nav again. `--scroll-offset` exists to hold content out
+       from under a bar floating over the page; down here the bar is not
+       floating over anything — it is sitting in a margin whose height is
+       reserved by the body. Left at its full figure the cover paid for
+       the same clearance twice and opened on about 250px of nothing.
+
+       What is left is the gap between the band's hairline and the first
+       line of the page, and that is all it should ever have been. */
+    --scroll-offset: 1.25rem;
+  }
+
+  /* ONLY THE HEAD MARGIN SURVIVES DOWN HERE. The foot band is gone: it
+     had no occupant that needed it, and an opaque strip across the
+     bottom of a phone spends a tenth of the screen to repeat something
+     the top of the screen is already saying. One margin carries the
+     colour; the page runs to the bottom edge as pages do. */
+  .rail-right {
+    display: none;
+  }
+
+  /* The horizontal `.page-inset`, and it reserves the head only.
+     Everything that scrolls is inset by the band's height, so it owns
+     its strip of the viewport outright and nothing in the document can
+     reach into it — the same guarantee `--rail-w` gives the columns
+     above 1280px, and the reason the band can be opaque at all.
+
+     On `body` rather than on `main`, because the fixed chrome has to
+     clear it too. */
+  body {
+    padding-block: var(--band-h) 0;
+  }
+
+  /* An anchor jump lands at the top of a section, and the top of the
+     viewport is now behind a band. Without this, tapping "Work" puts the
+     department's opening rule underneath the head margin.
+
+     The band's height and nothing more: every section already carries
+     `scroll-mt-(--scroll-offset)` of its own, and adding that figure
+     here as well would offset the landing twice. */
+  html {
+    scroll-padding-top: var(--band-h);
+  }
+
+  .rail {
+    inset-inline: 0;
+    height: var(--band-h);
+    /* Opaque. The band is a margin, and a margin the text shows through
+       is not a margin — it is a tint lying across the copy, which is
+       what this looked like when it was drawn behind the page. Paper
+       goes down first and the fill, the colour and the grain stack on
+       it, so whatever scrolls up to the edge is trimmed cleanly. */
+    background-color: var(--paper);
+  }
+
+  .rail-left {
+    top: 0;
+  }
+
+  /* The hairline turns with the band: a rule across its lower edge
+     rather than down its side. Same weight, same job — it is the
+     boundary between the margin and the measure, and it is what stops
+     an opaque band reading as a bar dropped on the page.
+
+     `scaleX` rather than `scaleY` for the draw, for the obvious reason. */
+  .rail::after {
+    width: auto;
+    height: 1px;
+    inset-inline: 0;
+    inset-block: auto;
+    bottom: 0;
+    right: auto;
+    transform-origin: left center;
+    animation-name: rail-rule-h;
+  }
+}
+
+@keyframes rail-rule-h {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 /* ---- The ground --------------------------------------------------
@@ -804,62 +1038,111 @@ body {
 }
 
 /* ---- The tint ----------------------------------------------------
-   The two cross-fading colour layers, held together so `TintStack` can
-   swap them without either of them having to know the theme's strength.
-   It arrives with the ground it sits in — the rise carries all three
-   layers at once, which is the point of them being one element.
+   One layer per department in each margin, all of them permanently
+   painted, all but the current one at zero opacity. Changing department
+   fades one out and the next in.
 
-   The strengths, on top of two sets of inks already chosen per theme.
-   Light lands the margins around 90% lightness — a clear tint that is
-   still plainly paper, with the grain still visible in it. Dark lands
-   them at roughly two thirds the luminance of body copy: lit enough to
-   be a colour, and far enough under the type that the measure is never
-   competing with its own margin. */
+   OPACITY IS THE ONLY THING THAT MOVES, AND THAT IS THE WHOLE POINT.
+   It is the one property a browser can transition on the compositor,
+   without repainting anything and without touching the main thread. It
+   is also the fifth attempt at this, and the previous four are worth
+   listing because each looked like the obvious fix for the last:
+
+     1. interpolate the ink from scroll position and write it to
+        `background-color` — repaints a full-height strip sixty times a
+        second, because `background-color` is not compositable;
+     2. stack the departments and cross-fade their opacities from scroll
+        position — no repaint, but twelve composited surfaces blended on
+        every frame forever;
+     3. promote those with `will-change` — cheaper frames, thirty-odd
+        megabytes of compositor memory held for the life of the page,
+        and the stutter got worse rather than better;
+     4. one element, `color` transitioned at a threshold — no per-frame
+        work at all, and a visible stall at each boundary, because the
+        gradient below reads `currentColor`, so transitioning `color`
+        made the browser regenerate the gradient on all forty-two frames
+        of the transition.
+
+   Number four is the trap worth naming, because it looks like the
+   cheapest possible thing. A transition is only free if the property
+   being transitioned is free. `color` is not: anything downstream of it
+   — a gradient, a border, a shadow — has to be re-rasterised for every
+   frame it changes.
+
+   So the colour never changes here. Each layer is painted once, in one
+   ink, and stays that way for the life of the page. The only value that
+   ever moves is an opacity, and it moves on the compositor.
+
+   THE STRENGTH IS A CUSTOM PROPERTY rather than a literal, because the
+   active layer transitions *to* it and the two themes want different
+   figures. Light lands the margins around 90% lightness — a clear tint
+   that is still plainly paper, with the grain still visible in it. Dark
+   lands them at roughly two thirds the luminance of body copy: lit
+   enough to be a colour, far enough under the type that the measure is
+   never competing with its own margin.
+
+   700ms with a gentle ease-out, not a snap: long enough to read as the
+   page changing register rather than as a value being switched, short
+   enough to have finished before the reader is properly into the new
+   department.
+
+   Both layers are partly transparent halfway through a change, so the
+   composite dips about a quarter of the way toward the ground at the
+   midpoint. At these strengths that is a few levels out of 255 and is
+   not visible; it is the ordinary cost of a cross-dissolve and it is
+   cheaper than any of the alternatives that avoid it. */
+
 .rail-tint {
   position: absolute;
   inset: 0;
-  opacity: 0.3;
+  /* Any layer without an ink of its own paints nothing at all — which
+     is what gives the cover its neutral margins for free. */
+  color: transparent;
+  opacity: 0;
+  transition: opacity 700ms cubic-bezier(0.33, 1, 0.68, 1);
 }
 
-[data-theme="dark"] .rail-tint {
-  opacity: 0.58;
+.rail-tint[data-for="work"] {
+  color: var(--tint-work);
 }
 
-/* Two of these at a time, cross-faded by `TintStack`. The ink arrives as
-   `color` and is written once when the pair changes; everything that
-   makes it a shape rather than a bar is in the gradient below and is
-   painted once at mount.
-
-   NO MASK, AND THAT IS THE POINT. This shape was a `mask-image` on the
-   parent, which is the obvious way to write it and the reason the page
-   stopped scrolling smoothly. A mask forces its element into its own
-   render surface and re-applies on every composite where the contents
-   change — and the contents here are an opacity animating on every
-   frame of every scroll. Baked into the layer's own gradient it costs
-   one paint and then nothing, forever.
-
-   The shape is doing two jobs. It falls off from the outer edge of the
-   screen toward the rule, so the colour is heaviest where there is only
-   margin and lightest where it meets the measure. And its core sits
-   high on the outer side rather than in the middle, which is what gives
-   the ink a light in it instead of laying it on flat — that used to be
-   a second drifting layer, and this is all that was ever visible of it.
-
-   `color-mix` rather than four hand-written rgba stops, because the ink
-   is `currentColor` and is not known until the pair changes. */
-.rail-tint-layer {
-  position: absolute;
-  inset: 0;
+.rail-tint[data-for="experience"] {
+  color: var(--tint-experience);
 }
 
-/* The upper of the two — the only one whose opacity moves. See the note in
-   `TintStack` for why this is on one layer and not both. */
-.rail-tint-layer-over,
-.page-tint-layer-over {
-  will-change: opacity;
+.rail-tint[data-for="toolkit"] {
+  color: var(--tint-toolkit);
 }
 
-.rail-left .rail-tint-layer {
+.rail-tint[data-for="contact"] {
+  color: var(--tint-contact);
+}
+
+/* The one that matches the department on the root is the one that is
+   up. `home` has no rule, so the cover fades every layer to nothing. */
+[data-tint="work"] .rail-tint[data-for="work"],
+[data-tint="experience"] .rail-tint[data-for="experience"],
+[data-tint="toolkit"] .rail-tint[data-for="toolkit"],
+[data-tint="contact"] .rail-tint[data-for="contact"] {
+  opacity: var(--rail-tint-strength);
+}
+
+/* The shape, and it is doing two jobs. It falls off from the outer edge
+   of the screen toward the rule, so the colour is heaviest where there
+   is only margin and lightest where it meets the measure. And its core
+   sits high on the outer side rather than in the middle, which is what
+   gives the ink a light in it instead of laying it on flat — that used
+   to be a second drifting layer, and this is all that was ever visible
+   of it.
+
+   NO MASK. A mask forces its element into its own render surface and
+   re-applies whenever the contents change; baked into the element's own
+   gradient the shape is rasterised once and never again.
+
+   `currentColor` is safe here precisely because `color` is now static
+   per layer. It was not safe when one element's colour was being
+   transitioned — see the note above. */
+.rail-left .rail-tint {
   background-image: radial-gradient(
     135% 62% at 0% 34%,
     currentColor 0%,
@@ -868,13 +1151,49 @@ body {
   );
 }
 
-.rail-right .rail-tint-layer {
+.rail-right .rail-tint {
   background-image: radial-gradient(
     135% 62% at 100% 34%,
     currentColor 0%,
     color-mix(in srgb, currentColor 74%, transparent) 58%,
     color-mix(in srgb, currentColor 52%, transparent) 100%
   );
+}
+
+/* Lying down, a different shape rather than the same one rotated.
+   ------------------------------------------------------------------
+   The vertical version ends at 52% of its ink against the rule, because
+   there is a rule there for it to end against. These end at nothing,
+   because there is body copy there instead and any residue at the inner
+   edge is a visible horizontal boundary lying across the measure —
+   which is exactly what made the first attempt read as two slabs.
+
+   LINEAR, NOT RADIAL. A radial gradient is brightest at a point, so its
+   falloff is uneven across the width of the screen and the band reads
+   heavier on one side than the other. Across a full-width band that
+   asymmetry is precisely what looks uneven. A linear gradient is
+   identical at every x, which is what lets the two bands mirror each
+   other exactly.
+
+   IT DOES NOT FADE TO NOTHING. The vertical rails end at about half
+   their ink against the rule, and these do the same against the
+   hairline at the inner edge. A band that faded out completely would
+   leave a strip of untinted paper along the boundary, which reads as
+   the colour having run out rather than as a margin that has been
+   ruled.
+
+   Written out twice rather than rotated with a transform, because a
+   transform on these would re-introduce the one thing this system has
+   spent five rewrites removing: a property that is not free to change. */
+@media (max-width: 1279px) {
+  .rail-left .rail-tint {
+    background-image: linear-gradient(
+      to bottom,
+      currentColor 0%,
+      color-mix(in srgb, currentColor 74%, transparent) 58%,
+      color-mix(in srgb, currentColor 52%, transparent) 100%
+    );
+  }
 }
 
 /* A RULED SCALE LIVED HERE. A fine tick every 56px down the outer edge
@@ -973,71 +1292,86 @@ body {
     radial-gradient(38vw 62vh at 108vw 76%, var(--edge-glow) 0%, transparent 72%);
 }
 
-/* ---- The department's colour on the ground -----------------------
-   The same ink the two margins are carrying, laid over the full
-   viewport behind everything that scrolls. `PageTint` drives the
-   colour; the strength and the shape are here.
+/* THE COLOUR IS THE MARGINS’ ALONE.
+   ------------------------------------------------------------------
+   A `.page-tint` lived here: one fixed layer over the full viewport,
+   carrying the same ink as the rails so the ground behind the measure
+   changed register with them. It is gone.
 
-   A FIFTH OF WHAT THE RAILS TAKE. The margins can hold two-thirds of
-   an ink because nothing is read out there. This is behind body copy,
-   and every point of tint is a point of contrast off the text.
+   Two reasons, and the second is the real one. It was the most
+   expensive object on the page — a viewport-sized surface repainted
+   every time the colour moved, and through four rewrites the thing
+   making the whole site stutter while scrolling. And it was spending
+   contrast on every line of body copy to say what the two rails were
+   already saying out at the edges of vision, where nothing is read and
+   a colour costs nothing to carry.
 
-   MASKED OUT OF THE MIDDLE. Weakest across the centre of the viewport,
-   full at the edges, so it pools around the measure instead of lying
-   under it. With the rails masked the same way from the outside in, the
-   colour ends up framing the reading column from every side at once —
-   which is what makes the page read as enclosed by the colour rather
-   than painted with it.
+   The margins report which department you are in. The page stays
+   paper. */
 
-   `z-index: 0` puts it over the haze and under both the grain and the
-   content, so the page's texture reads across the colour exactly as it
-   reads across the paper. ------------------------------------------ */
+/* ---- The turn ----------------------------------------------------
+   "I Do Both." is a block of the accent ink with paper-coloured type on
+   it — the site's own inversion device, in the one colour the site has.
 
-/* A FIFTH OF WHAT THE MARGINS TAKE, and dark takes more than twice what
-   light does even after the inks have already been chosen per theme.
-   Both figures are set by the same test: the ground may shift far enough
-   that you can name the colour if you look for it, and not so far that
-   body copy loses contrast against it. On white the paper is the
-   brightest thing on the screen and any tint at all is spending its
-   contrast; on black the ground has nowhere to go but up, and a seventh
-   of an ink over #000000 is still a very dark surface. */
-.page-tint {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.09;
+   THE TWO THEMES GET TWO DIFFERENT BLOCKS. A filled block is a light
+   source on a dark page and a printed ink on a white one — opposite
+   jobs — so running one treatment on both made the light theme look
+   like the dark one rendered badly.
+
+     dark    #E85C33 block, #12100E letters   5.43 : 1
+     light   #C8401A block, #FFFFFF letters   5.00 : 1
+
+   On black the block glows and the type is cut out of it. On white it
+   cannot out-glow the page, so it stops trying and becomes ink instead,
+   which is the inversion this site already runs on every button. The
+   letters flip and the block flips against them, which is why neither
+   can be `--ink` or `--paper`: those two flip *together*, and what is
+   wanted here is one moving opposite the other. Both figures clear AA
+   for normal text, and this is large text, which needs only 3:1.
+
+   The values are declared in `Hero.tsx` beside the rest of the cover's
+   tokens; this rule only spends them.
+
+   THE BLOCK HANGS LEFT by exactly its own left padding, so the ink
+   bleeds into the margin and the *letters* keep the same left edge as
+   the two lines above them. Aligning the block instead would indent the
+   sentence at the one line that has to look most certain of itself.
+
+   The mask that clips the row needs more clearance here than on the two
+   setup lines, because a filled block stands proud of the type on all
+   four sides — hence the extra padding, taken straight back out again
+   as negative margin so the layout never sees it. --------------- */
+
+.hero-turn {
+  display: inline-block;
+  padding: 0.06em 0.16em 0.1em;
+  margin-left: -0.16em;
+  background-color: var(--hero-accent);
+  color: var(--hero-turn-ink);
+
+  /* 800 against the setup lines' 400 — the top of Manrope's axis, and
+     the same figure every heading on the site turns on. The variable
+     axis carries it, so nothing reflows but this line's own width, and
+     it is the last line, so nothing below it moves at all.
+
+     TRACKING TIGHTENS WITH THE WEIGHT. Heavier stems eat their own
+     sidebearings, so type set at 800 on the tracking chosen for 400
+     reads loose — the counters stay put while the space between the
+     letters does not. A further -0.015em brings the block back to the
+     colour the setup lines have. */
+  font-weight: 800;
+  letter-spacing: -0.05em;
+
+  /* Both copies, so a wrap can never leave half the sentence outside
+     the block. It has room at every width the site supports; this is
+     the guarantee rather than the expectation. */
+  white-space: nowrap;
 }
 
-[data-theme="dark"] .page-tint {
-  opacity: 0.17;
-}
-
-/* Two at a time, cross-faded by `TintStack`.
-
-   THE MIDDLE IS EMPTY, and that is both the design and the optimisation.
-   The gradient starts at a fifth of the ink across the centre of the
-   viewport and reaches full only out at the edges, so the colour pools
-   around the measure rather than lying under it — the same instinct the
-   rails follow from the outside in, and between the two of them the
-   reading column ends up framed by the colour rather than painted with
-   it. It also means the region of the screen that is doing the most
-   work, the one with all the text in it, has almost nothing composited
-   over it.
-
-   This was a `mask-image` on the parent. See the note on
-   `.rail-tint-layer` for why it is a gradient now: a mask over a
-   viewport-sized element with an opacity animating inside it is a
-   full-screen render surface rebuilt on every frame of every scroll,
-   and it was the most expensive thing on the page. */
-.page-tint-layer {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(
-    115% 80% at 50% 46%,
-    color-mix(in srgb, currentColor 20%, transparent) 0%,
-    currentColor 82%
-  );
+/* The row that carries it, given the clearance a filled block needs. */
+.hero-line-turn {
+  padding-block: 0.14em 0.22em;
+  margin-block: -0.14em -0.22em;
 }
 
 /* ---- Live marks --------------------------------------------------

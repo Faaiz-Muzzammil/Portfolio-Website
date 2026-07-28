@@ -1,55 +1,38 @@
-"use client";
-
-import TintStack from "@/components/layout/TintStack";
+import { SECTION_IDS } from "@/lib/sections";
 
 /**
  * One margin's worth of colour.
  *
- *   TINT    The department's ink, as two cross-fading layers. Their shape —
- *           strongest out at the screen edge, falling away toward the rule,
- *           with a soft core high on the outer side — is baked into each
- *           layer's own gradient in `globals.css`. Opacity is the only thing
- *           that moves, and it moves on the compositor.
- *   GRAIN   The page's own grey noise over the top, fixed and unchanged from
- *           what it has always been.
+ * ONE LAYER PER DEPARTMENT, ALL OF THEM PAINTED, ALL BUT ONE AT ZERO
+ * OPACITY. The stylesheet raises whichever layer matches the department on
+ * the root and lets the rest fall away, so changing section is a pair of
+ * opacity transitions — the only kind of change a browser can make without
+ * repainting anything or touching the main thread.
  *
- * NOTHING IN THE RAIL TRANSFORMS ANY MORE. This carried three drifting layers
- * at three rates — a wash, a bloom over it, and a ruled scale travelling
- * against the scroll — on the theory that three rates is parallax and one is
- * not. Two of the three were invisible by construction: a soft mass has no
- * edge for the eye to track, so a gradient sliding under another gradient
- * reads as nothing at all while costing a full-height re-raster every frame.
+ * WHY NOT ONE ELEMENT THAT CHANGES COLOUR. Because that is what it was, and
+ * it stalled the page at every boundary. The layer's shape is a gradient
+ * built on `currentColor`, so transitioning `color` made the browser
+ * regenerate that gradient on all forty-two frames of the transition — a
+ * transition is only free if the property being transitioned is free, and
+ * `color` drags everything downstream of it along. Here the colour of each
+ * layer is fixed for the life of the page and nothing but opacity moves.
+ * `globals.css` carries the full list of what was tried before this.
  *
- * The scale was the one you could see, and it went last and most reluctantly.
- * It was a tall tiled background under a mask, translated on every frame, in
- * a fixed column beside body copy — and a moving ruler in the corner of the
- * eye is a real cost to pay in scroll smoothness for something nobody is
- * looking at. The colour changing as the page moves is the effect that was
- * asked for; it does not need a second thing moving to prove it is moving.
+ * IT RENDERS A LAYER FOR EVERY SECTION, including the ones with no ink.
+ * Which departments have a colour is a fact about the stylesheet, not about
+ * this component — a layer with no rule resolves `color` to `transparent`,
+ * paints nothing, and costs nothing. That is also what gives the cover its
+ * neutral margins without a special case.
  *
- * What survived is the bloom's *shape*, which is now a gradient rather than a
- * layer, and costs one paint at mount.
- *
- * THE COLOUR IS UNDER THE GRAIN, not in it. Both rails carry the same grey
- * noise as the rest of the page; what varies is the ink beneath it. That is
- * the difference between a margin that reads as tinted paper and one that
- * reads as a screen with a fault.
- *
- * THE COLOUR ITSELF comes from `TintProvider` by way of `TintStack`, so the
- * two rails and the ground behind the measure are provably the same value and
- * cannot drift apart from one another.
- *
- * IT TAKES NO SIDE. Which way the gradients run is decided by `.rail-left` and
- * `.rail-right` on the container, in the stylesheet, because that is a fact
- * about how the layer is painted and there is no longer anything here that
- * needs to know it.
+ * There is no state, no hook and no motion value in it. The rails are static
+ * markup and the cascade does the rest.
  */
 export default function RailWash() {
     return (
         <div className="rail-ground" aria-hidden>
-            <div className="rail-tint">
-                <TintStack className="rail-tint-layer" />
-            </div>
+            {SECTION_IDS.map((id) => (
+                <div key={id} className="rail-tint" data-for={id} />
+            ))}
         </div>
     );
 }

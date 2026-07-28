@@ -81,21 +81,48 @@ const TOKENS = {
     "--fig-fade": "58%",
 
     /* Colour — one hue, and only on the turn. */
-    "--hero-accent": "light-dark(#C43F1B, #E85C33)",
+    /* THE TWO THEMES GET TWO DIFFERENT BLOCKS, not one block at two
+       brightnesses. A filled block is a light source on a dark page and a
+       printed ink on a white one, and those are opposite jobs — running the
+       same treatment on both made the light theme look like the dark one
+       rendered badly.
+
+         DARK   A luminous orange with near-black letters. The block is the
+                brightest thing on the screen and the type is cut out of it.
+                #E85C33 on #12100E — 5.43 : 1.
+
+         LIGHT  A deep vermilion with paper-white letters. On white the
+                block cannot out-glow the page, so it stops trying: it goes
+                the other way and becomes ink, which is the inversion device
+                the rest of this site already runs on every button and every
+                heading. #C8401A on #FFFFFF — 5.00 : 1.
+
+       So the letters flip and the block flips with them, and each theme
+       gets the arrangement that is legible on its own ground. Neither can
+       be expressed with `--ink` or `--paper`: those flip together, and what
+       is needed here is one flipping against the other. */
+    "--hero-accent": "light-dark(#C8401A, #E85C33)",
+    "--hero-turn-ink": "light-dark(#FFFFFF, #12100E)",
 
     /* Motion. Longest path = 140ms delay + 440ms = 580ms. */
     "--m-line": "440ms",
     "--m-fade": "380ms",
     "--m-fig": "280ms",
 
-    /* THE STAGE. 72svh is a floor, not a height: the text block is three
+    /* `--band-h` is the height of the head margin the left rail becomes on
+       a narrow screen, and it is 0 above 1280px, so this expression is
+       correct at every width. Without it the cover would be a full stage
+       tall *inside* a body already inset by the band, and would overflow
+       the screen by exactly its height.
+
+       THE STAGE. 72svh is a floor, not a height: the text block is three
        beats tall now and the figure stretches to meet it, so on most
        screens the content sets the height and this never applies. It
        exists so the cover cannot collapse into a band on a very short
        window. It also leaves the Work rule just above the fold, which —
        with no proof block on this screen — is the only thing telling a
        stranger there is something behind the claim. */
-    "--stage": "calc(72svh - var(--scroll-offset))",
+    "--stage": "calc(72svh - var(--scroll-offset) - var(--band-h))",
 } as CSSProperties;
 
 const SOCIAL_ICONS = {
@@ -200,24 +227,42 @@ export default function Hero() {
                         className="font-display font-normal leading-[1.04] tracking-[-0.035em] text-(length:--t-display) lg:text-(length:--t-display-wide)"
                     >
                         {BEATS.map((beat) => (
-                            <span key={beat.text} className="line-mask-display">
+                            <span
+                                key={beat.text}
+                                className={
+                                    beat.turns
+                                        ? "line-mask-display hero-line-turn"
+                                        : "line-mask-display"
+                                }
+                            >
                                 <span
-                                    className={
-                                        beat.turns
-                                            ? "line-up text-(--hero-accent)"
-                                            : "line-up text-ink"
-                                    }
+                                    className="line-up text-ink"
                                     /* The gaps widen — 0, 70, 140 — so the
                                        beat before the payoff is the longest.
                                        The stagger states the rhythm rather
-                                       than emphasising the turn; the turn's
-                                       one device is still the hue. */
+                                       than emphasising the turn. */
                                     style={{
                                         animationDuration: "var(--m-line)",
                                         animationDelay: beat.delay,
                                     }}
                                 >
-                                    {beat.text}
+                                    {/* The block is its own element rather
+                                        than a class on the sliding row. That
+                                        row carries `.line-up`, which sets
+                                        `display: block` and is declared later
+                                        in the stylesheet — so an
+                                        `inline-block` on the same element
+                                        loses the cascade and the highlight
+                                        stretches the full width of the
+                                        measure instead of shrinking to its
+                                        three words. */}
+                                    {beat.turns ? (
+                                        <span className="hero-turn">
+                                            {beat.text}
+                                        </span>
+                                    ) : (
+                                        beat.text
+                                    )}
                                 </span>
                             </span>
                         ))}
