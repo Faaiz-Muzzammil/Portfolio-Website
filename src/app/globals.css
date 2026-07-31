@@ -1391,7 +1391,7 @@ summary {
   background-color: var(--hero-accent);
   color: var(--hero-turn-ink);
 
-  /* 800 against the setup lines' 400 — the top of Manrope's axis, and
+  /* 800 against the setup lines' 400 — the top of Bricolage's axis, and
      the same figure every heading on the site turns on. The variable
      axis carries it, so nothing reflows but this line's own width, and
      it is the last line, so nothing below it moves at all.
@@ -1875,6 +1875,79 @@ summary {
 
 .tnum {
   font-variant-numeric: tabular-nums;
+}
+
+/* ---- The cover's plate -------------------------------------------
+   The portrait, given an edge and a pair of registration marks.
+
+   ── THE RULE IS FIXING A REAL FAULT, NOT DECORATING ──────────────
+
+   The photograph is graded to near-black through its lower half — the
+   shirt, the balcony wall — and the dark theme's ground is #000000.
+   With no edge on it those two are the same colour, so the bottom of
+   the plate did not end anywhere: it dissolved into the page, and what
+   was left read as a lighter patch on the background rather than as a
+   picture sitting on it. A hairline at `--line-2` is enough to say
+   where the plate stops. On the light theme it does the same job
+   against white, where the sky at the top of the frame is the half
+   that disappears.
+
+   THIS IS WHAT THE MASK WAS PAPERING OVER. A `.fig-grade` class used to
+   fade the image out toward its foot — 58% on the tall desktop crop,
+   90% on the phone — which hid the undefined edge by making the whole
+   bottom of the picture undefined on purpose. It is gone. Deleting two
+   fifths of a photograph to avoid drawing a one-pixel line is a bad
+   trade, and the line is also the better-looking answer.
+
+   ── THE MARKS ────────────────────────────────────────────────────
+
+   Two corner brackets, top-left and bottom-right, sitting ten pixels
+   outside the plate. They are crop marks: the corner registration a
+   press sheet carries to show where the trim falls. That is the only
+   ornament vocabulary this site has any business borrowing — it is
+   monochrome, it is hairline, it is square, and it is drawn from the
+   same printing world as the departments, the folios and the measure.
+
+   A DIAGONAL PAIR, NOT FOUR. Four corners is a frame, and a frame
+   around a photograph on a page with no other framed object is a
+   picture in a box. Two opposite corners imply the rectangle without
+   closing it, which is what a crop mark does — it registers the plate
+   rather than containing it.
+
+   `transparent` on the two unwanted sides rather than `border-width: 0`,
+   so each mark keeps its full box and the two arms stay exactly the
+   same length. Set the width to zero and the corner shifts.
+
+   They sit outside the plate, so nothing in the chain above may clip:
+   `Reveal` and `Parallax` both render plain wrappers, and ten pixels
+   is well inside the page gutter at every width. ------------------ */
+
+.plate {
+  border: 1px solid var(--line-2);
+}
+
+.plate::before,
+.plate::after {
+  content: "";
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--line);
+  pointer-events: none;
+}
+
+.plate::before {
+  top: -0.625rem;
+  left: -0.625rem;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.plate::after {
+  right: -0.625rem;
+  bottom: -0.625rem;
+  border-left-color: transparent;
+  border-top-color: transparent;
 }
 
 /* A `.write-on` rule lived here: the contact form's message field set

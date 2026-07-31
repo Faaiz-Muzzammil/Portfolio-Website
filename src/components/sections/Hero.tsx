@@ -10,6 +10,8 @@ import {
 
 import { personalInfo, socialLinks } from "@/data";
 import Button from "@/components/ui/Button";
+import Reveal from "@/components/motion/Reveal";
+import Parallax from "@/components/motion/Parallax";
 
 /* ══════════════════════════════════════════════════════════════════════
    TOKENS
@@ -56,7 +58,23 @@ import Button from "@/components/ui/Button";
 const TOKENS = {
     /* Type */
     "--t-body": "1rem",
-    "--t-lead": "1.25rem",
+
+    /* THE LEAD IS FLUID NOW; IT WAS A FLAT 1.25rem. Twenty pixels is
+       right under a 68px headline and wrong under a 37px one — on a
+       phone it put the subhead within 1.8× of the display line, which
+       is not a step, it is two sizes of type in the same neighbourhood
+       arguing about which one is the headline.
+
+       It was also the one type size on this cover that did not scale.
+       Everything else is measured in `cqw` against the grid container,
+       so the whole composition holds its proportions as the screen
+       changes and then the subhead alone stayed put and broke them.
+
+       17px on a phone against a ~37px display line is a clean 2.2×;
+       21px at full width against 68px is 3.2×. Both read as a heading
+       and a standfirst rather than as two headings. The floor is still
+       a full point above body copy, so it never stops being a lead. */
+    "--t-lead": "clamp(1.0625rem, 3.6cqw, 1.3125rem)",
     "--t-display": "clamp(1.95rem, 11.5cqw, 4.25rem)",
     "--t-display-wide": "clamp(2.5rem, 9.5cqw, 6.5rem)",
 
@@ -75,34 +93,37 @@ const TOKENS = {
     "--fig-min": "15rem",
     "--fig-max": "24rem",
 
-    /* Where the picture stops being a picture. Solid to 58%, gone by the
-       foot — the shirt and the balcony wall are already near-black, so
-       the grade finishes a dissolve the photograph starts on its own. */
-    "--fig-fade": "58%",
+    /* A `--fig-fade` lived here, and then briefly in a `.fig-grade` class
+       so it could differ per breakpoint. Both are gone with the mask —
+       the picture now ends where it ends. */
 
-    /* Colour — one hue, and only on the turn. */
-    /* THE TWO THEMES GET TWO DIFFERENT BLOCKS, not one block at two
-       brightnesses. A filled block is a light source on a dark page and a
-       printed ink on a white one, and those are opposite jobs — running the
-       same treatment on both made the light theme look like the dark one
-       rendered badly.
+    /* ---- The turn block: ink and paper, and no hue at all -----------
+       THE COVER HAS NO COLOUR NOW, which finally makes it agree with
+       the rest of the site. "The cover is not a colour" is the rule the
+       department inks are built on — `home` has no entry in either tint
+       set, the nav's marker falls back to solid ink there, and the
+       margins stay neutral. The one thing that had never been told was
+       the cover itself, which was carrying a vermilion block: the only
+       hue on the site, on the one screen the tint system exempts.
 
-         DARK   A luminous orange with near-black letters. The block is the
-                brightest thing on the screen and the type is cut out of it.
-                #E85C33 on #12100E — 5.43 : 1.
+       `--ink` ON `--paper` IS THE SAME DEVICE EVERY OTHER CONTROL HERE
+       USES. A thing that matters is a solid block of ink with
+       paper-coloured type cut out of it — the buttons do it, the nav's
+       CTA does it, the footer's icons do it on hover. The turn now does
+       it too, at 96px.
 
-         LIGHT  A deep vermilion with paper-white letters. On white the
-                block cannot out-glow the page, so it stops trying: it goes
-                the other way and becomes ink, which is the inversion device
-                the rest of this site already runs on every button and every
-                heading. #C8401A on #FFFFFF — 5.00 : 1.
-
-       So the letters flip and the block flips with them, and each theme
-       gets the arrangement that is legible on its own ground. Neither can
-       be expressed with `--ink` or `--paper`: those flip together, and what
-       is needed here is one flipping against the other. */
-    "--hero-accent": "light-dark(#C8401A, #E85C33)",
-    "--hero-turn-ink": "light-dark(#FFFFFF, #12100E)",
+       IT NEEDS NO PER-THEME BRANCH, and that is what makes it right
+       rather than merely quieter. The old pair could not be expressed
+       in these tokens: an orange block wants near-black letters on a
+       dark page and paper-white ones on a light page, so the two ends
+       had to move independently and were pinned by hand with
+       `light-dark()` — two hexes, two contrast ratios, checked twice.
+       Ink and paper already invert together against whichever ground is
+       under them. Black block with white letters on the white theme,
+       white block with black letters on the black one — 20.4:1 and
+       21:1 — and nothing to keep in sync. */
+    "--hero-accent": "var(--ink)",
+    "--hero-turn-ink": "var(--paper)",
 
     /* Motion. Longest path = 140ms delay + 440ms = 580ms. */
     "--m-line": "440ms",
@@ -110,12 +131,21 @@ const TOKENS = {
     "--m-fig": "280ms",
 
     /* THE STAGE. 72svh is a floor, not a height: the text block is three
-       beats tall now and the figure stretches to meet it, so on most
-       screens the content sets the height and this never applies. It
-       exists so the cover cannot collapse into a band on a very short
-       window. It also leaves the Work rule just above the fold, which —
-       with no proof block on this screen — is the only thing telling a
-       stranger there is something behind the claim. */
+       beats tall and the figure stretches to meet it, so on most screens
+       the content sets the height and this never applies. It exists so
+       the cover cannot collapse into a band on a very short window. It
+       also leaves the Work rule just above the fold, which — with no
+       proof block on this screen — is the only thing telling a stranger
+       there is something behind the claim.
+
+       ON A PHONE IT NOW NEVER APPLIES AT ALL, because the portrait band
+       is stacked under the copy and the cover is comfortably past 72svh
+       on its own. That is the intended outcome rather than a floor being
+       overshot: the fold lands somewhere in the band, so the first thing
+       a phone reader does is scroll *into a photograph* — which is a
+       better reason to keep going than a rule at the bottom of a screen
+       of type. `justify-center` stops mattering for the same reason;
+       there is no slack left to centre. */
     "--stage": "calc(72svh - var(--scroll-offset))",
 } as CSSProperties;
 
@@ -199,9 +229,52 @@ export default function Hero() {
                 measure at every width. */}
             <div
                 style={{ containerType: "inline-size" }}
-                className="grid w-full items-stretch gap-(--s-12) lg:grid-cols-[minmax(0,1fr)_minmax(var(--fig-min),var(--fig-max))] lg:gap-[clamp(2rem,4vw,4rem)]"
+                /* `--s-8` between the stack and the band, not `--s-12`. Three
+                   rems of air below the social row read as the cover ending
+                   and a photograph starting; two keeps the band attached to
+                   the copy it belongs to. At `lg` the gap is horizontal and
+                   goes back to its own clamp. */
+                className="grid w-full items-stretch gap-(--s-8) lg:grid-cols-[minmax(0,1fr)_minmax(var(--fig-min),var(--fig-max))] lg:gap-[clamp(2rem,4vw,4rem)]"
             >
-                <div>
+                {/* ---- THE TWO LAYERS THAT MAKE THE DEPTH ----------------
+                    `Parallax` was in the codebase and wired to nothing. Its
+                    own doc describes a cover running "the sentence at 0.14
+                    and the paragraph and buttons at 0.07" — a composition
+                    that had been unwired at some point without the component
+                    going with it. This is the first use on the site.
+
+                    IT IS ON BOTH COLUMNS, AT DIFFERENT FIGURES, and that is
+                    not optional. Depth is a *difference*: one layer drifting
+                    while everything around it holds still is not parallax,
+                    it is an element that has come loose. The type leaves at
+                    0.05 of a viewport and the portrait at 0.12, so the
+                    picture pulls away from the words as the cover exits and
+                    the flat page reads as having a near and a far.
+
+                    THE PORTRAIT IS THE FASTER LAYER because it is the nearer
+                    object. Run it the other way — type faster than the
+                    photograph behind it — and the depth inverts: the page
+                    reads as a picture hanging in front of the headline,
+                    which is the one relationship the composition does not
+                    have.
+
+                    BOTH FIGURES ARE SMALL ON PURPOSE. Half a screen of drift
+                    is a slideshow; a twentieth and an eighth are things you
+                    feel rather than watch, and the difference between them —
+                    which is the only part that matters — is still plain.
+
+                    IT DOES NOT RUN ON A PHONE. `Parallax` gates itself at
+                    768px, on the reasoning that a phone's viewport is barely
+                    shorter than its section so there is no scroll distance
+                    for the drift to happen over. That reasoning is now
+                    weaker here than it was — the cover is a good deal taller
+                    than a phone screen since the portrait went full-height —
+                    but the gate is the component's, shared by every future
+                    call site, and the other half of its argument still
+                    stands: a scrubbed tween per layer, on the least powerful
+                    hardware there is. Lower it there if it is ever wanted,
+                    not here. */}
+                <Parallax depth={0.05} className="min-w-0">
                     {/* THE HEADLINE OPENS THE PAGE, with nothing above it.
                         An eyebrow sat here and has been cut: it was the first
                         thing the eye met on the site and it was a label, so
@@ -274,8 +347,14 @@ export default function Hero() {
                             animationDelay: "200ms",
                         }}
                     >
-                        I ship full-stack apps and AI agents, then run the
-                        marketing that gets them used.
+                        {/* One line, three beats, and it is deliberately the
+                            only thing on the cover that does not resolve
+                            further down the page. Everything else here is
+                            checkable — the projects, the roles, the numbers.
+                            This is the voice. Keep it short; the moment it
+                            starts explaining itself it stops being the
+                            voice. */}
+                        Busy building stuff, marketing and winning awards.
                     </p>
 
                     {/* One primary action. A filled button and a text link
@@ -347,54 +426,127 @@ export default function Hero() {
                             );
                         })}
                     </ul>
-                </div>
+                </Parallax>
 
-                {/* THE FIGURE — 1024px AND UP ONLY.
-                    It drops out below that rather than stacking, and that is
-                    a decision rather than a shortcut. On a phone the cover is
-                    already spending every vertical pixel it has on three
-                    lines of display type, a subhead, two actions and a social
-                    row; a portrait inserted anywhere in that stack either
-                    pushes the primary action under the fold or forces the
-                    headline down a size. The photograph does no persuasive
-                    work the headline is not already doing, and it appears
-                    elsewhere on the site — so on a small screen it is the
-                    thing that gives way.
+                {/* THE FIGURE, AND IT NOW APPEARS AT EVERY WIDTH.
+                    It used to be `hidden lg:block`, on the argument that a
+                    phone's cover is already spending every vertical pixel it
+                    has on three lines of display type, a subhead, two actions
+                    and a social row — and that a portrait dropped into that
+                    stack pushes the primary action under the fold.
 
-                    `sizes` declares 1px below the breakpoint so that a
-                    browser which fetches it anyway takes the smallest
-                    candidate in the set rather than a desktop-width file. */}
-                <figure className="relative hidden lg:block">
-                    <Image
-                        src="/portrait.jpeg"
-                        alt={`${personalInfo.name} on a balcony in ${personalInfo.location}, the foothills and river valley behind him`}
-                        fill
-                        sizes="(min-width: 1024px) 24rem, 1px"
-                        priority
-                        /* `cover` against a container that is taller than the
-                           3:4 source, so the crop takes the sides and leaves
-                           the tonal split intact top to bottom — which is
-                           what the graded foot depends on. 30% keeps the head
-                           in the upper third and lets the near-black lower
-                           half fall into the fade. */
-                        className="rise object-cover object-[50%_30%] grayscale"
-                        /* The shared `.rise` class rather than an inline
-                           `animation`, so this inherits the two things that
-                           come with it for free: the `js-loading` gate, which
-                           holds the entrance until the page is actually on
-                           screen, and the reduced-motion override. Only the
-                           timing is set here — 300ms, so the figure arrives
-                           after the headline has finished, never with it. */
-                        style={{
-                            animationDuration: "var(--m-fig)",
-                            animationDelay: "300ms",
-                            maskImage:
-                                "linear-gradient(to bottom, #000 0%, #000 var(--fig-fade), transparent 100%)",
-                            WebkitMaskImage:
-                                "linear-gradient(to bottom, #000 0%, #000 var(--fig-fade), transparent 100%)",
-                        }}
-                    />
-                </figure>
+                    That argument is only true if the portrait goes *into* the
+                    stack. It does not: it comes after all of it. The order on
+                    a phone is headline, subhead, actions, socials, portrait,
+                    so nothing above it moves by a pixel and "View Work" sits
+                    exactly where it sat before. What the image costs is scroll
+                    depth below the fold, which is the one thing a cover has in
+                    unlimited supply.
+
+                    THE BOX IS THE FILE'S OWN RATIO — 1165 × 1280 — SO NOTHING
+                    IS CROPPED. Two landscape bands were tried here first, 3:2
+                    and then 4:3, on the reasoning that a phone cannot afford
+                    a full-height portrait. Both cut the picture in half, and
+                    the reason is worth recording because it was not a matter
+                    of taste: the comment beside this image asserted a 3:4
+                    source and the file is 0.91 — very nearly square. Every
+                    crop figure downstream had been derived from a number
+                    nobody had checked, so a "band" that should have shown a
+                    wide slice through the face was instead showing the top
+                    two thirds of a nearly-square frame.
+
+                    Measure the asset. At its real ratio `object-cover` has
+                    nothing to cut, the whole photograph is on screen, and no
+                    focal point is needed at all. On a 360px phone that is
+                    ~396px tall — a full plate rather than a band, which is
+                    more than the earlier reasoning wanted to spend and is
+                    what showing a picture whole actually costs.
+
+                    THE DESKTOP COLUMN IS UNAFFECTED. There the box is a tall
+                    grid cell, the crop is real, and `50% 30%` still keeps the
+                    head in the upper third.
+
+                    THE GRADED FOOT IS GONE AND `.plate` REPLACED IT. The mask
+                    that used to dissolve the bottom of this image was hiding
+                    a problem rather than solving one: the photograph grades
+                    to near-black and the dark theme's ground *is* black, so
+                    the plate had no visible lower edge, and fading the whole
+                    foot out made that look deliberate. It is a hairline and
+                    two crop marks now — an edge where the edge is, and the
+                    picture kept whole. See `.plate` in `globals.css`.
+
+                    `sizes` says `100vw` below the breakpoint now, not `1px`.
+                    That 1px was there to stop a browser that fetched the
+                    image anyway from taking a desktop-width file for a
+                    hidden element; with the figure genuinely rendered, it
+                    would have picked the smallest candidate in the set and
+                    scaled it across the full width of a phone. */}
+                {/* IT ARRIVES WHEN YOU REACH IT, WHICH IT DID NOT BEFORE.
+                    The image carried `.rise` — a CSS entrance that starts
+                    counting from page load with a 300ms delay. On a desktop
+                    that is right: the figure is a column beside the headline,
+                    above the fold, and it lifts in a beat after the type. On
+                    a phone the same class was playing to nobody. The band is
+                    below the fold, so its entrance ran and finished while the
+                    reader was still looking at the headline, and by the time
+                    they scrolled down the photograph was simply *there* —
+                    inert, already arrived, the one still object at the foot
+                    of a page where everything else moves as you reach it.
+
+                    `Reveal` fires on a ScrollTrigger instead, so the arrival
+                    happens at the moment the image is actually seen. Above
+                    the fold on a desktop the trigger is already satisfied at
+                    load and it behaves exactly as it did; on a phone it waits
+                    for the scroll. One mechanism, correct at both sizes,
+                    rather than a load-timed animation guessing where the fold
+                    is.
+
+                    `as="figure"` so this is still a `<figure>` with a
+                    `<figcaption>` — the wrapper is the element, not a div
+                    around it. `scale` adds the 0.98 → 1 settle to the fade,
+                    which on a photograph reads as the plate being pressed
+                    onto the page. */}
+                {/* The nearer layer, at more than twice the type's figure —
+                    see the note on the text column. `Parallax` wraps rather
+                    than animates, so its transform and the `Reveal`
+                    entrance below it are on separate nodes and never write
+                    to the same element. */}
+                <Parallax depth={0.12} className="w-full lg:h-full lg:w-auto">
+                <Reveal as="figure" scale y={20} delay={0.3} className="w-full lg:h-full lg:w-auto">
+                    {/* The aspect box wraps the plate and nothing else. The
+                        caption is a sibling below it — put inside, it would
+                        sit over a `fill` image and count against the ratio
+                        the box exists to hold. At `lg` the ratio gives way to
+                        `h-full` and the column's own height takes over. */}
+                    <div className="plate relative aspect-1165/1280 w-full lg:aspect-auto lg:h-full">
+                        <Image
+                            src="/portrait.jpeg"
+                            alt={`${personalInfo.name} on a balcony in ${personalInfo.location}, the foothills and river valley behind him`}
+                            fill
+                            sizes="(min-width: 1024px) 24rem, 100vw"
+                            priority
+                            /* NO CROP ON A PHONE. The box is the file's own
+                               ratio, so `cover` has nothing to cut and no
+                               focal point is needed — the whole photograph is
+                               on screen. At `lg` the box is a tall column
+                               instead and the crop comes back, taking the
+                               sides and keeping the head in the upper third.
+
+                               No `.rise` and no inline `animation` any more:
+                               the entrance belongs to the `Reveal` around this
+                               now, and two entrances on one element fight. */
+                            className="object-cover grayscale lg:object-[50%_30%]"
+                        />
+                    </div>
+
+                    {/* A `<figcaption>` was tried here on phones — the name,
+                       a rule across, the place, in the department heads' own
+                       plate line. It is gone: the picture is the last thing
+                       on the cover and a line of grey mono under it was one
+                       more object between the reader and the Work rule. The
+                       `alt` still names both. */}
+                </Reveal>
+                </Parallax>
             </div>
         </div>
     );

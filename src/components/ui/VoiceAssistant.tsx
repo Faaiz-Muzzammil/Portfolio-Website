@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { m, AnimatePresence } from "framer-motion";
 import { Microphone, SpeakerHigh, X } from "@phosphor-icons/react";
-import { personalInfo } from "@/data";
 import { useTheme } from "next-themes";
+import { VOICE_LINES } from "@/lib/voice/lines";
 
 // TypeScript definition for Web Speech API
 interface IWindow extends Window {
@@ -82,19 +82,68 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
     const speechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const recognitionActiveRef = useRef(false);
     const retryCountRef = useRef(0);
-    const audioContextRef = useRef<AudioContext | null>(null);
     const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+
+    /* ---- THE LATEST-HANDLER REFS, AND WHY THEY ARE NOT OPTIONAL -----
+       The recognition object is built once, in an effect that must not
+       re-run — rebuilding it mid-session tears down a live microphone —
+       so its `onresult` and `onerror` callbacks are created exactly once
+       and live for the page's lifetime. Those callbacks were calling
+       `handleCommand` and `speak` directly, which meant they captured
+       the *first render's* copies and kept them forever.
+
+       That is not a theoretical staleness. `handleCommand` closes over
+       `theme` from `useTheme()`, so "toggle theme" read whatever the
+       theme was when the component first mounted and flipped away from
+       that every single time — say it twice and the second one did
+       nothing. Everything downstream of `speak` was equally frozen.
+
+       A ref reassigned on every render is the standard fix: the effect
+       reads `.current` at call time, so it always gets the newest
+       closure while the recognition object itself is never rebuilt. */
+    const handleCommandRef = useRef<(cmd: string) => void>(() => { });
+    const speakRef = useRef<(text: string) => void>(() => { });
     const persistentAudioRef = useRef<HTMLAudioElement | null>(null);  // iOS: single primed element
     const iosAudioPrimedRef = useRef(false);  // iOS: track if audio is primed
-    const useElevenLabsRef = useRef(true); // Try ElevenLabs first
+    /* ---- WHEN TO STOP ASKING ELEVENLABS ------------------------------
+       `useElevenLabsRef` was set true and never written again, so a
+       deployment with no `ELEVENLABS_API_KEY`, or one that had burned
+       its rate limit, paid the full remote round trip on every single
+       utterance and then fell back — and on a hard failure that is a
+       ten-second timeout before the reply starts. Every command. For
+       the whole session.
+
+       Two consecutive failures is enough to conclude the service is not
+       available right now; after that the session uses the platform
+       voice, which is instant. The counter resets on any success, so a
+       single flaky request does not cost the rest of the visit. */
+    const useElevenLabsRef = useRef(true);
+    const ttsFailuresRef = useRef(0);
+
+    /* Consecutive restarts that produced no speech. Reset by any real
+       result; see `recognition.onend` for what it is guarding against. */
+    const restartsRef = useRef(0);
+
     const MAX_RETRIES = 3;
+    const MAX_TTS_FAILURES = 2;
+    const MAX_DEAD_RESTARTS = 6;
 
     // Broadcast state changes
     useEffect(() => {
         onStateChange?.(isListening || isSpeaking);
     }, [isListening, isSpeaking, onStateChange]);
 
-    // Detect mobile on mount and pre-check mic permission
+    /* Detect mobile and pre-check mic permission.
+
+       AN `AudioContext` WAS BEING CONSTRUCTED HERE ON EVERY PAGE LOAD
+       and it is gone. Nothing ever used it: playback goes through an
+       `<audio>` element, and the context was only ever created,
+       resumed once, and closed on unmount. Every visitor to the site —
+       including the overwhelming majority who never touch the mic —
+       was paying to spin up an audio graph, and on Chrome and Safari an
+       `AudioContext` built outside a user gesture starts `suspended`
+       and logs a warning about it. A cost and a console warning, for a
+       thing with no consumer. */
     useEffect(() => {
         setIsMobileDevice(isMobile());
 
@@ -109,17 +158,6 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
                 // Permissions API not fully supported, will check on first use
             });
         }
-
-        // Initialize AudioContext for ElevenLabs playback
-        if (typeof window !== 'undefined') {
-            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        }
-
-        return () => {
-            if (audioContextRef.current) {
-                audioContextRef.current.close();
-            }
-        };
     }, []);
 
     // Rotate hints
@@ -132,17 +170,55 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
         }
     }, [isListening, transcript, response, isMobileDevice]);
 
-    // Cleanup timeouts on unmount
+    /* ---- ONE WAY TO SILENCE IT --------------------------------------
+       There are two independent things that can be making noise — an
+       `<audio>` element playing an ElevenLabs clip, and the platform's
+       own `speechSynthesis` — and before this they were being stopped
+       in different places by different code. `Escape` cancelled
+       `speechSynthesis` and left the audio element playing, so the one
+       guaranteed way out of a live session did not actually stop the
+       voice. Unmount had the mirror problem.
+
+       Everything that ends a session calls this now. `pause()` alone
+       leaves the element holding a decoded buffer and a blob URL, so
+       the source is cleared and the URL revoked as well — a session
+       that gets opened and closed a dozen times should not accumulate
+       a dozen decoded clips. */
+    const stopAllAudio = useCallback(() => {
+        const audio = currentAudioRef.current;
+        if (audio) {
+            audio.pause();
+            /* Revoking before clearing `src` is the wrong order — the
+               element still holds the URL until the source is dropped. */
+            const url = audio.src;
+            audio.removeAttribute("src");
+            audio.load();
+            if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+            currentAudioRef.current = null;
+        }
+
+        if (typeof window !== "undefined" && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+    }, []);
+
+    // Cleanup on unmount: timers, audio, and the microphone itself.
     useEffect(() => {
         return () => {
+            shouldListenRef.current = false;
             if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
             if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-            if (currentAudioRef.current) {
-                currentAudioRef.current.pause();
-                currentAudioRef.current = null;
-            }
+            stopAllAudio();
+            /* The recognition object was left running on unmount, which
+               on Android holds the mic indicator up after the component
+               is gone. `abort()` rather than `stop()`: there is no
+               result worth waiting for. */
+            try {
+                recognitionRef.current?.abort();
+            } catch { /* already stopped */ }
+            recognitionActiveRef.current = false;
         };
-    }, []);
+    }, [stopAllAudio]);
 
     // Load voices (fallback)
     const loadVoices = useCallback(() => {
@@ -198,15 +274,22 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
             if (e.key !== "Escape") return;
             shouldListenRef.current = false;
             if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
-            safeStopRecognition(false);
+            safeStopRecognition(true);
             setIsListening(false);
-            window.speechSynthesis?.cancel();
+            /* `stopAllAudio`, not `speechSynthesis.cancel()`. Escape used
+               to silence the platform voice and leave an ElevenLabs clip
+               playing to the end — which is most of the time, since
+               ElevenLabs is tried first. */
+            stopAllAudio();
+            isSpeakingRef.current = false;
             setIsSpeaking(false);
+            setResponse("");
+            setTranscript("");
         };
 
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
-    }, [isListening, isSpeaking, safeStopRecognition]);
+    }, [isListening, isSpeaking, safeStopRecognition, stopAllAudio]);
 
     // Initialize Speech API
     useEffect(() => {
@@ -262,7 +345,7 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
                         recognitionActiveRef.current = false;
                         setIsListening(false);
                         setMicPermissionGranted(false);
-                        speak("Please allow microphone access.");
+                        speakRef.current(VOICE_LINES.micBlocked);
                     } else if (event.error === 'service-not-allowed') {
                         shouldListenRef.current = false;
                         recognitionActiveRef.current = false;
@@ -275,36 +358,84 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
                     }
                 };
 
+                /* ---- THE RESTART, AND ITS CEILING -------------------
+                   Recognition is `continuous = false` on mobile, so it
+                   ends after every utterance and has to be restarted for
+                   the session to feel continuous. That restart had no
+                   limit and no memory: if the engine ended immediately —
+                   a revoked permission, a browser that stops honouring
+                   `start()` without a fresh gesture, an Android build
+                   with no network to its recognition service — `onend`
+                   fired, rescheduled, started, ended immediately, and
+                   went round again. Three times a second, forever, with
+                   the panel showing "Listening" the entire time.
+
+                   `restartsRef` counts starts that produced nothing. A
+                   real utterance resets it in `onresult`. Six dead
+                   restarts is the point at which the session is not
+                   coming back, so it closes and says so — which is a
+                   fixable answer, unlike a spinner that never resolves. */
                 recognition.onend = () => {
                     recognitionActiveRef.current = false;
 
-                    if (shouldListenRef.current && !isSpeakingRef.current) {
-                        const delay = isMobile() ? 300 : 100;
-
-                        restartTimeoutRef.current = setTimeout(() => {
-                            if (shouldListenRef.current && !isSpeakingRef.current && !recognitionActiveRef.current) {
-                                safeStartRecognition();
-                            }
-                        }, delay);
-                    } else {
-                        setIsListening(false);
+                    if (!shouldListenRef.current || isSpeakingRef.current) {
+                        if (!shouldListenRef.current) setIsListening(false);
+                        return;
                     }
+
+                    restartsRef.current += 1;
+
+                    if (restartsRef.current > MAX_DEAD_RESTARTS) {
+                        shouldListenRef.current = false;
+                        restartsRef.current = 0;
+                        setIsListening(false);
+                        speakRef.current(VOICE_LINES.micLost);
+                        return;
+                    }
+
+                    const delay = isMobile() ? 300 : 100;
+
+                    restartTimeoutRef.current = setTimeout(() => {
+                        if (shouldListenRef.current && !isSpeakingRef.current && !recognitionActiveRef.current) {
+                            safeStartRecognition();
+                        }
+                    }, delay);
                 };
 
                 recognition.onresult = (event: any) => {
-                    let finalTranscript = "";
-
+                    /* `handleCommandRef`, never `handleCommand` — this
+                       callback is created once and outlives every render.
+                       See the note beside the ref declarations. */
                     if (isMobile()) {
-                        finalTranscript = event.results[0][0].transcript;
-                        setTranscript(finalTranscript);
-                        handleCommand(finalTranscript.toLowerCase());
+                        /* `event.results[0]` is wrong once a session has
+                           produced more than one result, which happens on
+                           Android whenever recognition restarts without
+                           the results list being reset: the second
+                           utterance re-runs the *first* command. Index
+                           from `resultIndex`, which is what the event
+                           carries precisely to say "this is the new
+                           part". */
+                        const idx = typeof event.resultIndex === "number"
+                            ? event.resultIndex
+                            : event.results.length - 1;
+                        const result = event.results[idx];
+                        if (!result) return;
+
+                        // A real utterance: the session is alive.
+                        restartsRef.current = 0;
+
+                        const text = result[0].transcript;
+                        setTranscript(text);
+                        handleCommandRef.current(text.toLowerCase());
                     } else {
+                        restartsRef.current = 0;
+
                         const lastResult = event.results[event.results.length - 1];
-                        finalTranscript = lastResult[0].transcript;
-                        setTranscript(finalTranscript);
+                        const text = lastResult[0].transcript;
+                        setTranscript(text);
 
                         if (lastResult.isFinal) {
-                            handleCommand(finalTranscript.toLowerCase());
+                            handleCommandRef.current(text.toLowerCase());
                         }
                     }
                 };
@@ -437,44 +568,46 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
 
                 return new Promise<boolean>((resolve) => {
                     let resolved = false;
-
-                    const cleanup = () => {
-                        URL.revokeObjectURL(audioUrl);
-                    };
+                    let playStarted = false;
 
                     const finish = (success: boolean) => {
                         if (resolved) return;
                         resolved = true;
-                        cleanup();
+                        URL.revokeObjectURL(audioUrl);
                         resolve(success);
                     };
 
-                    audio.onended = () => finish(true);
-                    audio.onerror = () => finish(false);
+                    /* ONE PLAY, NOT TWO. Both `loadeddata` and
+                       `canplaythrough` were calling `play()`, and on a
+                       clip small enough to buffer in one go both fire —
+                       the second call restarts a stream that has already
+                       begun, which is the stutter at the top of a reply.
+                       `canplaythrough` alone is not enough either: some
+                       Android builds never fire it for a short blob, so
+                       both listeners stay and a latch decides. */
+                    const startPlayback = () => {
+                        if (resolved || playStarted) return;
+                        playStarted = true;
 
-                    // Wait for audio to be ready before playing
-                    audio.oncanplaythrough = () => {
-                        if (resolved) return;
-                        // CRITICAL: Cancel native speech RIGHT before play()
+                        /* iOS re-arms `speechSynthesis` on its own once
+                           SpeechRecognition has run in the session, so it
+                           is cancelled as late as possible — any earlier
+                           and it can wake up again between the cancel and
+                           the play, and the reply is spoken twice in two
+                           different voices. */
                         if (window.speechSynthesis) window.speechSynthesis.cancel();
+
                         audio.play().catch((e) => {
                             console.error('Audio play failed:', e);
                             finish(false);
                         });
                     };
 
-                    // Fallback for browsers that don't fire canplaythrough
-                    audio.onloadeddata = () => {
-                        if (resolved) return;
-                        // CRITICAL: Cancel native speech RIGHT before play()
-                        if (window.speechSynthesis) window.speechSynthesis.cancel();
-                        audio.play().catch((e) => {
-                            console.error('Audio play on loadeddata failed:', e);
-                            finish(false);
-                        });
-                    };
+                    audio.onended = () => finish(true);
+                    audio.onerror = () => finish(false);
+                    audio.oncanplaythrough = startPlayback;
+                    audio.onloadeddata = startPlayback;
 
-                    // Start loading
                     audio.load();
                 });
 
@@ -484,8 +617,26 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
             }
         })();
 
-        // Race between TTS and timeout
-        return Promise.race([ttsPromise, timeoutPromise]);
+        /* Race between TTS and timeout, then keep score. Two failures in
+           a row and the rest of the session goes straight to the
+           platform voice rather than paying the round trip — and the
+           timeout is the expensive failure, so this matters most exactly
+           when the service is worst. */
+        const ok = await Promise.race([ttsPromise, timeoutPromise]);
+
+        if (ok) {
+            ttsFailuresRef.current = 0;
+        } else {
+            ttsFailuresRef.current += 1;
+            if (ttsFailuresRef.current >= MAX_TTS_FAILURES) {
+                useElevenLabsRef.current = false;
+                console.warn(
+                    `ElevenLabs failed ${MAX_TTS_FAILURES}x — using the platform voice for the rest of this session`,
+                );
+            }
+        }
+
+        return ok;
     }, []);
 
     // Main speak function (tries ElevenLabs first, falls back to browser)
@@ -532,22 +683,24 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
             }
         };
 
-        // Try ElevenLabs first (if enabled and not rate-limited)
+        /* Try ElevenLabs, then the platform voice.
+
+           iOS USED TO GET NO FALLBACK AT ALL — on a failure it called
+           `onSpeechEnd()` and said nothing, on the reasoning that
+           switching voices mid-session is jarring. It is, and it is also
+           far better than the alternative that was shipping: with no
+           API key, a rate limit hit, or one bad network moment, the
+           assistant on iPhone went permanently and silently mute while
+           still showing "Speaking" in the panel. A different voice is a
+           blemish; no voice is a broken feature. */
         if (useElevenLabsRef.current) {
             const success = await speakWithElevenLabs(text);
             if (success) {
                 onSpeechEnd();
                 return;
             }
-            // On iOS, if 11labs fails, don't fall back to native (jarring voice switch)
-            if (isIOS()) {
-                console.warn('11labs failed on iOS - skipping native fallback');
-                onSpeechEnd();
-                return;
-            }
         }
 
-        // Fallback to browser TTS (not on iOS)
         speakWithBrowser(text, onSpeechEnd);
 
     }, [speakWithElevenLabs, speakWithBrowser, safeStartRecognition, safeStopRecognition]);
@@ -590,40 +743,66 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
                 onEnd();
                 return;
             }
-            // On iOS, if 11labs fails, don't fall back to native
-            if (isIOS()) {
-                console.warn('11labs failed on iOS (speakAndClose) - skipping native fallback');
-                onEnd();
-                return;
-            }
         }
 
-        // Fallback to browser (not on iOS)
+        // Same fallback as `speak` — see the note there on why iOS is
+        // no longer excluded.
         setTimeout(() => {
             speakWithBrowser(text, onEnd);
         }, 50);
 
     }, [speakWithElevenLabs, speakWithBrowser, safeStopRecognition]);
 
-    const handleCommand = useCallback((cmd: string) => {
+    const handleCommand = useCallback((raw: string) => {
+        /* ---- VALIDATE THE TRANSCRIPT BEFORE MATCHING ON IT -----------
+           Recognition output is untrusted input. It arrives from a
+           remote service, it is shaped by whatever noise was in the
+           room, and on Android a poor connection can deliver a single
+           "result" hundreds of characters long — a stretch of a podcast
+           playing nearby, a conversation across the room.
+
+           None of it is ever synthesised or rendered as markup, so
+           there is no injection surface here; what these guards prevent
+           is worse-behaved matching. `cmd.includes("work")` against a
+           four-hundred-character transcript will find "work" in almost
+           anything, so long input does not fail to match — it matches
+           *everything*, and the first branch wins. The assistant appears
+           to respond confidently to speech that was never aimed at it.
+
+           NORMALISE, THEN BOUND, THEN MATCH:
+             · collapse whitespace, so " go   to  work " behaves;
+             · strip anything that is not a letter, digit, space or
+               apostrophe — recognition emits stray punctuation that
+               breaks `includes` on multi-word phrases;
+             · drop anything under two characters as noise;
+             · drop anything over the length of a plausible command.
+               Real ones here are under forty characters; eighty is
+               generous and still far short of ambient speech. */
+        const cmd = raw
+            .toLowerCase()
+            .replace(/[^a-z0-9\s']/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        if (cmd.length < 2 || cmd.length > 80) return;
 
         // --- STOP/CANCEL COMMANDS ---
         if (cmd.includes("cancel") || cmd.includes("stop") || cmd.includes("close") || cmd.includes("bye")) {
-            speakAndClose("Goodbye!");
+            speakAndClose(VOICE_LINES.goodbye);
             return;
         }
 
         // --- NAVIGATION COMMANDS ---
         else if (cmd.includes("home") || cmd.includes("start")) {
-            speak("Going to home.");
+            speak(VOICE_LINES.home);
             navigateTo("#home");
         }
         else if (cmd.includes("project") || cmd.includes("work") || cmd.includes("portfolio")) {
-            speak("Navigating to projects.");
+            speak(VOICE_LINES.work);
             navigateTo("#work");
         }
         else if (cmd.includes("experience") || cmd.includes("job") || cmd.includes("career")) {
-            speak("Showing experience section.");
+            speak(VOICE_LINES.experience);
             navigateTo("#experience");
         }
         /* The toolkit department is gone, so "what's your stack" now goes
@@ -632,43 +811,70 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
            question a visitor is most likely to ask this thing answered
            with a shrug. */
         else if (cmd.includes("tool") || cmd.includes("stack") || cmd.includes("skill") || cmd.includes("technology")) {
-            speak("Each project lists what it was built with — here they are.");
+            speak(VOICE_LINES.stack);
             navigateTo("#work");
         }
         else if (cmd.includes("contact") || cmd.includes("email") || cmd.includes("touch") || cmd.includes("message")) {
-            speak("Taking you to the contact form.");
+            speak(VOICE_LINES.contact);
             navigateTo("#contact");
         }
 
         // --- Q&A COMMANDS ---
         else if (cmd.includes("who are you") || cmd.includes("your name")) {
-            speak(`I am an AI assistant for ${personalInfo.name}. He is a ${personalInfo.role}.`);
+            speak(VOICE_LINES.whoAreYou);
         }
         else if (cmd.includes("what do you do") || cmd.includes("function")) {
-            speak("I help you navigate this portfolio and answer questions about Faaiz's work.");
+            speak(VOICE_LINES.whatDoYouDo);
         }
         else if (cmd.includes("available") || cmd.includes("hire")) {
-            speak(personalInfo.available ? "Yes, Faaiz is currently available for new projects." : "Faaiz is currently busy, but you can always reach out.");
+            speak(VOICE_LINES.availability);
         }
-        else if (cmd.includes("hello") || cmd.includes("hi") || cmd.includes("hey")) {
-            speak("Hello there! How can I help you navigate today?");
+        /* `hi` and `hey` are checked as whole words. As substrings they
+           matched inside "this", "which", "they" and most of the rest of
+           English, so a greeting could win over a real command that
+           happened to contain one. */
+        else if (/\b(hello|hi|hey)\b/.test(cmd)) {
+            speak(VOICE_LINES.hello);
         }
 
         // --- THEME COMMANDS ---
         else if (cmd.includes("light mode") || cmd.includes("switch to light") || cmd.includes("day mode")) {
-            speak("Switching to light mode.");
+            speak(VOICE_LINES.toLight);
             setTheme("light");
         }
         else if (cmd.includes("dark mode") || cmd.includes("switch to dark") || cmd.includes("night mode")) {
-            speak("Switching to dark mode.");
+            speak(VOICE_LINES.toDark);
             setTheme("dark");
         }
         else if (cmd.includes("toggle theme") || cmd.includes("change theme")) {
-            const newTheme = theme === 'dark' ? 'light' : 'dark';
-            speak(`Switching to ${newTheme} mode.`);
-            setTheme(newTheme);
+            const next = theme === 'dark' ? 'light' : 'dark';
+            speak(next === 'light' ? VOICE_LINES.toLight : VOICE_LINES.toDark);
+            setTheme(next);
+        }
+        /* NOTHING MATCHED, AND IT NOW SAYS SO. Every unrecognised
+           utterance used to fall off the end of this chain in silence,
+           which is indistinguishable from the microphone being broken —
+           the reader has no way to tell "I did not understand you" from
+           "I did not hear you". Naming two commands that do work turns a
+           dead end into an instruction. */
+        else {
+            speak(VOICE_LINES.notUnderstood);
         }
     }, [speak, speakAndClose, setTheme, theme]);
+
+    /* Keep the long-lived recognition callbacks pointed at the current
+       closures. These run after every render that changes either
+       function, which is what makes `handleCommandRef.current(...)`
+       inside `onresult` equivalent to calling the fresh `handleCommand`
+       — without rebuilding the recognition object and dropping the
+       microphone to do it. */
+    useEffect(() => {
+        handleCommandRef.current = handleCommand;
+    }, [handleCommand]);
+
+    useEffect(() => {
+        speakRef.current = speak;
+    }, [speak]);
 
     const navigateTo = (hash: string) => {
         const id = hash.replace("#", "");
@@ -688,8 +894,20 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
             window.speechSynthesis.cancel();
         }
 
-        // iOS: Prime a persistent Audio element on user gesture
-        // This is CRITICAL - iOS only allows audio.play() if the Audio was created/primed during user gesture
+        /* iOS: prime one Audio element inside the user gesture. Safari
+           only lets `play()` run on an element that was created and
+           played during a gesture, so every later reply reuses this
+           exact element rather than constructing a new one.
+
+           THE REF IS ASSIGNED SYNCHRONOUSLY, BEFORE `play()` RESOLVES.
+           It used to be set inside `.then()`, which is a promise tick
+           after the gesture — and `toggleListening` does not await it,
+           so a fast tap could reach `speak()` and construct a *second*,
+           unprimed element while this one was still settling. That is
+           the "first reply is silent on iPhone" bug: the element that
+           played was not the element that was blessed. What matters for
+           the ref is that the object exists and was created here; the
+           play/pause is what unlocks it, and it can finish whenever. */
         if (isIOS() && !iosAudioPrimedRef.current) {
             const audio = new Audio();
             audio.preload = 'auto';
@@ -698,35 +916,43 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
             // Silent WAV data URL (minimal size)
             audio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
             audio.load();
-            // Prime by playing (will be silent)
+
+            persistentAudioRef.current = audio;
+            iosAudioPrimedRef.current = true;
+
             audio.play().then(() => {
                 audio.pause();
                 audio.currentTime = 0;
-                persistentAudioRef.current = audio;
-                iosAudioPrimedRef.current = true;
-                console.log('iOS audio primed successfully');
-            }).catch((e) => {
-                console.warn('iOS audio prime failed:', e);
-                // Still store ref even if prime fails
-                persistentAudioRef.current = audio;
-                iosAudioPrimedRef.current = true;
+            }).catch(() => {
+                /* The unlock failed — usually because the gesture was
+                   synthetic. The element is kept anyway: it is still the
+                   best candidate, and a later real tap re-runs this. */
+                iosAudioPrimedRef.current = false;
             });
-        }
-
-        // Also resume AudioContext if suspended
-        if (audioContextRef.current?.state === 'suspended') {
-            await audioContextRef.current.resume();
         }
 
         // Check for secure context
         if (typeof window !== "undefined" && !window.isSecureContext) {
-            speak("Voice commands require a secure HTTPS connection.");
+            speakAndClose(VOICE_LINES.insecure);
             return;
         }
 
-        // iOS doesn't support speech recognition
-        if (isIOS() && !recognitionRef.current) {
-            speak("Speech recognition is not supported on iOS Safari.");
+        /* NO RECOGNITION ON THIS BROWSER. Every browser on iOS and
+           Firefox everywhere. `speakAndClose`, not `speak`: `speak`
+           leaves `shouldListenRef` alone and schedules a restart of a
+           recognition object that does not exist, so the panel sat open
+           on "Listening" forever with nothing behind it. This says its
+           piece and shuts.
+
+           The message names a way forward rather than just refusing —
+           the page works without any of this, and the mail link is two
+           taps away. */
+        if (!recognitionRef.current) {
+            speakAndClose(
+                isIOS()
+                    ? VOICE_LINES.unsupportedIOS
+                    : VOICE_LINES.unsupported,
+            );
             return;
         }
 
@@ -751,7 +977,7 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
             if (micPermissionGranted) {
                 if (!hasGreetedRef.current) {
                     hasGreetedRef.current = true;
-                    speak("Hi! How can I help you today?");
+                    speak(VOICE_LINES.greeting);
                 } else {
                     safeStartRecognition();
                 }
@@ -764,7 +990,7 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
 
                     if (!hasGreetedRef.current) {
                         hasGreetedRef.current = true;
-                        speak("Hi! How can I help you today?");
+                        speak(VOICE_LINES.greeting);
                     } else {
                         safeStartRecognition();
                     }
@@ -773,19 +999,37 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
                     setMicPermissionGranted(false);
 
                     if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-                        speak("Microphone access was blocked.");
+                        speak(VOICE_LINES.micBlocked);
                     } else if (error.name === 'NotFoundError') {
-                        speak("No microphone found.");
+                        speak(VOICE_LINES.micNotFound);
                     } else {
-                        speak("Could not access microphone.");
+                        speak(VOICE_LINES.micFailed);
                     }
                 }
             }
         }
-    }, [isListening, speak, safeStartRecognition, safeStopRecognition, micPermissionGranted]);
+    }, [isListening, speak, speakAndClose, safeStartRecognition, safeStopRecognition, micPermissionGranted]);
 
-    if (!isSupported) return null;
+    /* ---- IT NO LONGER DISAPPEARS -------------------------------------
+       `if (!isSupported) return null` used to sit here, and it was the
+       worst behaviour in the component.
 
+       `SpeechRecognition` is absent on every browser on iOS — Chrome
+       and Firefox there are WebKit in a different wrapper, so none of
+       them have it — and on Firefox everywhere. On all of those the
+       button silently vanished, while the Contact department went on
+       instructing the reader to "say 'contact Faaiz' to the mic in the
+       top bar". A control that is documented on the page and missing
+       from it reads as a broken site, not an unsupported browser.
+
+       It was also a layout shift: `isSupported` starts `true` and is
+       set false in an effect, so the button rendered, then went, one
+       frame after hydration.
+
+       The button stays. Tapping it explains, out loud and in the panel,
+       which is a real answer — text-to-speech is supported in all the
+       places recognition is not, so the assistant can still talk even
+       where it cannot listen. */
     const isActive = isListening || isSpeaking;
     const statusLabel = isSpeaking ? "Speaking" : "Listening";
 
@@ -804,7 +1048,16 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
                         transition={{ type: "spring", stiffness: 420, damping: 30 }}
                         whileHover={isMobileDevice ? undefined : { scale: 1.06 }}
                         whileTap={{ scale: 0.92 }}
-                        aria-label="Open voice assistant"
+                        /* `isSupported` no longer decides whether this
+                           renders — it decides what the label promises. A
+                           screen-reader user on iOS should not be told
+                           "open voice assistant" by a control that can
+                           only ever explain why it will not open. */
+                        aria-label={
+                            isSupported
+                                ? "Open voice assistant"
+                                : "Voice assistant — not supported by this browser"
+                        }
                     >
                         <Microphone size={18} weight="fill" aria-hidden />
                     </m.button>
