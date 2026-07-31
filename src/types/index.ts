@@ -62,15 +62,14 @@ export interface Experience {
     bullets: string[];
 }
 
-export interface Tool {
-    name: string;
-    /** Key into the ICONS map in components/ui/ToolIcon.tsx. */
-    slug: string;
-    category: string;
-}
+/* A `Tool` interface sat here, describing an entry in the toolkit
+   department. Both it and the department are gone — see `data/index.ts`. */
 
 export interface NavItem {
     name: string;
     href: string;
-    icon: "home" | "folder" | "briefcase" | "wrench" | "mail";
+    /* `wrench` went with the toolkit. The union is the list of icons the
+       bar can actually draw, so an id with no `ICONS` entry is a type
+       error rather than a blank square at runtime. */
+    icon: "home" | "folder" | "briefcase" | "mail";
 }

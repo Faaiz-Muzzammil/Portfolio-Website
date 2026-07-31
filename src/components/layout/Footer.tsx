@@ -59,6 +59,23 @@ export default function Footer() {
                         row that emptiness is the space between them and it is
                         doing a job; stacked, it is just a gap. Centring gives
                         the pair an axis to share instead. */}
+                    {/* NO `Reveal` ON THIS ROW, AND THAT IS NOT AN OMISSION.
+                        It had one and the whole footer vanished.
+
+                        `Reveal` fires on a ScrollTrigger at `top 88%` — the
+                        element's top edge has to rise past 88% of the
+                        viewport height for the entrance to run, which every
+                        block in the document does on its way up the screen.
+                        The footer is the last thing on the page: scrolled all
+                        the way to the end, its top is still sitting near the
+                        bottom of the window and never reaches the line. The
+                        trigger never fires, and the resting state a reveal
+                        holds before its trigger fires is `opacity: 0`.
+
+                        Anything at the foot of a scroll needs a trigger that
+                        does not assume there is more page below it. Until
+                        `Reveal` takes a `start`, the colophon is simply
+                        printed — which is what a colophon is. */}
                     <div className="flex flex-col items-center gap-7 text-center sm:flex-row sm:justify-between sm:gap-6 sm:text-left">
                         <p className="coord text-coord text-ink-3">
                             © {year} {personalInfo.name} · {personalInfo.location}
@@ -75,7 +92,7 @@ export default function Footer() {
                                         aria-label={link.name}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="grid size-10 place-items-center text-ink-3 shadow-[0_0_0_1px_var(--line)] transition-colors duration-300 hover:bg-ink hover:text-paper"
+                                        className="grid size-10 place-items-center text-ink-3 shadow-[0_0_0_1px_var(--line)] transition-[color,background-color,transform] duration-300 hover:bg-ink hover:text-paper active:scale-[0.97] motion-reduce:active:scale-100"
                                     >
                                         <Icon size={16} aria-hidden />
                                     </a>
@@ -86,7 +103,7 @@ export default function Footer() {
                                 type="button"
                                 onClick={scrollToTop}
                                 aria-label="Back to top"
-                                className="group/top grid size-10 place-items-center text-ink-3 shadow-[0_0_0_1px_var(--line)] transition-colors duration-300 hover:bg-ink hover:text-paper"
+                                className="group/top grid size-10 place-items-center text-ink-3 shadow-[0_0_0_1px_var(--line)] transition-[color,background-color,transform] duration-300 hover:bg-ink hover:text-paper active:scale-[0.97] motion-reduce:active:scale-100"
                             >
                                 <ArrowUp
                                     size={16}

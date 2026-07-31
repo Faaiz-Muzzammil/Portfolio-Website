@@ -44,20 +44,51 @@
                    flickers, which is what lets those two read as
                    live rather than as decoration.
 
-     WHERE       — the margins. The two rails carry the colour of
-                   whatever department is being read and a ruled
-                   scale that travels against the scroll. It is the
-                   only hue on the site and it is kept out at the
-                   edges of vision, where it can report position
-                   without a bar pinned over the page to do it.
+     WHERE       — one word, and the nav's marker. Each department's
+                   heading is set with its heavy word in that
+                   department's ink, and the bar's active marker takes
+                   the ink of wherever the reader currently is. Four
+                   hues, one per department, and no other colour
+                   anywhere on the site.
 
-   Emphasis anywhere on this site is a change of weight and
-   nothing else. A heading is set at 300 and the word it turns on
-   at 800: one typeface, one size, one colour, with the variable
-   axis carrying all of it. The cover does it, every department
-   head does it, and it is the reason this face was chosen —
-   emphasis that survives at 96px and at 30px because it is not
-   relying on a stroke, a rule or a second colour to be seen.
+                   THE MARGINS USED TO DO THIS and no longer do. Both
+                   rails carried the current department's colour and
+                   cross-faded between them as the page was scrolled.
+                   It was the wrong place for it twice over: colour
+                   out at the edge of vision has to be *noticed*
+                   before it can be read, so you had to turn away
+                   from the sentence you were in to find out where
+                   you were — and the rails only exist above 1280px,
+                   so the same fact had to be said a second way for
+                   every narrower screen. A word in the measure costs
+                   no space, adds no element, is legible from where
+                   the eye already is, and is the same on a phone.
+
+                   IT IS FIXED PER DEPARTMENT, NOT DRIVEN BY SCROLL.
+                   The heading of Work is Work's colour whether or
+                   not Work is the section you are in. Everything
+                   that tied it to the *active* section had headings
+                   changing colour while being read; see `.tint-word`
+                   for the three versions of that and why each was
+                   worse than the last. The marker is the one thing
+                   left that follows the scroll, because it is the
+                   one thing whose whole job is to.
+
+   Emphasis anywhere on this site is a change of weight first. A
+   heading is set at 300 and the word it turns on at 800: one
+   typeface, one size, and the variable axis carrying the whole
+   step. The cover does it, every department head does it, and it
+   is the reason this face was chosen — emphasis that survives at
+   96px and at 30px without a stroke or a rule under it.
+
+   THE COLOUR IS A SECOND CHANNEL ON THAT SAME WORD, never a
+   replacement for the first and never on a word the weight has
+   not already picked. Set the department heads in one flat ink
+   and every one of them still reads exactly as designed; the
+   cover is that test, because `home` has no colour and its
+   heading is the same heading. Nothing anywhere on this site is
+   emphasised by colour alone, and nothing carries a hue that is
+   not saying which department you are in.
    ============================================================ */
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
@@ -124,51 +155,86 @@
   /* The masses that fill the outer margins. Ink in water on paper. */
   --edge-glow: rgba(10, 10, 10, 0.075);
 
-  /* ---- The department inks --------------------------------------------
-     The only hue on the site, and the two themes get different sets of
-     it rather than one set at two strengths.
+  /* ---- The department inks, as a surface ------------------------------
+     Four hues, one per department. This set is the *fill*: the nav's
+     active marker takes it whole, and `--tint-wash` dilutes it to
+     sixteen per cent for the bar the marker sits in. The set below is
+     the same four as type. Nothing else on the site has a hue.
 
-     BOTH SETS ARE LIGHT, and that is the correction that mattered most.
-     These were deep pigments — an oxblood, a bottle green, a near-navy —
-     on the reasoning that a margin should sit *under* the page and
-     therefore ought to be dark. It is the wrong reasoning, for a reason
-     specific to this site: the margins are grained. Grain is fine dark
-     speckle, and dark speckle over a dark colour has nothing to be
-     speckle against, so the texture disappeared into the ink and both
-     rails went flat and heavy — a painted bar where a sheet of tinted,
-     textured paper was wanted. A light tint keeps the noise legible in
-     it, and the noise is what stops the colour looking printed on.
+     THEY WERE THE MARGINS' COLOUR FIRST, and that is what made them
+     light. They were deep pigments to begin with — an oxblood, a bottle
+     green, a near-navy — on the reasoning that a margin sits under the
+     page and ought to be dark; the margins are grained, dark speckle
+     over a dark colour has nothing to be speckle against, and both rails
+     went flat. Lightening them fixed it. The rails no longer carry a
+     colour at all, but the values stayed, because a marker 80px wide
+     with near-black type on it wants exactly the same thing a tinted
+     sheet of paper did.
 
-     THEY STILL DIFFER PER THEME, because a tint does opposite things on
-     the two grounds. On white it removes light, so the ink is diluted
-     into the paper and needs enough chroma left after that dilution to
-     read as a hue rather than as a warm or cool grey. On black it adds
-     light, and the same colour has nothing to borrow from — chroma is
-     the only thing separating a soft blue from a soft grey — so the dark
-     set is a touch brighter and a touch more saturated than the light
-     one. Written down that sounds backwards. On screen it is the only
-     way either set reads as a colour on its own ground.
+     THEY DIFFER PER THEME, because a tint does opposite things on the
+     two grounds. On white it removes light, so the ink is diluted into
+     the paper and needs enough chroma left after that dilution to read
+     as a hue rather than as a warm or cool grey. On black it adds light,
+     and the same colour has nothing to borrow from — chroma is the only
+     thing separating a soft blue from a soft grey — so the dark set is a
+     touch brighter and a touch more saturated than the light one.
+     Written down that sounds backwards. On screen it is the only way
+     either set reads as a colour on its own ground.
 
-     Both stay under the measure. On the light theme the margins land
-     around 90% lightness against #FFFFFF paper; on the dark theme they
-     land at roughly two thirds the luminance of body copy and a little
-     over a third of a heading. The page remains the brightest thing on
-     the screen at every point in the scroll, in both themes, which is
-     the one rule none of this is allowed to break.
+     THEY ARE FILLS, NEVER TYPE. Both sets sit near the light end of
+     their hue and land around 2:1 on white. Set one of these in letters
+     and you get a word nobody can read; that is what the set below is
+     for, and the two are not interchangeable in either direction.
 
      `home` has no entry in either set. The cover is not a colour. */
+  /* Three, not four. A violet sat between the green and the rose for
+     the toolkit department; that department is gone and its ink went
+     with it rather than being left for a section that might one day
+     want a colour. */
   --tint-work: #CFA76B;
   --tint-experience: #8DC5AE;
-  --tint-toolkit: #A79AD6;
   --tint-contact: #D89BA5;
 
-  /* HOW HARD THE MARGINS CARRY IT. The active layer transitions to this
-     figure, so it has to be a property rather than a literal — the two
-     themes want different strengths and the transition has to end on
-     whichever one is in force. Light lands the margins around 90%
-     lightness; dark at roughly two thirds the luminance of body copy. */
-  --rail-tint-strength: 0.3;
+  /* ---- The same four inks, at reading strength ------------------------
+     The set above is a *surface* colour: mixed into paper across a
+     nine-rem column, seen rather than read. These are the same four hues
+     as *type* — the heavy word each department's heading turns on — and a
+     colour that works spread over a rail is not the colour that works set
+     in letters. Every ink in the set above sits near 90% lightness, which
+     lands around 2:1 on white: a tint you can see and a word you cannot.
 
+     SO THE LIGHT THEME GETS ITS OWN SET, pulled down until each clears
+     4.5:1 on #FFFFFF — well past the 3:1 a 72px heading is held to, so
+     the same value is still safe if one of these is ever set at coord
+     size. They are held to within a tenth of each other — 4.84, 4.86,
+     4.93, 4.99 — because four words doing one job in four departments
+     have to read at one weight. Let them drift and the rose department
+     looks quieter than the violet one for reasons that have nothing to do
+     with the page.
+
+     THEY ARE DARK ON PURPOSE, and not only for contrast. The word they
+     colour is the *heavy* end of the heading — 800 against 300 — so it
+     cannot be the palest thing in its own line without inverting the
+     hierarchy the weight just built. Taking these anywhere near the rail
+     inks makes the emphasised word lighter than the words leading up to
+     it, and the heading stops having a point.
+
+     THE DARK THEME DOES NOT NEED A SECOND SET. The rail inks are already
+     the light end of their own hue, so on #000000 they run near 10:1 —
+     brighter than `--ink-2`, and heavier than the type around them, which
+     is the same relationship the other way up. They are aliased rather
+     than restated so there is one place a hue is chosen.
+
+     `home` has no entry, as above: it falls through to `--accent-ink` and
+     the cover's heading stays in plain ink, in both themes. The cover is
+     not a colour — the margins say so and the masthead now says it too. */
+  --tint-work-ink: #9A6520;
+  --tint-experience-ink: #2A7F64;
+  --tint-contact-ink: #BE4A60;
+
+  /* A `--rail-tint-strength` sat here, setting how hard the active
+     department's layer was carried in the margins. The margins no
+     longer carry a department at all — see the note beside `.rail`. */
 
   /* The rails. Declared per theme rather than derived from the paper,
      because the two themes have to move in opposite directions to get
@@ -314,15 +380,16 @@
      darker. See the note beside that set: on black a tint adds light,
      and chroma is the only thing separating a soft colour from a soft
      grey. */
-  /* Carried nearly twice as hard as on paper. A tint over white removes
-     light and is already a definite colour at a third; over #000000 it
-     is the only thing in the margin with any luminance at all. */
-  --rail-tint-strength: 0.58;
-
   --tint-work: #DCA96E;
   --tint-experience: #8FD2BB;
-  --tint-toolkit: #B0A0E6;
   --tint-contact: #E6A0AB;
+
+  /* The rail inks unchanged — see the note beside the light set. On black
+     these already run near ten to one, so a mark drawn in one is safer
+     than the same mark in `--ink-2`. */
+  --tint-work-ink: var(--tint-work);
+  --tint-experience-ink: var(--tint-experience);
+  --tint-contact-ink: var(--tint-contact);
 
   /* Light in fog rather than ink in water — carried harder, because a
      pure black margin swallows anything gentler. */
@@ -356,10 +423,18 @@
 }
 
 /* ---- The current department, as a colour you can use ------------
-   The margins express "which department" as an opacity, because that is
-   the only form that transitions for free on a full-height surface. The
-   nav's active marker is 80 pixels wide and needs the ink itself, so it
-   gets it here as a pair of tokens.
+   Three tokens, resolved off `[data-tint]` on the root, for the things
+   that are about wherever the reader currently *is*: the nav's active
+   marker and the bar it sits in.
+
+   THE RUNNING HEADS ARE NOT IN THIS, and the marker is now the only
+   thing on the site that is. A department's heading is about a fixed
+   department rather than the current one, so it names its own ink and
+   never looks at the root at all — see `.tint-word` for what happened
+   every time it did. The distinction these tokens exist to mark:
+   "where the reader is" is a moving fact and belongs to the nav;
+   "which department this is" is a fixed one and belongs to the thing
+   itself. Only the first has any business reading `[data-tint]`.
 
    THEY ARE A SET AND THEY MOVE TOGETHER. `--tint` is the fill,
    `--tint-fg` is whatever is legible on top of it, and `--tint-wash` is
@@ -371,7 +446,7 @@
 
      home    no rule, so the marker falls back to solid ink with
              paper-coloured type — the cover has no colour, and the nav
-             says so in the same breath the margins do.
+             says so.
      others  a light tint with near-black type on it.
 
    Reaching for `--accent-fg` on a tinted marker is the trap: it is
@@ -389,50 +464,136 @@
    than a coloured bar. The bar carries the active marker at full
    `--tint`, so the wash has to sit far enough below it that the two
    read as ground and figure — sixteen per cent against a hundred is
-   about a five-to-one step in saturation, which is the same relationship
-   the margins have with the measure. Push the wash much past a fifth
-   and the marker starts to disappear into its own bar.
+   about a five-to-one step in saturation. Push the wash much past a
+   fifth and the marker starts to disappear into its own bar.
 
    On the cover it resolves to plain `--paper`, so the nav is untinted
-   there exactly as the margins are. ------------------------------- */
+   there — which is the same thing the cover's own heading says by
+   staying in plain ink. `home` has no colour anywhere. ------------ */
 
-:root {
+/* ---- AND THEY ARE DECLARED ON THE NAV, NOT ON `:root` --------------
+   This is a performance rule with a stylistic-looking shape, so it is
+   worth being explicit: these three must be declared on the smallest
+   element that contains everything reading them — which is the nav bar,
+   and which is what `.tint-scope` marks.
+
+   They used to sit on `:root` beside the other tokens, where they
+   obviously belonged. Custom properties inherit, so changing one on the
+   root element means every node in the document might now compute
+   differently, and the browser has no way to know they do not — it
+   re-resolves inherited style for the entire tree. `TintController`
+   writes `data-tint` on the root at every section boundary, so that
+   recalculation landed four times in a read of the page, each time in
+   the middle of a scroll. One long frame in the middle of a scroll is
+   exactly what "stuttery" describes, and nothing in a paint or a
+   compositor profile shows it, because it is neither.
+
+   Declared on a class instead, the same attribute change is an ordinary
+   selector invalidation: the engine holds an invalidation set for
+   `data-tint` containing `.tint-scope`, so it re-examines the one
+   element carrying that class and leaves the rest of the document
+   alone. Same colours, same 700ms, and the boundary stops costing a
+   frame. It is now the only thing on the page `data-tint` reaches.
+
+   THE RULE, GENERALLY: an inherited custom property changed high in the
+   tree is a document-wide recalculation dressed up as a variable
+   assignment. Put the declaration where the consumers are. If something
+   outside the nav ever needs a tint, give it its own `.tint-scope`
+   rather than lifting these back to the root. ---------------------- */
+
+.tint-scope {
   --tint: var(--accent);
   --tint-fg: var(--accent-fg);
   --tint-wash: var(--paper);
 }
 
-[data-tint="work"] {
+[data-tint="work"] .tint-scope {
   --tint: var(--tint-work);
   --tint-fg: #12100e;
   --tint-wash: color-mix(in srgb, var(--tint-work) 16%, var(--paper));
 }
 
-[data-tint="experience"] {
+[data-tint="experience"] .tint-scope {
   --tint: var(--tint-experience);
   --tint-fg: #12100e;
   --tint-wash: color-mix(in srgb, var(--tint-experience) 16%, var(--paper));
 }
 
-[data-tint="toolkit"] {
-  --tint: var(--tint-toolkit);
-  --tint-fg: #12100e;
-  --tint-wash: color-mix(in srgb, var(--tint-toolkit) 16%, var(--paper));
-}
-
-[data-tint="contact"] {
+[data-tint="contact"] .tint-scope {
   --tint: var(--tint-contact);
   --tint-fg: #12100e;
   --tint-wash: color-mix(in srgb, var(--tint-contact) 16%, var(--paper));
 }
 
-/* WHICH DEPARTMENT IS CURRENT is expressed as opacity on the margins.
-   A `--tint` custom property used to sit here, resolved per department
-   and read by every layer that carried the colour. It is gone with the
-   full-viewport wash that needed it: the rails now hold one permanently
-   painted layer per department and raise the matching one, which is the
-   only form of this that transitions without repainting. The selectors
-   that do it are beside the rails, with the shape they apply to. */
+/* The margins are not in this any more. They carried the department as
+   a stack of cross-fading layers, one per section; the colour is now in
+   the running head's heavy word and the rails are a neutral wash. The
+   note beside `.rail` has what was removed and why. */
+
+
+/* ---- The word that carries the department ------------------------
+   One class, on the heavy word of each running head. Four on the page,
+   one department each, painted in that department's ink and left there
+   for the life of the page.
+
+   IT READS ITS OWN `data-dept`, NEVER `[data-tint]` ON THE ROOT, and
+   there is no transition anywhere in it. Both of those look like things
+   left undone, so here is the argument — three working animated
+   versions were built and thrown out before the fact underneath them
+   was noticed:
+
+   A DEPARTMENT'S HEADING NEVER CHANGES DEPARTMENT. The Work head is
+   Work's, at the top of Work, forever. There is no moment at which a
+   heading you are looking at has any reason to become a different
+   colour, so there is nothing to animate — and every version that
+   animated something was animating the wrong thing.
+
+   What those versions did, in order:
+
+     · read the *active* department off the root, so all four heads
+       changed at every boundary — three of them off-screen, repainting
+       for nobody;
+     · and the fourth was the one arriving. Scrolling Work into
+       Experience, the Experience head enters from the bottom while the
+       root still says `work`, so it came up in Work's ochre and turned
+       green a moment later, under the reader's eye, at whatever instant
+       an IntersectionObserver band happened to trip;
+     · held neutral until its own department went current, which fixed
+       the wrong-colour problem and left the word changing colour while
+       being read, on a threshold rather than on anything the reader
+       did. Smoother easing made it slower, not better.
+
+   None of it was a frame-rate problem and no amount of tuning was going
+   to fix it, because in every case the word was showing a state it had
+   no business being in and then correcting itself in public.
+
+   Painted per department, a head is simply the right colour on the
+   first frame it exists. Nothing recalculates, nothing repaints,
+   nothing chases the scroll, and the colour still changes as you read —
+   because you are reading a different department, which is the only
+   thing it ever meant.
+
+   THE COLOUR STILL ARRIVES, AND IT ARRIVES WITH THE WORD. `AnimatedText`
+   masks the heading and slides it up from its own baseline; the ink
+   comes up inside that reveal, already correct. A colour tween on top
+   would be a second entrance for something that has already entered.
+
+   `home` has no rule and needs none: the cover's heading has no
+   `data-dept`, falls through to the ink it inherits from its own h1,
+   and the cover stays the one part of the site with no colour in it at
+   all. ------------------------------------------------------------- */
+
+.tint-word[data-dept="work"] {
+  color: var(--tint-work-ink);
+}
+
+.tint-word[data-dept="experience"] {
+  color: var(--tint-experience-ink);
+}
+
+.tint-word[data-dept="contact"] {
+  color: var(--tint-contact-ink);
+}
 
 /* Legacy aliases — the voice assistant reads the older token names. */
 :root,
@@ -500,22 +661,25 @@
   --shadow-e2: var(--shadow-2);
   --shadow-e3: var(--shadow-3);
 
-  --font-display: var(--font-heading), "Helvetica Neue", sans-serif;
+  --font-display: var(--font-heading), "Helvetica Neue", Arial, sans-serif;
   --font-sans: var(--font-text), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-code), ui-monospace, "SF Mono", monospace;
 
   /* ---- The scale ------------------------------------------------
-     Retuned for the new faces. Two things changed everywhere:
+     Body is a full 16px. Fifteen was a compromise made for a wider body
+     face; Instrument Sans is narrow enough that 16 sets the same
+     measure in the same space and is simply easier to read.
 
-     Body went up to a full 16px. Fifteen was a compromise made for a
-     wider body face; Instrument Sans is narrow enough that 16 sets the
-     same measure in the same space and is simply easier to read.
+     TRACKING HAS COME BACK TOWARD ZERO TWICE NOW. Archivo had to be
+     pulled to -0.045em before large settings stopped looking gappy;
+     Manrope is drawn tighter, so those figures closed the counters and
+     the floor came up to -0.035em. Bricolage is tighter again *and*
+     carries a real optical-size axis, so it narrows its own fit as the
+     size goes up — which is work that was being done here by hand.
 
-     Tracking came back toward zero at every size above body. Archivo
-     needed to be pulled hard — down to -0.045em — before large settings
-     stopped looking gappy. Manrope is drawn tight already, so the same
-     numbers here would have closed the counters up and made a headline
-     read as one long word. -0.035em is the floor now. ---------------- */
+     Everything above body eased by roughly a third when the face
+     changed. These figures are only the part the font cannot do for
+     itself; the argument is beside `.display`. -------------------- */
 
   --text-coord: 0.6875rem;
   --text-coord--line-height: 1.1;
@@ -540,19 +704,19 @@
 
   --text-h3: clamp(1.25rem, 1.9vw, 1.5rem);
   --text-h3--line-height: 1.22;
-  --text-h3--letter-spacing: -0.02em;
+  --text-h3--letter-spacing: -0.015em;
 
   /* Entry titles. Six of them at department size was the loudest thing
      on the page, and the department they sit inside has to out-rank
      them. */
   --text-h2: clamp(1.875rem, 3.6vw, 2.75rem);
   --text-h2--line-height: 1.04;
-  --text-h2--letter-spacing: -0.028em;
+  --text-h2--letter-spacing: -0.022em;
 
   /* Department titles. A clear step above the entries, not a nudge. */
   --text-h1: clamp(2.5rem, 6vw, 4.5rem);
   --text-h1--line-height: 1;
-  --text-h1--letter-spacing: -0.035em;
+  --text-h1--letter-spacing: -0.028em;
 
   --text-display: clamp(2.75rem, 8.4vw, 7rem);
   --text-display--line-height: 0.94;
@@ -679,6 +843,48 @@ body {
   outline-offset: 3px;
 }
 
+/* ============================================================
+   BEING TOUCHED
+   ------------------------------------------------------------
+   Two rules, both about what happens between the finger landing
+   and the page reacting.
+   ============================================================ */
+
+/* THE GREY FLASH IS NOT OURS AND IT HAS TO GO. Mobile WebKit and
+   Blink paint a translucent block over any element they consider
+   tappable the instant it is touched — a rounded, system-coloured
+   rectangle that ignores the element's own shape. On a page where
+   the controls are square, hairline-ruled and monochrome, it is
+   the one piece of chrome the design does not own, and it fires
+   on every single tap.
+
+   REMOVING IT IS ONLY HALF THE JOB. That flash is the only press
+   feedback a touch device gets for free — hover does not exist
+   there — so turning it off without replacing it makes the whole
+   site feel unresponsive, which is worse than the flash. Every
+   control that had nothing now carries `active:scale-[0.97]`, so
+   the acknowledgement is the element itself moving rather than a
+   box drawn over it. The two that already had a press state keep
+   their own figures. */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* `manipulation` drops double-tap-to-zoom on controls, and with it
+   the ~300ms the browser spends waiting to find out whether a tap
+   was the first of two. Everything here is a single-tap target;
+   none of it is content anyone pinches into. Text is untouched, so
+   the page itself still zooms — this is scoped to the controls. */
+a,
+button,
+label,
+input,
+select,
+textarea,
+summary {
+  touch-action: manipulation;
+}
+
 /* ---- The ground --------------------------------------------------
    Two fixed layers, both static, both below every section.
 
@@ -791,11 +997,12 @@ body {
    only ever arrive together, and the sequence is the whole effect.
 
    The rule is a pseudo-element — it is one flat hairline that only ever
-   draws. The surface is a real element, `.rail-ground`, because it is no
-   longer one thing: it is a neutral base, a colour that changes as the
-   page is read, and the page's own grain over both. The colour is driven
-   from JavaScript and has to be a node something can write to. See
-   `RailWash`.
+   draws. The surface is a real element, `.rail-ground`, because it has
+   to rise on its own timing while the rule draws on the rule's; a
+   pseudo-element cannot be given a second animation independent of its
+   host's. It was also, for a while, the node the department's colour was
+   written into — that is gone, and the element stayed for the timing
+   alone, which was always the better half of the reason.
 
    BOTH ANIMATIONS FILL `backwards`, NOT `both`. `both` leaves the last
    keyframe applied for the life of the page, and both last keyframes
@@ -899,33 +1106,26 @@ body {
 }
 
 /* ---- The ground --------------------------------------------------
-   Three layers:
+   Two layers, and it used to be three:
 
      BASE    The neutral wash that makes the middle third read as the
-             lit page. Flat, fixed, and the only one of the three that
-             is there before anything has been read.
-
-     WASH    The section's colour, crossfading from one to the next as
-             the page is scrolled, and drifting slowly against it. The
-             one moving part, set from `RailWash`.
+             lit page. Flat, fixed, and unchanging.
 
      GRAIN   The site's own grain, over the top. Grey, exactly as it is
              everywhere else, and static.
 
-   THE GRAIN IS NOT COLOURED AND DOES NOT MOVE, and both halves of that
-   are deliberate. Colouring the speckle itself was tried and it is the
-   wrong instrument: at this pitch the eye resolves the individual
-   coloured pixels instead of the texture, so the margin stops reading
-   as a tinted surface and starts reading as a display fault. The colour
-   belongs in the wash *under* the grain — a deep ink with the page's
-   ordinary noise sitting in it — which is also how the thing works on
-   paper. And grain that moves is how this page says "now"; that signal
-   is spent on the live marks and cannot also mean "you are scrolling".
+   THE WASH IN BETWEEN — the section's colour, crossfading as the page
+   was scrolled — is gone. See the note further down for where it went
+   and why. What is left is a margin, which is all it has to be.
+
+   THE GRAIN DOES NOT MOVE. Grain that moves is how this page says
+   "now", and that signal is spent on the live marks; it cannot also
+   mean "you are scrolling".
 
    The rails need their own copy of it because they sit at `z-20` and
    the document's grain layer is at `z-1` — the margins paint over it,
-   and at the strength the wash is now carried at there would be no
-   texture left showing through from underneath. ------------------- */
+   so without this there would be no texture showing through from
+   underneath at all. ----------------------------------------------- */
 
 .rail-ground {
   position: absolute;
@@ -973,128 +1173,46 @@ body {
   opacity: 0.07;
 }
 
-/* ---- The tint ----------------------------------------------------
-   One layer per department in each margin, all of them permanently
-   painted, all but the current one at zero opacity. Changing department
-   fades one out and the next in.
+/* ---- THE MARGINS NO LONGER CARRY THE DEPARTMENT'S COLOUR -----------
+   A `.rail-tint` stack lived here: one permanently painted layer per
+   department in each rail, all but the current one at zero opacity, so
+   changing section faded one out and the next in. Both rails are now
+   the neutral wash and the grain, and nothing else. They do not change
+   as the page is read.
 
-   OPACITY IS THE ONLY THING THAT MOVES, AND THAT IS THE WHOLE POINT.
-   It is the one property a browser can transition on the compositor,
-   without repainting anything and without touching the main thread. It
-   is also the fifth attempt at this, and the previous four are worth
-   listing because each looked like the obvious fix for the last:
+   WHAT REPLACED IT IS THE HEADING. The department's colour is set in
+   the heavy word of its own running head — see `.tint-word` and
+   `RunningHead`. That is the same information in a better place, and
+   moving it there is what made the rails redundant rather than merely
+   quieter. Colour out at the edge of vision has to be *noticed* to be
+   read: you see that something changed, and then you have to look away
+   from the sentence you are in to find out what. A word in the measure
+   is read where the eye already is.
 
-     1. interpolate the ink from scroll position and write it to
-        `background-color` — repaints a full-height strip sixty times a
-        second, because `background-color` is not compositable;
-     2. stack the departments and cross-fade their opacities from scroll
-        position — no repaint, but twelve composited surfaces blended on
-        every frame forever;
-     3. promote those with `will-change` — cheaper frames, thirty-odd
-        megabytes of compositor memory held for the life of the page,
-        and the stutter got worse rather than better;
-     4. one element, `color` transitioned at a threshold — no per-frame
-        work at all, and a visible stall at each boundary, because the
-        gradient below reads `currentColor`, so transitioning `color`
-        made the browser regenerate the gradient on all forty-two frames
-        of the transition.
+   And the margins were the expensive way to say it. Two fixed columns,
+   five layers apiece, blended for the life of the page, to report a
+   fact one word now carries for the cost of a `color`. They also only
+   ever existed above 1280px, so the phone had to say the same thing a
+   second way through the nav — one device, two implementations, and a
+   third of the audience seeing neither.
 
-   Number four is the trap worth naming, because it looks like the
-   cheapest possible thing. A transition is only free if the property
-   being transitioned is free. `color` is not: anything downstream of it
-   — a gradient, a border, a shadow — has to be re-rasterised for every
-   frame it changes.
+   The rails keep everything that was not the colour: `--rail-fill`, the
+   grain over it, the rule down the inside edge, and the rise-in. Those
+   are what make the middle third read as the lit page, and that job has
+   nothing to do with which department you are in.
 
-   So the colour never changes here. Each layer is painted once, in one
-   ink, and stays that way for the life of the page. The only value that
-   ever moves is an opacity, and it moves on the compositor.
+   IF THE COLOUR IS EVER WANTED OUT HERE AGAIN, bring back the opacity
+   stack and nothing else. The long note that used to sit at this point
+   listed four earlier versions — scroll-linked `background-color`,
+   scroll-linked cross-fade, the same promoted with `will-change`, and a
+   single element with `color` transitioned — and every one of them cost
+   per-frame work on viewport-sized surfaces. The fifth, which is the one
+   that was removed here, moved only an opacity and only at a threshold.
+   It is in the history; do not re-derive the first four.
 
-   THE STRENGTH IS A CUSTOM PROPERTY rather than a literal, because the
-   active layer transitions *to* it and the two themes want different
-   figures. Light lands the margins around 90% lightness — a clear tint
-   that is still plainly paper, with the grain still visible in it. Dark
-   lands them at roughly two thirds the luminance of body copy: lit
-   enough to be a colour, far enough under the type that the measure is
-   never competing with its own margin.
-
-   700ms with a gentle ease-out, not a snap: long enough to read as the
-   page changing register rather than as a value being switched, short
-   enough to have finished before the reader is properly into the new
-   department.
-
-   Both layers are partly transparent halfway through a change, so the
-   composite dips about a quarter of the way toward the ground at the
-   midpoint. At these strengths that is a few levels out of 255 and is
-   not visible; it is the ordinary cost of a cross-dissolve and it is
-   cheaper than any of the alternatives that avoid it. */
-
-.rail-tint {
-  position: absolute;
-  inset: 0;
-  /* Any layer without an ink of its own paints nothing at all — which
-     is what gives the cover its neutral margins for free. */
-  color: transparent;
-  opacity: 0;
-  transition: opacity 700ms cubic-bezier(0.33, 1, 0.68, 1);
-}
-
-.rail-tint[data-for="work"] {
-  color: var(--tint-work);
-}
-
-.rail-tint[data-for="experience"] {
-  color: var(--tint-experience);
-}
-
-.rail-tint[data-for="toolkit"] {
-  color: var(--tint-toolkit);
-}
-
-.rail-tint[data-for="contact"] {
-  color: var(--tint-contact);
-}
-
-/* The one that matches the department on the root is the one that is
-   up. `home` has no rule, so the cover fades every layer to nothing. */
-[data-tint="work"] .rail-tint[data-for="work"],
-[data-tint="experience"] .rail-tint[data-for="experience"],
-[data-tint="toolkit"] .rail-tint[data-for="toolkit"],
-[data-tint="contact"] .rail-tint[data-for="contact"] {
-  opacity: var(--rail-tint-strength);
-}
-
-/* The shape, and it is doing two jobs. It falls off from the outer edge
-   of the screen toward the rule, so the colour is heaviest where there
-   is only margin and lightest where it meets the measure. And its core
-   sits high on the outer side rather than in the middle, which is what
-   gives the ink a light in it instead of laying it on flat — that used
-   to be a second drifting layer, and this is all that was ever visible
-   of it.
-
-   NO MASK. A mask forces its element into its own render surface and
-   re-applies whenever the contents change; baked into the element's own
-   gradient the shape is rasterised once and never again.
-
-   `currentColor` is safe here precisely because `color` is now static
-   per layer. It was not safe when one element's colour was being
-   transitioned — see the note above. */
-.rail-left .rail-tint {
-  background-image: radial-gradient(
-    135% 62% at 0% 34%,
-    currentColor 0%,
-    color-mix(in srgb, currentColor 74%, transparent) 58%,
-    color-mix(in srgb, currentColor 52%, transparent) 100%
-  );
-}
-
-.rail-right .rail-tint {
-  background-image: radial-gradient(
-    135% 62% at 100% 34%,
-    currentColor 0%,
-    color-mix(in srgb, currentColor 74%, transparent) 58%,
-    color-mix(in srgb, currentColor 52%, transparent) 100%
-  );
-}
+   `--rail-tint-strength` went with it, and so did `RailWash`, whose
+   only purpose was to render one layer per section id.
+   ------------------------------------------------------------------ */
 
 
 /* A RULED SCALE LIVED HERE. A fine tick every 56px down the outer edge
@@ -1425,21 +1543,31 @@ body {
    TYPOGRAPHY
    ============================================================ */
 
-/* The display voice. Manrope carries a 200–800 weight axis, so the three
-   cuts below are one typeface behaving three ways rather than three
-   fonts — and the axis is continuous, which is what lets the home page
-   animate a word up it. */
+/* The display voice. Bricolage Grotesque carries a 200–800 weight axis,
+   so the three cuts below are one typeface behaving three ways rather
+   than three fonts — and the axis is continuous, which is what lets the
+   cover animate a word up it.
+
+   THE TRACKING EASED WHEN THE FACE CHANGED, and by about a third rather
+   than by taste. Manrope's figures were -0.03, -0.042, -0.035, -0.045,
+   and they were doing two jobs: closing the gaps a wide-apertured
+   geometric leaves at display size, *and* standing in for an optical
+   size the family does not have. Bricolage is drawn tighter to begin
+   with and has a real `opsz` axis, so it narrows its own fit as it gets
+   larger. Holding the old numbers on top of that closed the counters
+   and turned a headline into one long word. What is here now is the
+   part the font cannot do for itself. */
 .display {
-  font-family: var(--font-heading), "Helvetica Neue", sans-serif;
+  font-family: var(--font-heading), "Helvetica Neue", Arial, sans-serif;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
 /* Heavier and tighter, for the lines that have to hold a width. */
 .display-tight {
-  font-family: var(--font-heading), "Helvetica Neue", sans-serif;
+  font-family: var(--font-heading), "Helvetica Neue", Arial, sans-serif;
   font-weight: 800;
-  letter-spacing: -0.042em;
+  letter-spacing: -0.03em;
 }
 
 /* A department heading, and the word it turns on.
@@ -1463,11 +1591,16 @@ body {
    solves the same problem a different way is a second system to learn
    for no gain, so the headings now do exactly what the cover does.
    The axis is continuous and the counters stay open at every weight
-   on it, which is the whole reason this typeface is here. */
+   on it, which is the whole reason this typeface is here.
+
+   THE LIGHT END IS 300 AND THE FLOOR OF THE AXIS IS 200, which is the
+   headroom that keeps this honest: 300 is a real setting on this family
+   rather than the thinnest thing it has, so the light phrase is drawn
+   rather than merely reduced. */
 .display-axis {
-  font-family: var(--font-heading), "Helvetica Neue", sans-serif;
+  font-family: var(--font-heading), "Helvetica Neue", Arial, sans-serif;
   font-weight: 300;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.025em;
 }
 
 /* Tighter as well as heavier — at 800 the letterforms claim more room
@@ -1475,7 +1608,7 @@ body {
    the stressed word looking loose rather than solid. */
 .display-axis strong {
   font-weight: 800;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.035em;
 }
 
 /* ============================================================
@@ -1721,6 +1854,15 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* A `.write-on` rule lived here: the contact form's message field set
+   on feint ruled lines, at a 32px pitch with the rule at 27 so typed
+   copy landed on it the way handwriting lands on a reply card. It was
+   the only device in that department and it is gone with the version
+   of the form that had it. Worth knowing it worked, and worth knowing
+   why it went: the form is three fields on one column now, and a ruled
+   panel in the middle of three plain underlines is one field claiming
+   to be more interesting than the others. */
+
 /* ============================================================
    MOTION PRIMITIVES
    ============================================================ */
@@ -1825,8 +1967,16 @@ body {
   transition: background-size 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* `:active` alongside the other two, and it is what makes this device
+   exist on a phone at all. `.rule-draw` is the site's only treatment
+   for an inline text link — the rule strokes in under the words on
+   hover — and hover is a thing touch screens do not have. Without
+   this, every prose link on the site is completely inert to a finger:
+   no colour move, no rule, nothing between the tap and the navigation.
+   It is one selector and it covers every call site at once. */
 .rule-draw:hover,
-.rule-draw:focus-visible {
+.rule-draw:focus-visible,
+.rule-draw:active {
   background-size: 100% 1px;
 }
 

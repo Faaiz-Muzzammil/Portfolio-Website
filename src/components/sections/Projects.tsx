@@ -28,6 +28,7 @@ export default function Projects() {
         <div>
             <RunningHead
                 id="work-title"
+                dept="work"
                 number="01"
                 name="Work"
                 meta="2023 — 2025"
@@ -41,8 +42,16 @@ export default function Projects() {
                         const isActive = hovered === index;
                         const dimmed = hovered !== null && !isActive;
 
+                        /* The rule over the hovered entry goes to full ink.
+                           `:has()` rather than a group, because the thing
+                           being styled is the row's *own* top rule and the
+                           thing being hovered is the link inside it — the
+                           relationship only reads upward. */
                         return (
-                            <li key={project.id} className="border-t border-line">
+                            <li
+                                key={project.id}
+                                className="border-t border-line transition-colors duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] has-[a:hover]:border-line-2"
+                            >
                                 <Link
                                     href={`/projects/${project.slug}`}
                                     onPointerEnter={() => setHovered(index)}
@@ -69,7 +78,30 @@ export default function Projects() {
                                         column until `lg`, so below that the
                                         gap is buying nothing and costing the
                                         layout. */}
-                                    <div className="grid grid-cols-12 gap-y-5 sm:gap-x-8">
+                                    {/* THE ENTRY STEPS FORWARD AND THE NUMBER
+                                        STAYS PUT. The hanging mark is outside
+                                        this element, in the margin, so on
+                                        hover the content slides six pixels
+                                        off it and the two separate slightly —
+                                        an entry lifting off the page rather
+                                        than the whole row sliding, which is
+                                        what moving both would be.
+
+                                        Six pixels, not twelve. It has to be
+                                        felt at the edge of vision while the
+                                        eye is on the title, and anything far
+                                        enough to actually watch is a row that
+                                        moves when you point at it.
+
+                                        `group-active` DOES THE SAME THING,
+                                        and it is the only reason this gesture
+                                        exists on a phone. There is no hover
+                                        on a touch screen, so without it the
+                                        entire Work index acknowledges a tap
+                                        with nothing at all — the row simply
+                                        navigates, half a second later, with
+                                        no sign it registered the finger. */}
+                                    <div className="grid grid-cols-12 gap-y-5 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/row:translate-x-1.5 group-active/row:translate-x-1.5 motion-reduce:transform-none sm:gap-x-8">
                                         <div className="col-span-12 lg:col-span-6">
                                             <h3 className="display text-h2 leading-[1] text-ink">
                                                 {project.title}

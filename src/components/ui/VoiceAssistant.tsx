@@ -626,9 +626,14 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
             speak("Showing experience section.");
             navigateTo("#experience");
         }
+        /* The toolkit department is gone, so "what's your stack" now goes
+           to the work — where every entry lists the stack it was built
+           with. Dropping the command outright would have left the one
+           question a visitor is most likely to ask this thing answered
+           with a shrug. */
         else if (cmd.includes("tool") || cmd.includes("stack") || cmd.includes("skill") || cmd.includes("technology")) {
-            speak("Here are my tools and skills.");
-            navigateTo("#toolkit");
+            speak("Each project lists what it was built with — here they are.");
+            navigateTo("#work");
         }
         else if (cmd.includes("contact") || cmd.includes("email") || cmd.includes("touch") || cmd.includes("message")) {
             speak("Taking you to the contact form.");

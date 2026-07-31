@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const { name, email, topic, message, honeypot } = parsed.data;
+        const { name, email, message, honeypot } = parsed.data;
 
         // Bots fill the hidden field. Report success, send nothing.
         if (honeypot) return NextResponse.json({ ok: true });
@@ -102,11 +102,10 @@ export async function POST(req: NextRequest) {
                 from: process.env.CONTACT_FROM ?? "Portfolio <onboarding@resend.dev>",
                 to: [TO_EMAIL],
                 reply_to: email,
-                subject: `[Portfolio] ${topic} — ${name}`,
-                text: `From: ${name} <${email}>\nTopic: ${topic}\n\n${message}`,
+                subject: `[Portfolio] ${name}`,
+                text: `From: ${name} <${email}>\n\n${message}`,
                 html:
                     `<p><strong>${escapeHtml(name)}</strong> &lt;${escapeHtml(email)}&gt;</p>` +
-                    `<p><strong>Topic:</strong> ${escapeHtml(topic)}</p>` +
                     `<hr /><p style="white-space:pre-wrap">${escapeHtml(message)}</p>`,
             }),
         });

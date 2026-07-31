@@ -8,7 +8,6 @@ import {
     House,
     Moon,
     Sun,
-    Wrench,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
@@ -21,7 +20,6 @@ const ICONS = {
     home: House,
     folder: FolderOpen,
     briefcase: Briefcase,
-    wrench: Wrench,
     mail: ChatCircle,
 } as const;
 
@@ -96,8 +94,17 @@ export default function Navigation({
                 is the ink at full strength, and the two have to read as
                 ground and figure. `--tint-wash` resolves to plain paper on
                 the cover, which has no colour. Same 700ms as everything
-                else that changes with the section. */}
-            <div className="flex items-center gap-1 border border-line-2 bg-(--tint-wash) p-1 shadow-e2 transition-colors duration-700 ease-[cubic-bezier(0.33,1,0.68,1)] max-sm:w-full">
+                else that changes with the section.
+
+                `tint-scope` IS NOT DECORATION — it is where the three tint
+                tokens are declared, and it has to be this element because
+                this is the smallest one containing everything that reads
+                them. They were on `:root`, and an inherited custom property
+                changing on the root re-resolves style for the whole
+                document; `data-tint` changes at every section boundary, so
+                that was a long frame in the middle of every scroll. Do not
+                lift them back up. The full note is in `globals.css`. */}
+            <div className="tint-scope flex items-center gap-1 border border-line-2 bg-(--tint-wash) p-1 shadow-e2 transition-colors duration-700 ease-[cubic-bezier(0.33,1,0.68,1)] max-sm:w-full">
                 {/* On a phone the bar spans the plate width, so the sections
                     spread to fill it rather than packing left and leaving a
                     hole in the middle. The marker measures real geometry, so
@@ -147,7 +154,13 @@ export default function Navigation({
                                        width equally — four items, a divider, a
                                        theme toggle, a CTA and the mic all have
                                        to clear a 320px viewport. */
-                                    "relative flex h-10 items-center justify-center gap-2 px-2.5 transition-colors duration-300 max-sm:min-w-0 max-sm:flex-1 sm:px-3.5",
+                                    /* `transition-[color,transform]`, not
+                                       `transition-colors`: the press needs
+                                       the transform tweened too, or the
+                                       release snaps back instantly and the
+                                       tap reads as a glitch rather than as
+                                       a button coming back up. */
+                                    "relative flex h-10 items-center justify-center gap-2 px-2.5 transition-[color,transform] duration-300 active:scale-[0.97] motion-reduce:active:scale-100 max-sm:min-w-0 max-sm:flex-1 sm:px-3.5",
                                     /* `--tint-fg`, not `--accent-fg`. The
                                        marker under this label is a light
                                        tint on every section but the cover,
@@ -184,7 +197,7 @@ export default function Navigation({
                     type="button"
                     onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
                     aria-label="Toggle colour theme"
-                    className="grid h-10 w-9 place-items-center text-ink-3 transition-colors duration-300 hover:bg-surface-2 hover:text-ink sm:w-10"
+                    className="grid h-10 w-9 place-items-center text-ink-3 transition-[color,background-color,transform] duration-300 hover:bg-surface-2 hover:text-ink active:scale-[0.97] motion-reduce:active:scale-100 sm:w-10"
                 >
                     <Sun size={16} className="icon-when-light" aria-hidden />
                     <Moon size={16} className="icon-when-dark" aria-hidden />
@@ -196,7 +209,7 @@ export default function Navigation({
                         e.preventDefault();
                         onNavigate("contact");
                     }}
-                    className="group/cta relative flex h-10 items-center gap-2 overflow-hidden bg-ink px-3 text-paper sm:px-4"
+                    className="group/cta relative flex h-10 items-center gap-2 overflow-hidden bg-ink px-3 text-paper transition-transform duration-300 active:scale-[0.97] motion-reduce:active:scale-100 sm:px-4"
                 >
                     <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/cta:translate-y-0 motion-reduce:hidden" />
                     <ChatCircle

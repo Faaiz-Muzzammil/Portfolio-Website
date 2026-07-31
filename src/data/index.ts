@@ -5,7 +5,6 @@ import type {
     Project,
     SocialLink,
     Stat,
-    Tool,
 } from "@/types";
 
 export const personalInfo: PersonalInfo = {
@@ -43,8 +42,13 @@ export const navItems: NavItem[] = [
     { name: "Home", href: "#home", icon: "home" },
     { name: "Work", href: "#work", icon: "folder" },
     { name: "Experience", href: "#experience", icon: "briefcase" },
-    { name: "Toolkit", href: "#toolkit", icon: "wrench" },
 ];
+
+/* Contact is deliberately not in this list. It has its own control at the
+   end of the bar, and a department that is both an item and a button is
+   the same destination twice on one 320px row. Toolkit sat here until the
+   department went; nothing replaced it, because the bar is a list of what
+   the page contains rather than a shape that has to be filled. */
 
 /* ------------------------------------------------------------------ */
 /* Projects                                                            */
@@ -225,41 +229,15 @@ export const experience: Experience[] = [
 ];
 
 /* ------------------------------------------------------------------ */
-/* Toolkit                                                             */
+/* THE TOOLKIT DEPARTMENT IS GONE                                      */
 /* ------------------------------------------------------------------ */
+/* A `tools` array of twenty-four entries and a `TOOL_CATEGORIES` list
+   sat here, feeding a department of four ruled columns of logos.
 
-export const tools: Tool[] = [
-    { name: "Python", slug: "python", category: "Languages" },
-    { name: "TypeScript", slug: "typescript", category: "Languages" },
-    { name: "JavaScript", slug: "javascript", category: "Languages" },
-    { name: "Java", slug: "java", category: "Languages" },
-    { name: "C++", slug: "cplusplus", category: "Languages" },
-
-    { name: "React", slug: "react", category: "Frontend" },
-    { name: "Next.js", slug: "nextjs", category: "Frontend" },
-    { name: "Tailwind", slug: "tailwind", category: "Frontend" },
-    { name: "HTML", slug: "html", category: "Frontend" },
-    { name: "CSS", slug: "css", category: "Frontend" },
-
-    { name: "Node.js", slug: "nodejs", category: "Backend & Data" },
-    { name: "MongoDB", slug: "mongodb", category: "Backend & Data" },
-    { name: "MySQL", slug: "mysql", category: "Backend & Data" },
-    { name: "Supabase", slug: "supabase", category: "Backend & Data" },
-    { name: "Firebase", slug: "firebase", category: "Backend & Data" },
-
-    { name: "LangGraph", slug: "langchain", category: "AI & Tooling" },
-    { name: "Claude", slug: "claude", category: "AI & Tooling" },
-    { name: "Cursor", slug: "cursor", category: "AI & Tooling" },
-    { name: "Git", slug: "git", category: "AI & Tooling" },
-    { name: "Postman", slug: "postman", category: "AI & Tooling" },
-    { name: "Selenium", slug: "selenium", category: "AI & Tooling" },
-    { name: "Figma", slug: "figma", category: "AI & Tooling" },
-    { name: "Vercel", slug: "vercel", category: "AI & Tooling" },
-];
-
-export const TOOL_CATEGORIES = [
-    "Languages",
-    "Frontend",
-    "Backend & Data",
-    "AI & Tooling",
-] as const;
+   The issue is four departments now: the cover, the work, the roles,
+   and the way to write. What the toolkit said is said better by the
+   things either side of it — every project entry already lists the
+   stack it was built with, and a list of logos claims a fluency that
+   six shipped projects demonstrate. `ToolIcon` and the `Tool` type went
+   with it rather than being left for a call site that no longer
+   exists. */

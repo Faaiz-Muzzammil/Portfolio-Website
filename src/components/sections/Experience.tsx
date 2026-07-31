@@ -24,6 +24,7 @@ export default function Experience() {
         <div>
             <RunningHead
                 id="experience-title"
+                dept="experience"
                 number="02"
                 name="Experience"
                 meta={`${experience.length} roles · dev, growth, legal`}

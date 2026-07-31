@@ -1,5 +1,3 @@
-import RailWash from "@/components/layout/RailWash";
-
 /**
  * The furniture: everything printed on the page that is not the content.
  *
@@ -13,15 +11,18 @@ import RailWash from "@/components/layout/RailWash";
  * measure's own edges, which put them directly under the first and last
  * character of every line.
  *
- *   RAILS     Given a surface of their own, bounded by a rule on the inside
- *             edge, and carrying the page's one colour: each department has
- *             a deep ink and both margins cross-fade between them as the page
- *             is scrolled, under the ordinary grey grain and never in it. A
- *             ruled scale travels down the outer edge of each — ink, not
- *             colour — which is the one thing out here you can see moving and
- *             therefore the only reason the colour reads as being on
- *             something. `RailWash` owns all of it; `sections.ts` owns the
- *             colours.
+ *   RAILS     A surface of their own, bounded by a rule on the inside edge,
+ *             carrying a neutral wash and the page's own grain. They are the
+ *             same at the top of the page as at the bottom.
+ *
+ *             THEY USED TO CARRY THE COLOUR. Each department had an ink and
+ *             both margins cross-faded between them as the page was
+ *             scrolled. The colour is now in the type — the heavy word of
+ *             each department's running head — and it is the same statement
+ *             made where the reader is actually looking, rather than at the
+ *             edge of vision where it has to be noticed before it can be
+ *             read. It also survives below `xl`, where these do not exist.
+ *             `globals.css` has the full note.
  *
  *   GLOW      Two soft masses bleeding in from the outer edges, so the rails
  *             have some weather in them. They drift, on two periods that
@@ -63,18 +64,22 @@ export default function PageFurniture() {
         <>
             <div className="edge-glow" aria-hidden />
 
+            {/* `.rail-ground` is the whole of a rail's surface now, so it is
+                one div rather than a component. It used to be `RailWash`,
+                which rendered a tint layer per section id inside it; with
+                the colour gone there is nothing left for it to map over. */}
             <div
                 aria-hidden
                 className="rail rail-left pointer-events-none fixed"
             >
-                <RailWash />
+                <div className="rail-ground" />
             </div>
 
             <div
                 aria-hidden
                 className="rail rail-right pointer-events-none fixed"
             >
-                <RailWash />
+                <div className="rail-ground" />
             </div>
         </>
     );

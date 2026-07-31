@@ -7,10 +7,18 @@ import { z } from "zod";
  *
  * zod is v3 here: `z.string().email()`, not the v4 `z.email()`.
  */
+/* THREE FIELDS, AND `topic` IS NOT ONE OF THEM ANY MORE.
+   It was a required select — four options, one of which was "Something
+   else" — and it earned none of what it cost. Every answer it could
+   give is the first line of the message anyway, so it bought no
+   information; it was required, so it was a fourth thing to get past
+   before writing; and being required meant it could fail validation,
+   which is a form telling someone their message is wrong when the
+   message is fine. The subject line of the mail it sends is built from
+   the name now. */
 export const contactSchema = z.object({
     name: z.string().trim().min(2, "Please enter your name").max(80),
     email: z.string().trim().email("Enter a valid email address").max(160),
-    topic: z.string().min(1, "Pick a topic"),
     message: z
         .string()
         .trim()
@@ -24,10 +32,5 @@ export const contactSchema = z.object({
 
 export type ContactInput = z.infer<typeof contactSchema>;
 
-export const CONTACT_TOPICS = [
-    { value: "", label: "What's this about?" },
-    { value: "Role", label: "A role — full-time or internship" },
-    { value: "Freelance", label: "Freelance or contract work" },
-    { value: "Collaboration", label: "Collaboration or open source" },
-    { value: "Other", label: "Something else" },
-] as const;
+/* A `CONTACT_TOPICS` list lived here, feeding the topic select. It went
+   with the field — see the note above. */

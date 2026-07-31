@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Instrument_Sans, Manrope } from "next/font/google";
+import { Bricolage_Grotesque, Geist_Mono, Instrument_Sans } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { ThemeProvider } from "@/providers/ThemeProvider";
@@ -8,17 +8,50 @@ import ScrollProvider from "@/providers/ScrollProvider";
 import { personalInfo } from "@/data";
 import "./globals.css";
 
-/* The display voice. Manrope is a variable grotesque with a 200–800 weight
-   axis and slightly geometric, wide-apertured letterforms — it reads modern
-   at 15px and holds together at 100px, which not many faces do.
+/* The display voice, and the one decision on this page that a visitor
+   registers before they have read a word.
 
-   The axis is not decoration. The opening line sets its two verbs at 800
-   against the rest of the sentence at 300, and the second of them animates
-   up the axis as it arrives. No static family can do that. */
-const manrope = Manrope({
+   THIS WAS MANROPE, WHICH IS A UI FONT DOING A MASTHEAD'S JOB. Wide
+   apertures, even strokes, a 200–800 axis: entirely competent at 15px,
+   and at 104px it had nothing to say. The cover is three lines of type
+   on an otherwise empty screen, so the face is not a detail there — it
+   is the whole composition, and a face that reads as a framework's
+   default gives away that nothing was chosen.
+
+   WHY BRICOLAGE GROTESQUE. It is drawn as a display face rather than
+   adapted into one, and at cover size that shows in the letters
+   themselves: flat-sided bowls, tight apertures, a slightly condensed
+   fit, and enough irregularity in the drawing to read as somebody's
+   decision instead of a system font. Set at 104px it looks like a
+   masthead; set at 30px in a department head it behaves, which is the
+   test that rules most display faces out.
+
+   Two axes carry the site's own devices:
+
+     wght     200–800, variable and continuous. Emphasis here is a
+              change of weight and nothing else — the cover sets its
+              setup lines light and its turn heavy, every department
+              head does the same, and the turn animates *up* the axis as
+              it arrives. A family with four cut weights cannot do that.
+
+     opsz     12–96, and this is the part most grotesques do not have.
+              One drawing cannot be right at 11px and at 104px; the fit
+              that keeps a caption legible leaves a headline looking
+              slack. Browsers map this axis to the rendered size on
+              their own, so the cover gets the display cut and a subhead
+              gets the text cut without either being asked for — which
+              is why the tracking figures in `globals.css` are gentler
+              than they were under Manrope. Some of that work is now the
+              font's.
+
+   `wdth` is available and deliberately not requested: it is a second
+   way to make type louder, the page already has one, and every axis
+   loaded is weight on the wire whether or not anything varies it. */
+const bricolage = Bricolage_Grotesque({
     subsets: ["latin"],
     variable: "--font-heading",
     display: "swap",
+    axes: ["opsz"],
 });
 
 /* Body copy and UI. Instrument Sans is a touch narrower than most
@@ -112,7 +145,7 @@ export default function RootLayout({
     return (
         <html
             lang="en"
-            className={`${manrope.variable} ${instrumentSans.variable} ${geistMono.variable}`}
+            className={`${bricolage.variable} ${instrumentSans.variable} ${geistMono.variable}`}
             suppressHydrationWarning
         >
             <body className="min-h-screen antialiased">

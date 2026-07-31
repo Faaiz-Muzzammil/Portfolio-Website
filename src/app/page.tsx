@@ -6,7 +6,6 @@ import Experience from "@/components/sections/Experience";
 import Hero from "@/components/sections/Hero";
 import PageFurniture from "@/components/layout/PageFurniture";
 import Projects from "@/components/sections/Projects";
-import Toolkit from "@/components/sections/Toolkit";
 import TintController from "@/components/layout/TintController";
 import { personalInfo, projects, socialLinks } from "@/data";
 
@@ -102,10 +101,6 @@ export default function Home() {
 
                 <Section id="experience" labelledBy="experience-title">
                     <Experience />
-                </Section>
-
-                <Section id="toolkit" labelledBy="toolkit-title">
-                    <Toolkit />
                 </Section>
 
                 <Section id="contact" labelledBy="contact-title">

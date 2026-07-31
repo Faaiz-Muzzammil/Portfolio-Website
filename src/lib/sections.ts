@@ -11,7 +11,6 @@ export const SECTION_IDS = [
     "home",
     "work",
     "experience",
-    "toolkit",
     "contact",
 ] as const;
 

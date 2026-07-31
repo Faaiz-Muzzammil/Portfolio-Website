@@ -302,7 +302,14 @@ export default function Hero() {
                             href="/cv.pdf"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="rule-draw inline-flex items-center gap-2 text-(length:--t-body) font-medium text-ink-2 transition-colors hover:text-ink"
+                            /* `active:text-ink` as well as `hover:`. An inline
+                               text link is the one control that must not
+                               scale on press — a word that shrinks under the
+                               finger reads as a rendering fault — so the
+                               press is the same colour move the hover makes,
+                               which is also the only feedback a touch device
+                               gets here at all. */
+                            className="rule-draw inline-flex items-center gap-2 text-(length:--t-body) font-medium text-ink-2 transition-colors hover:text-ink active:text-ink"
                         >
                             Read CV
                             <ArrowUpRight size={15} weight="bold" aria-hidden />
@@ -332,7 +339,7 @@ export default function Hero() {
                                         target={link.icon === "mail" ? undefined : "_blank"}
                                         rel="noopener noreferrer"
                                         aria-label={link.name}
-                                        className="block p-1 text-ink-3 transition-colors hover:text-ink focus-visible:text-ink"
+                                        className="block p-1 text-ink-3 transition-[color,transform] duration-300 hover:text-ink focus-visible:text-ink active:scale-[0.92] active:text-ink motion-reduce:active:scale-100"
                                     >
                                         <Icon size={19} aria-hidden />
                                     </a>
