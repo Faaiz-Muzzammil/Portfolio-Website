@@ -208,6 +208,8 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
             shouldListenRef.current = false;
             if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
             if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
+            if (startWatchdogRef.current) clearTimeout(startWatchdogRef.current);
+            startingRef.current = false;
             stopAllAudio();
             /* The recognition object was left running on unmount, which
                on Android holds the mic indicator up after the component
@@ -229,29 +231,103 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
         }
     }, []);
 
-    // Safe recognition start
-    const safeStartRecognition = useCallback(() => {
+    /* ---- STARTING, AND THE LIE THAT KILLED THE SECOND COMMAND -------
+       THE BUG THIS REPLACES. `recognitionActiveRef` was written
+       optimistically here — set to `true` immediately after calling
+       `start()`, and set to `true` again in the `catch` whenever the
+       engine said "already started". Both are guesses about a state
+       only the engine knows, and the second one is a guess that is
+       wrong in exactly the case it fires.
+
+       The sequence that broke it: `speak()` calls `abort()` to free the
+       microphone, and `abort()` tears down asynchronously — `onend`
+       arrives a few frames later. When the reply finished quickly, the
+       restart in `onSpeechEnd` ran *during* that teardown, `start()`
+       threw, and the catch recorded `active = true` for a recognition
+       object that was in the middle of stopping. From then on every
+       call to this function hit `if (recognitionActiveRef.current)
+       return true` and returned without starting anything. The panel
+       kept saying "Listening" because nothing ever set it false, and no
+       result ever arrived again. One command worked; the next never
+       did.
+
+       THE RULE NOW: `recognitionActiveRef` is written only by the
+       engine's own events — `onstart` sets it, `onend` clears it. This
+       function never asserts it. A throw means the start did not
+       happen, so it is treated as a failure and retried once the engine
+       has had time to settle, rather than being recorded as success.
+
+       `startingRef` covers the gap between calling `start()` and
+       `onstart` arriving, so two paths racing to restart — the one in
+       `onSpeechEnd` and the one in `onend` — cannot both get through.
+
+       THE WATCHDOG IS THE BACKSTOP. If `onstart` never arrives, no
+       event will ever clear `startingRef` and the session would hang in
+       the same way for a different reason. Anything that has not
+       started within two seconds is treated as dead and retried. */
+    const startWatchdogRef = useRef<NodeJS.Timeout | null>(null);
+    const startingRef = useRef(false);
+    const startFnRef = useRef<() => boolean>(() => false);
+
+    const safeStartRecognition = useCallback((): boolean => {
         if (!recognitionRef.current) return false;
-        if (recognitionActiveRef.current) return true;
+        if (recognitionActiveRef.current || startingRef.current) return true;
         if (isSpeakingRef.current) return false;
+        if (!shouldListenRef.current) return false;
+
+        startingRef.current = true;
 
         try {
             recognitionRef.current.start();
-            recognitionActiveRef.current = true;
             retryCountRef.current = 0;
+
+            if (startWatchdogRef.current) clearTimeout(startWatchdogRef.current);
+            startWatchdogRef.current = setTimeout(() => {
+                if (!startingRef.current) return;
+                // `onstart` never came. Assume nothing is running.
+                startingRef.current = false;
+                recognitionActiveRef.current = false;
+                try { recognitionRef.current?.abort(); } catch { /* already down */ }
+                if (shouldListenRef.current && !isSpeakingRef.current) {
+                    startFnRef.current();
+                }
+            }, 2000);
+
             return true;
-        } catch (e: any) {
-            if (e.message?.includes('already started')) {
-                recognitionActiveRef.current = true;
-                return true;
-            }
-            console.error("Failed to start recognition:", e);
+        } catch {
+            /* Mid-teardown. Not a success — clear the latch, force the
+               engine down so the next `start()` has a clean object, and
+               come back once it has settled. */
+            startingRef.current = false;
+            recognitionActiveRef.current = false;
+
+            try { recognitionRef.current.abort(); } catch { /* already down */ }
+
+            if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
+            restartTimeoutRef.current = setTimeout(() => {
+                if (shouldListenRef.current && !isSpeakingRef.current) {
+                    startFnRef.current();
+                }
+            }, 400);
+
             return false;
         }
     }, []);
 
+    // The retries above call through this so they always get the current
+    // function without making it a dependency of itself.
+    useEffect(() => {
+        startFnRef.current = safeStartRecognition;
+    }, [safeStartRecognition]);
+
     // Safe recognition stop
     const safeStopRecognition = useCallback((abort = false) => {
+        if (startWatchdogRef.current) {
+            clearTimeout(startWatchdogRef.current);
+            startWatchdogRef.current = null;
+        }
+        startingRef.current = false;
+
         if (!recognitionRef.current) return;
 
         try {
@@ -260,9 +336,13 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
             } else {
                 recognitionRef.current.stop();
             }
-        } catch (e) { /* ignore */ }
+        } catch { /* ignore */ }
 
-        recognitionActiveRef.current = false;
+        /* Deliberately NOT setting `recognitionActiveRef = false` here.
+           The engine is still running until `onend` fires, and claiming
+           otherwise is the same class of lie that broke the restart —
+           it would let a start slip through while the old session is
+           still tearing down. `onend` clears it. */
     }, []);
 
     // Escape closes the session. The command bar covers the nav while open,
@@ -317,12 +397,30 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
                 recognition.lang = "en-US";
                 recognition.maxAlternatives = 1;
 
+                /* The engine confirming it is live. This and `onend` are
+                   the only two places `recognitionActiveRef` is written;
+                   see the note on `safeStartRecognition`. */
                 recognition.onstart = () => {
+                    startingRef.current = false;
+                    if (startWatchdogRef.current) {
+                        clearTimeout(startWatchdogRef.current);
+                        startWatchdogRef.current = null;
+                    }
                     recognitionActiveRef.current = true;
                     setIsListening(true);
                 };
 
                 recognition.onerror = (event: any) => {
+                    /* A start that errors never reaches `onstart`, so the
+                       latch has to be released here too. `onend` follows
+                       every error and would also clear it, but relying on
+                       that is how the session hangs when it does not. */
+                    startingRef.current = false;
+                    if (startWatchdogRef.current) {
+                        clearTimeout(startWatchdogRef.current);
+                        startWatchdogRef.current = null;
+                    }
+
                     if (event.error === 'aborted' || event.error === 'no-speech') {
                         return;
                     }
@@ -377,6 +475,11 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
                    fixable answer, unlike a spinner that never resolves. */
                 recognition.onend = () => {
                     recognitionActiveRef.current = false;
+                    startingRef.current = false;
+                    if (startWatchdogRef.current) {
+                        clearTimeout(startWatchdogRef.current);
+                        startWatchdogRef.current = null;
+                    }
 
                     if (!shouldListenRef.current || isSpeakingRef.current) {
                         if (!shouldListenRef.current) setIsListening(false);
