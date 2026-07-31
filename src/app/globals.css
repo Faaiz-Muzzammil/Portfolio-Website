@@ -280,21 +280,38 @@
 
   /* The fixed chrome, described once so nothing has to guess at it.
      `--nav-top` is the gap above the bar, `--nav-h` is the bar itself
-     (h-10 plus its 1px-of-padding frame), and `--scroll-offset` is
-     everything the bar occupies plus a clear margin under it. That
+     (its controls plus a 1px-of-padding frame), and `--scroll-offset`
+     is everything the bar occupies plus a clear margin under it. That
      last one is what both the scroll-anchor offset and the opening
      plate's top padding read, so the space under the nav can only ever
      be changed in one place.
 
-     The bar floats, so the gap above it is not a margin — it is the
-     thing that tells you it is floating. At 1.25rem it read as a bar
-     that had been pushed slightly away from the top edge rather than
-     one sitting over the page; 1.75rem is enough air to be read as
-     deliberate. The clearance beneath went to 2.5rem with it, because
-     a floating object needs the same room on both sides or it looks
-     stuck to whichever edge it is nearer. */
-  --nav-top: 1.75rem;
-  --nav-h: 48px;
+     THE PHONE GETS DIFFERENT FIGURES FOR BOTH, and this block is the
+     mobile one — the desktop values are in the `sm` query below, which
+     is the opposite of how the rest of this file is written and is
+     deliberate. A phone is the constrained case here; it should be
+     what the defaults describe.
+
+     --nav-h IS 52 BELOW `sm`, NOT 48, because the controls inside are
+     44px there rather than 40. Forty is a comfortable target for a
+     cursor, which lands on a single pixel; a fingertip is about nine
+     millimetres across and lands on a patch, and 44 is the figure both
+     Apple and the WCAG target-size guidance settle on. The bar is the
+     one piece of chrome on the site that is *only* ever touched on a
+     phone, so it is the one place where that matters most. Anything
+     reading `--nav-h` — the scroll offset, the cover's top padding —
+     follows the change without knowing about it, which is the entire
+     reason the figure is a token.
+
+     --nav-top IS 1rem BELOW `sm`. The bar floats, and the gap above it
+     is not a margin — it is the thing that says it is floating. On a
+     desktop 1.75rem is what makes that read as deliberate rather than
+     as a bar nudged off the edge. On a 667px-tall phone the same
+     28 pixels is a chunk of a screen that has none to give, spent
+     making a bar look like it is hovering. A rem still reads as float
+     at that size, and gives twelve pixels back to the page. */
+  --nav-top: 1rem;
+  --nav-h: 52px;
   --scroll-offset: calc(var(--nav-top) + var(--nav-h) + 2.5rem);
 
   /* The band of visible ground above and below every plate. It is the
@@ -308,6 +325,12 @@
 @media (min-width: 640px) {
   :root {
     --plate-gap: 3.5rem;
+
+    /* Back to a cursor's figures: 40px controls in a 48px bar, and the
+       full 1.75rem of float above it. See the note beside the mobile
+       defaults for why the two differ at all. */
+    --nav-top: 1.75rem;
+    --nav-h: 48px;
   }
 }
 

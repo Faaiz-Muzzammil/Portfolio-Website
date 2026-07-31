@@ -34,8 +34,16 @@ type NavigationProps = {
 /**
  * An instrument bar, not a pill of icons. Labels are spelled out from `sm`
  * up — an icon on its own is a guess, and the coordinate face is the whole
- * point of the chrome. Below that the icons carry it alone, because four
- * Martian Mono labels will not fit a 360px viewport.
+ * point of the chrome. Below that the icons carry it alone, because
+ * "Experience" alone is most of the width a phone has left once the
+ * divider, the toggle, the CTA and the mic have taken theirs.
+ *
+ * IT IS SIZED TWICE. Every control in here is 44px on a phone and 40 from
+ * `sm` up, because a fingertip and a cursor are not the same instrument.
+ * The bar's total height is not hard-coded anywhere — it is `--nav-h`, and
+ * the scroll-anchor offset and the cover's top padding both read it, so the
+ * breakpoint is declared once in `globals.css` and everything downstream
+ * follows without being told.
  */
 export default function Navigation({
     activeId,
@@ -150,17 +158,33 @@ export default function Navigation({
                                     onNavigate(id);
                                 }}
                                 className={cn(
-                                    /* Icon-only below `sm`, sharing the bar's
-                                       width equally — four items, a divider, a
-                                       theme toggle, a CTA and the mic all have
-                                       to clear a 320px viewport. */
-                                    /* `transition-[color,transform]`, not
+                                    /* ICON-ONLY BELOW `sm`, and it stayed that
+                                       way when the toolkit department left.
+                                       Three labels is not four, so the
+                                       arithmetic was worth redoing — and
+                                       "Experience" is ten characters of
+                                       mono, which on its own is about 92px
+                                       of the ~135px a 320px viewport has
+                                       left after the divider, the toggle,
+                                       the CTA and the mic have taken theirs.
+                                       Home and Work would fit; one of the
+                                       three wearing a label and the others
+                                       not is worse than none of them.
+
+                                       `h-11` BELOW `sm`, `h-10` ABOVE. 44px
+                                       is the touch target; 40 is the cursor
+                                       one. They share `flex-1` so the three
+                                       divide whatever the bar has left
+                                       equally, which is what keeps them from
+                                       packing left and leaving a hole.
+
+                                       `transition-[color,transform]`, not
                                        `transition-colors`: the press needs
                                        the transform tweened too, or the
                                        release snaps back instantly and the
                                        tap reads as a glitch rather than as
                                        a button coming back up. */
-                                    "relative flex h-10 items-center justify-center gap-2 px-2.5 transition-[color,transform] duration-300 active:scale-[0.97] motion-reduce:active:scale-100 max-sm:min-w-0 max-sm:flex-1 sm:px-3.5",
+                                    "relative flex h-11 items-center justify-center gap-2 px-2.5 transition-[color,transform] duration-300 active:scale-[0.97] motion-reduce:active:scale-100 max-sm:min-w-0 max-sm:flex-1 sm:h-10 sm:px-3.5",
                                     /* `--tint-fg`, not `--accent-fg`. The
                                        marker under this label is a light
                                        tint on every section but the cover,
@@ -197,7 +221,10 @@ export default function Navigation({
                     type="button"
                     onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
                     aria-label="Toggle colour theme"
-                    className="grid h-10 w-9 place-items-center text-ink-3 transition-[color,background-color,transform] duration-300 hover:bg-surface-2 hover:text-ink active:scale-[0.97] motion-reduce:active:scale-100 sm:w-10"
+                    /* Square at 44 on a phone, 40×40 from `sm`. It was `w-9`
+                       — 36px — which is the narrowest thing in the bar and
+                       the one control a thumb is most likely to clip. */
+                    className="grid h-11 w-11 place-items-center text-ink-3 transition-[color,background-color,transform] duration-300 hover:bg-surface-2 hover:text-ink active:scale-[0.97] motion-reduce:active:scale-100 sm:h-10 sm:w-10"
                 >
                     <Sun size={16} className="icon-when-light" aria-hidden />
                     <Moon size={16} className="icon-when-dark" aria-hidden />
@@ -209,7 +236,7 @@ export default function Navigation({
                         e.preventDefault();
                         onNavigate("contact");
                     }}
-                    className="group/cta relative flex h-10 items-center gap-2 overflow-hidden bg-ink px-3 text-paper transition-transform duration-300 active:scale-[0.97] motion-reduce:active:scale-100 sm:px-4"
+                    className="group/cta relative flex h-11 items-center gap-2 overflow-hidden bg-ink px-3.5 text-paper transition-transform duration-300 active:scale-[0.97] motion-reduce:active:scale-100 sm:h-10 sm:px-4"
                 >
                     <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/cta:translate-y-0 motion-reduce:hidden" />
                     <ChatCircle
