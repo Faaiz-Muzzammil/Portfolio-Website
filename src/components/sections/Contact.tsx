@@ -57,10 +57,32 @@ type Status =
 
 /* The resting rule is the heavier hairline, because it is a rule you
    write on rather than a division; focus takes it to full ink, which is
-   how a monochrome page says "active". */
+   how a monochrome page says "active".
+
+   ── WHY THE GLOBAL FOCUS RING IS TURNED OFF HERE ────────────────────
+
+   `globals.css` gives everything a `:focus-visible` outline — 2px of
+   `--accent`, offset 3px — and on a normal control that is exactly
+   right. On these it drew a full rectangle around a field that has no
+   rectangle: the box is three invisible sides and one rule you write
+   on, so focusing it summoned a border that does not exist at rest and
+   vanishes again on blur. It also boxed in the browser's own autofill
+   dropdown, which is what made it obvious.
+
+   REPLACING IT, NOT REMOVING IT. `outline-none` on its own is an
+   accessibility regression — a keyboard user needs to see where they
+   are. The replacement is the field's own rule going to full ink *and*
+   doubling in weight, which is a larger visual change than the ring
+   was and is drawn in the vocabulary the field is already using.
+
+   THE SECOND PIXEL IS AN INSET SHADOW, NOT A BORDER. Taking
+   `border-b` from 1px to 2px on focus reflows the field by a pixel and
+   nudges everything under it; an inset shadow sitting on the bottom
+   edge paints the same line and occupies no space. */
 const FIELD =
     "w-full border-x-0 border-t-0 border-b bg-transparent px-0 py-3 text-body text-ink " +
-    "outline-none transition-colors duration-300 placeholder:text-ink-4 focus:border-ink";
+    "transition-[color,border-color,box-shadow] duration-300 placeholder:text-ink-4 " +
+    "focus:outline-none focus:border-ink focus:shadow-[inset_0_-1px_0_0_var(--ink)]";
 
 /* The caption goes to full ink while its own field has focus, so the
    live field is marked at both ends — the rule under it thickens and

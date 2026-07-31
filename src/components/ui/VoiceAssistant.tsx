@@ -58,6 +58,31 @@ const isAndroid = (): boolean => {
     return cachedIsAndroid;
 };
 
+/* ---- WHY iOS CANNOT HOLD A CONTINUOUS SESSION ----------------------
+ * WebKit requires a user gesture for *every* `recognition.start()`, not
+ * just the first one in a session. Android and desktop Chrome only
+ * require the first, which is what makes a hands-free loop possible
+ * there: the reply finishes, a timer fires, recognition restarts, and
+ * the reader keeps talking.
+ *
+ * On iOS that timer is not a gesture. `start()` from it does nothing —
+ * no `onstart`, no `onerror`, no `onend`, no exception to catch. The
+ * call is simply ignored. So the loop was: tap, first command works,
+ * reply plays, restart is silently dropped, and the panel sits on
+ * "Listening" forever with a microphone that was never opened. Exactly
+ * one command per tap, which is what the bug report described.
+ *
+ * NO AMOUNT OF RETRY LOGIC FIXES THIS, and the watchdog added for the
+ * desktop hang made it worse rather than better here: it kept retrying
+ * a call that can never succeed, on a two-second cycle, forever.
+ *
+ * So iOS gets the interaction model it actually supports — one tap,
+ * one command — and the panel says so. `isIOS()` rather than a feature
+ * test because there is nothing to test: the failure is silence, and by
+ * the time it can be observed the turn is already lost.
+ */
+const needsGesturePerTurn = (): boolean => isIOS();
+
 export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssistantProps) {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState("");
@@ -68,6 +93,13 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
     const [isMobileDevice, setIsMobileDevice] = useState(false);
     const [micPermissionGranted, setMicPermissionGranted] = useState(false);
     const [ttsRemaining, setTtsRemaining] = useState<number | null>(null);
+
+    /* The panel is open and the turn is over, waiting on a tap to start
+       the next one. Only ever true where `needsGesturePerTurn()` is —
+       see the note beside it. It keeps the session on screen between
+       turns so the reader is not returned to a bare microphone button
+       after every command. */
+    const [awaitingTurn, setAwaitingTurn] = useState(false);
 
     const { setTheme, theme } = useTheme();
 
@@ -486,6 +518,16 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
                         return;
                     }
 
+                    /* iOS: the turn is over and only a tap can open the
+                       next one. Restarting here is the call that gets
+                       silently dropped, so it hands off to the panel
+                       instead of spinning. */
+                    if (needsGesturePerTurn()) {
+                        setIsListening(false);
+                        setAwaitingTurn(true);
+                        return;
+                    }
+
                     restartsRef.current += 1;
 
                     if (restartsRef.current > MAX_DEAD_RESTARTS) {
@@ -775,6 +817,15 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
             setTimeout(() => setResponse(""), 2000);
 
             if (shouldListenRef.current && recognitionRef.current) {
+                /* iOS: hand the next turn to a tap. The timer below is
+                   not a user gesture, and WebKit ignores `start()`
+                   outside one — see `needsGesturePerTurn`. */
+                if (needsGesturePerTurn()) {
+                    setIsListening(false);
+                    setAwaitingTurn(true);
+                    return;
+                }
+
                 const delay = isMobile() ? 400 : 100;
                 restartTimeoutRef.current = setTimeout(() => {
                     if (shouldListenRef.current && !isSpeakingRef.current) {
@@ -1075,6 +1126,35 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
             setIsListening(true);
             setTranscript("");
             setResponse("");
+            restartsRef.current = 0;
+
+            /* ---- iOS TAKES THE SHORT PATH, AND IT HAS TO ---------------
+               Two things below are fatal on WebKit, and both are fine
+               everywhere else.
+
+               `await getUserMedia(...)` ENDS THE GESTURE. Anything after
+               an `await` is no longer running inside the tap as far as
+               WebKit is concerned, so the `start()` that follows it is
+               dropped exactly as a timer's would be — the reader grants
+               permission and the microphone still never opens.
+               Recognition prompts for permission on its own anyway, so
+               the pre-flight is not buying anything here; it is only
+               costing the gesture.
+
+               THE GREETING COSTS A WHOLE TURN. Every reply ends a turn
+               on iOS, so opening with "Hi! How can I help you today?"
+               means the first tap is spent being greeted and the reader
+               has to tap again before saying anything. On a platform
+               where each turn is a deliberate tap, a pleasantry is not
+               free. It goes straight to listening.
+
+               `start()` is therefore the first thing that happens, with
+               nothing awaited in front of it. */
+            if (needsGesturePerTurn()) {
+                hasGreetedRef.current = true;
+                safeStartRecognition();
+                return;
+            }
 
             // If we already have permission, start immediately
             if (micPermissionGranted) {
@@ -1133,8 +1213,48 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
        which is a real answer — text-to-speech is supported in all the
        places recognition is not, so the assistant can still talk even
        where it cannot listen. */
-    const isActive = isListening || isSpeaking;
-    const statusLabel = isSpeaking ? "Speaking" : "Listening";
+    /* ---- OPENING THE NEXT TURN ON iOS --------------------------------
+       This must be reachable from a real tap and must call `start()`
+       with nothing awaited in front of it. `toggleListening` cannot be
+       reused: it is `async` and awaits `getUserMedia` on the permission
+       path, and an `await` ends the gesture as far as WebKit is
+       concerned — everything after it is no longer "in" the tap, and
+       `start()` is dropped exactly as it is from a timer.
+
+       Permission is already granted by the time this is reachable, since
+       the session is mid-flight, so there is nothing to await anyway. */
+    const beginTurn = () => {
+        setAwaitingTurn(false);
+        setTranscript("");
+        setResponse("");
+        shouldListenRef.current = true;
+        restartsRef.current = 0;
+        setIsListening(true);
+        safeStartRecognition();
+    };
+
+    /* One teardown for the close button, so it cannot leave the session
+       half-open the way the old handler could — it called
+       `toggleListening`, which only knew about `isListening`. */
+    const closeSession = () => {
+        shouldListenRef.current = false;
+        setAwaitingTurn(false);
+        if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
+        safeStopRecognition(true);
+        stopAllAudio();
+        isSpeakingRef.current = false;
+        setIsSpeaking(false);
+        setIsListening(false);
+        setTranscript("");
+        setResponse("");
+    };
+
+    const isActive = isListening || isSpeaking || awaitingTurn;
+    const statusLabel = isSpeaking
+        ? "Speaking"
+        : awaitingTurn
+            ? "Tap to speak"
+            : "Listening";
 
     return (
         <div className="relative flex h-11 w-11 items-center justify-center">
@@ -1189,12 +1309,27 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
                     >
                         {/* Waveform. Bars stay taller and busier while speaking
                             than while listening, so the two states are
-                            distinguishable at a glance. */}
+                            distinguishable at a glance.
+
+                            IT GOES FLAT AND STILL BETWEEN TURNS. A waveform
+                            that keeps moving while nothing is being recorded
+                            is the animation that made this bug so hard to
+                            see from the outside: the panel looked busy, so
+                            the reader kept talking to a microphone that was
+                            not open. Motion here now means "the mic is
+                            live", and nothing else. */}
                         <div
                             aria-hidden
                             className="flex h-5 flex-shrink-0 items-center gap-[3px] text-accent"
                         >
-                            {isMobileDevice ? (
+                            {awaitingTurn ? (
+                                [0, 1, 2, 3].map((i) => (
+                                    <span
+                                        key={i}
+                                        className="h-1 w-0.75 rounded-full bg-current opacity-40"
+                                    />
+                                ))
+                            ) : isMobileDevice ? (
                                 <>
                                     <span className="animate-wave-1 h-2 w-0.75 rounded-full bg-current" />
                                     <span className="animate-wave-2 h-4 w-0.75 rounded-full bg-current" />
@@ -1258,14 +1393,38 @@ export default function VoiceAssistant({ onNavigate, onStateChange }: VoiceAssis
                                         className={`text-caption text-ink-3 ${isMobileDevice ? "line-clamp-2 leading-snug" : "truncate"
                                             }`}
                                     >
-                                        Try &ldquo;{HINTS[hintIndex]}&rdquo;
+                                        {awaitingTurn
+                                            ? "Tap the mic for the next command"
+                                            : `Try “${HINTS[hintIndex]}”`}
                                     </m.p>
                                 )}
                             </AnimatePresence>
                         </div>
 
+                        {/* THE TAP THAT OPENS THE NEXT TURN. Only rendered
+                            where a gesture is required per turn, because
+                            everywhere else the session restarts itself and a
+                            button demanding a tap between commands would be
+                            asking for something the platform does not need.
+
+                            It is deliberately the same 44px target and the
+                            same ink block as the send button on the contact
+                            form: on iOS this is now the primary control of
+                            the whole feature, not an afterthought beside the
+                            close button. */}
+                        {awaitingTurn && (
+                            <button
+                                onClick={beginTurn}
+                                className="flex size-11 flex-shrink-0 touch-manipulation items-center justify-center rounded-full bg-accent text-accent-fg transition-transform duration-300 active:scale-[0.94] motion-reduce:active:scale-100"
+                                style={{ WebkitTapHighlightColor: "transparent" }}
+                                aria-label="Speak the next command"
+                            >
+                                <Microphone size={18} weight="fill" aria-hidden />
+                            </button>
+                        )}
+
                         <button
-                            onClick={toggleListening}
+                            onClick={closeSession}
                             className="flex size-10 flex-shrink-0 touch-manipulation items-center justify-center rounded-full text-ink-3 transition-colors duration-300 hover:bg-surface-2 hover:text-ink"
                             style={{ WebkitTapHighlightColor: "transparent" }}
                             aria-label="Close voice assistant"
