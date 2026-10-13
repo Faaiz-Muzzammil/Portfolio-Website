@@ -2284,3 +2284,157 @@ summary {
 [data-theme="dark"] .contact-art__grain {
   mix-blend-mode: overlay;
 }
+
+/* ============================================================
+   MARKETEER
+   ------------------------------------------------------------
+   The capstone, set as a plate of its own at the foot of Work.
+
+   It is the one place in the issue that carries a product's
+   colours rather than the page's: the deck's warm stock and its
+   one lime. It is still printed in the page's theme, though — a
+   fixed dark plate dropped into the white theme read as a hole
+   in the page — so each theme gets its own sheet:
+
+     light   a warm off-white sheet a step under the paper, near-
+             black type, and the lime pulled down to an olive for
+             the one line of type it carries (5.3:1 on the sheet).
+             The button is the site's own ink block.
+     dark    the deck's near-black, cream type, the lime at full
+             strength (15:1), and the lime as the button.
+
+   THE DEMO SITS ON A TILE OF #141414 with a hairline round it,
+   so the frame is there before the poster or the first frame of
+   the video has decoded, and the recording reads as a screen set
+   into the sheet in either theme rather than a hole in it.
+
+   Every colour below is a role, not a hue: the component only
+   ever names `--mk-*`, so the two sheets are the whole switch.
+   ============================================================ */
+
+.marketeer {
+  --mk-ground: #F2F1ED;
+  --mk-ink: #0A0A0A;
+  --mk-ink-2: #3B3B3B;
+  --mk-ink-3: #6A6A66;
+  --mk-line: rgba(10, 10, 10, 0.10);
+  --mk-line-2: rgba(10, 10, 10, 0.18);
+
+  --mk-accent: #56650A;      /* the label: lime as type */
+  --mk-mark: #CFE04A;        /* the underline: lime as fill */
+  --mk-btn: #0A0A0A;
+  --mk-btn-fg: #FFFFFF;
+  --mk-btn-hover: #CFE04A;
+  --mk-btn-hover-fg: #0A0A0A;
+  --mk-tile: #141414;
+  --mk-crest-shadow: 0 6px 16px -10px rgba(0, 0, 0, 0.35);
+  --mk-grain-blend: multiply;
+  --mk-grain: 0.05;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--mk-ground);
+  color: var(--mk-ink);
+  box-shadow: inset 0 0 0 1px var(--mk-line);
+}
+
+[data-theme="dark"] .marketeer {
+  --mk-ground: #141414;
+  --mk-ink: #F2EFE8;
+  --mk-ink-2: rgba(242, 239, 232, 0.72);
+  --mk-ink-3: rgba(242, 239, 232, 0.52);
+  --mk-line: rgba(242, 239, 232, 0.12);
+  --mk-line-2: rgba(242, 239, 232, 0.22);
+
+  --mk-accent: #E6F27A;
+  --mk-mark: #E6F27A;
+  --mk-btn: #E6F27A;
+  --mk-btn-fg: #141414;
+  --mk-btn-hover: #F2EFE8;
+  --mk-btn-hover-fg: #141414;
+  --mk-crest-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.6);
+  --mk-grain-blend: overlay;
+  --mk-grain: 0.06;
+
+  color-scheme: dark;
+}
+
+/* The page's own grain, carried onto the insert so it is the same
+   paper with a different ink on it rather than a flat screen. */
+.marketeer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--grain);
+  opacity: var(--mk-grain);
+  mix-blend-mode: var(--mk-grain-blend);
+}
+
+/* The deck's underline, under the heavy phrase only. Drawn as a
+   background so it can sit under the descenders without clipping
+   them, and so it breaks with the line on a phone. Heavier on the
+   light sheet, where a pale lime needs the extra body to register. */
+.mk-underline {
+  background-image: linear-gradient(var(--mk-mark), var(--mk-mark));
+  background-repeat: no-repeat;
+  background-position: 0 96%;
+  background-size: 100% 0.08em;
+  padding-bottom: 0.04em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+[data-theme="dark"] .mk-underline {
+  background-size: 100% 0.06em;
+}
+
+/* The action: an ink block on the light sheet, the lime on the dark
+   one, and the fill sweeping up from the bottom edge on hover like
+   every other button on the site. */
+.mk-button {
+  background-color: var(--mk-btn);
+  color: var(--mk-btn-fg);
+  transition: color 0.4s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s;
+}
+
+.mk-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--mk-btn-hover);
+  transform: translateY(100%);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mk-button:hover,
+.mk-button:focus-visible {
+  color: var(--mk-btn-hover-fg);
+}
+
+.mk-button:hover::before,
+.mk-button:focus-visible::before {
+  transform: none;
+}
+
+.mk-button:focus-visible {
+  outline: 2px solid var(--mk-ink);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-button::before {
+    transition: none;
+  }
+}
+
+/* A medal, not a logo wall: each crest seated on a white disc so the
+   three read as one set whatever the theme. The crests are drawn
+   for a white ground, so white is what they get in both themes. */
+.mk-crest {
+  background: #FFFFFF;
+  box-shadow: 0 0 0 1px var(--mk-line-2), var(--mk-crest-shadow);
+}

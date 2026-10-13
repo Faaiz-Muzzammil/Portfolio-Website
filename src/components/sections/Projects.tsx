@@ -8,6 +8,7 @@ import { projects } from "@/data";
 import { cn } from "@/lib/cn";
 import RunningHead from "@/components/ui/RunningHead";
 import Reveal from "@/components/motion/Reveal";
+import Marketeer from "@/components/sections/Marketeer";
 
 /**
  * The features, as a magazine index rather than a card grid.
@@ -152,6 +153,10 @@ export default function Projects() {
                     })}
                 </ul>
             </Reveal>
+
+            {/* The capstone closes the department as an insert of its own
+                rather than as a seventh row — see `Marketeer`. */}
+            <Marketeer />
         </div>
     );
 }
