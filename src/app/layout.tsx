@@ -105,7 +105,7 @@ const OG_IMAGE = {
     url: "/opengraph-image",
     width: 1200,
     height: 630,
-    type: "image/png",
+    type: "image/jpeg",
     alt: "Faaiz Muzzammil — I build useful apps. Then I help them grow.",
 };
 

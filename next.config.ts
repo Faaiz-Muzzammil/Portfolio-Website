@@ -199,7 +199,7 @@ const nextConfig: NextConfig = {
      became dynamic would deploy without its fonts and throw on the first
      request. Cheap insurance; the three files are 235KB total. */
   outputFileTracingIncludes: {
-    "/opengraph-image": ["./src/app/_og/fonts/**"],
+    "/opengraph-image": ["./src/app/_og/fonts/**", "./public/portrait.jpeg"],
     "/projects/[slug]/opengraph-image": ["./src/app/_og/fonts/**"],
   },
   images: {
