@@ -95,18 +95,18 @@ export const viewport: Viewport = {
    half throws away the one thing that distinguishes it from every other
    portfolio in the thread.
 
-   The description runs to about 110 characters because that is roughly
-   what WhatsApp shows before it ellipsises, and it is written to survive
-   being cut: the two concrete nouns land in the first half. */
-const TITLE = "Faaiz Muzzammil — Full-stack Developer & Marketer";
+   The description is short and spoken, well under the ~110 characters
+   WhatsApp shows before it ellipsises, so it never gets cut. No em
+   dashes: it should read like a message, not a press release. */
+const TITLE = "Faaiz Muzzammil · Developer & Marketer";
 const DESCRIPTION =
-    "Full-stack developer in Islamabad. I build apps and AI agents — then do the growth work that gets them used.";
+    "Hey, I'm Faaiz. I build apps and AI agents, then help them find real users.";
 const OG_IMAGE = {
     url: "/opengraph-image",
     width: 1200,
     height: 630,
     type: "image/jpeg",
-    alt: "Faaiz Muzzammil — I build useful apps. Then I help them grow.",
+    alt: "Portrait of Faaiz Muzzammil in front of the mountains",
 };
 
 export const metadata: Metadata = {

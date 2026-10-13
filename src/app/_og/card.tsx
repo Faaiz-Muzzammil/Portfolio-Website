@@ -112,7 +112,7 @@ type StillProps = {
     /** The photograph, as a data URI. */
     src: string;
     /** One line of speech, set as a subtitle over the bottom of the frame. */
-    subtitle: string;
+    subtitle?: string;
 };
 
 /** The cover: a still from the film. */
@@ -156,7 +156,7 @@ export function Still({ src, subtitle }: StillProps) {
                 {/* Subtitles sit low and centred, over the dark of the
                     shirt, which is what makes white legible on a
                     photograph whose sides are blown-out riverbed. */}
-                <div
+                {subtitle && <div
                     style={{
                         position: "absolute",
                         left: 0,
@@ -172,7 +172,7 @@ export function Still({ src, subtitle }: StillProps) {
                     }}
                 >
                     {subtitle}
-                </div>
+                </div>}
             </div>
             <Bar left="Faaiz Muzzammil" right="Islamabad" />
         </div>
