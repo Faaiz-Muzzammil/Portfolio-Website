@@ -74,6 +74,7 @@ const MONO = "Geist Mono";
  * degrades to a slow first render rather than a crash.
  */
 const FONT_DIR = path.join(process.cwd(), "src/app/_og/fonts");
+const AVATAR_PATH = path.join(process.cwd(), "public/Faaiz.jpeg");
 
 export async function loadFonts() {
     const [light, extraBold, mono] = await Promise.all([
@@ -87,6 +88,11 @@ export async function loadFonts() {
         { name: DISPLAY, data: extraBold, weight: 800 as const, style: "normal" as const },
         { name: MONO, data: mono, weight: 400 as const, style: "normal" as const },
     ];
+}
+
+export async function loadAvatar() {
+    const avatar = await readFile(AVATAR_PATH);
+    return `data:image/jpeg;base64,${avatar.toString("base64")}`;
 }
 
 /** The running head and the folio line, set the way the site sets them. */
@@ -110,9 +116,11 @@ type CardProps = {
     footer: string;
     /** Right-hand side of the folio line. Drawn with the ink mark beside it. */
     status: string;
+    /** Optional portrait, kept in the center-safe area used by chat crops. */
+    avatar?: string;
 };
 
-export function Card({ meta, beats, beatSize, standfirst, footer, status }: CardProps) {
+export function Card({ meta, beats, beatSize, standfirst, footer, status, avatar }: CardProps) {
     return (
         <div
             style={{
@@ -149,10 +157,19 @@ export function Card({ meta, beats, beatSize, standfirst, footer, status }: Card
                 style={{
                     flex: 1,
                     display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                    gap: avatar ? 42 : 0,
                 }}
             >
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        width: avatar ? 500 : "100%",
+                    }}
+                >
                 {/* `display: block`, not flex. A flex container lays its
                     text out as a single unbreakable item, so a line wider
                     than the measure runs straight off the right edge
@@ -161,35 +178,56 @@ export function Card({ meta, beats, beatSize, standfirst, footer, status }: Card
                     half by the card boundary. Block gives normal inline
                     layout, so an over-long title takes a second line and
                     the card stays intact whatever it is handed. */}
-                {beats.map((beat) => (
-                    <div
-                        key={beat.text}
-                        style={{
-                            display: "block",
-                            fontSize: beatSize,
-                            fontWeight: beat.turns ? 800 : 300,
-                            letterSpacing: beatSize * -0.035,
-                            lineHeight: 1.04,
-                        }}
-                    >
-                        {beat.text}
-                    </div>
-                ))}
+                    {beats.map((beat) => (
+                        <div
+                            key={beat.text}
+                            style={{
+                                display: "block",
+                                fontSize: beatSize,
+                                fontWeight: beat.turns ? 800 : 300,
+                                letterSpacing: beatSize * -0.035,
+                                lineHeight: 1.04,
+                            }}
+                        >
+                            {beat.text}
+                        </div>
+                    ))}
 
-                {standfirst ? (
-                    <div
+                    {standfirst ? (
+                        <div
+                            style={{
+                                display: "block",
+                                marginTop: 24,
+                                maxWidth: 860,
+                                fontSize: 28,
+                                fontWeight: 300,
+                                lineHeight: 1.45,
+                                color: INK_3,
+                            }}
+                        >
+                            {standfirst}
+                        </div>
+                    ) : null}
+                </div>
+
+                {avatar ? (
+                    /* ImageResponse accepts data URIs through a plain image
+                       element; next/image cannot optimize this build-time asset. */
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                        src={avatar}
+                        alt=""
+                        width={320}
+                        height={320}
                         style={{
-                            display: "block",
-                            marginTop: 24,
-                            maxWidth: 860,
-                            fontSize: 28,
-                            fontWeight: 300,
-                            lineHeight: 1.45,
-                            color: INK_3,
+                            width: 320,
+                            height: 320,
+                            objectFit: "cover",
+                            objectPosition: "50% 28%",
+                            borderRadius: 9999,
+                            border: `2px solid ${INK}`,
                         }}
-                    >
-                        {standfirst}
-                    </div>
+                    />
                 ) : null}
             </div>
 

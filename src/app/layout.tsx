@@ -106,7 +106,7 @@ const OG_IMAGE = {
     width: 1200,
     height: 630,
     type: "image/png",
-    alt: "Faaiz Muzzammil — Engineers build. Marketers sell. I do both.",
+    alt: "Faaiz Muzzammil — I build useful apps. Then I help them grow.",
 };
 
 export const metadata: Metadata = {
