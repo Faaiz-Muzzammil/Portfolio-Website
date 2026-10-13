@@ -4,7 +4,6 @@ import type {
     PersonalInfo,
     Project,
     SocialLink,
-    Stat,
 } from "@/types";
 
 export const personalInfo: PersonalInfo = {
@@ -21,15 +20,6 @@ export const personalInfo: PersonalInfo = {
     location: "Islamabad",
     available: true,
 };
-
-/* Grounded in the CV rather than rounded up. Each label names the thing
-   measured so the number reads on its own.
-   TODO(faaiz): adjust these if the numbers have moved. */
-export const stats: Stat[] = [
-    { value: 6, label: "Projects shipped" },
-    { value: 15, suffix: "+", label: "Companies filed" },
-    { value: 45, suffix: "%", label: "Signup lift" },
-];
 
 export const socialLinks: SocialLink[] = [
     // TODO(faaiz): replace with your real profile URLs.

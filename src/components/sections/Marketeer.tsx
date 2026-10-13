@@ -1,87 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
 import { ArrowUpRight, Sparkle } from "@phosphor-icons/react/dist/ssr";
 
 import Reveal from "@/components/motion/Reveal";
 import { PressAnchor } from "@/components/motion/Press";
+import AmbientVideo from "@/components/ui/AmbientVideo";
 
 const SITE_URL = "https://www.marketeer.studio";
-
-/**
- * The product demo, always running and never showing a control.
- *
- * Muted, looped and inline so every browser will autoplay it. It is paused
- * whenever it scrolls out of view — a 1080p decode running under the rest of
- * the page is frames taken off the scroll for nobody — and picked up again
- * when it comes back. Where iOS refuses autoplay (Low Power Mode, a data
- * saver) it is started on the reader's first touch instead, since a gesture
- * anywhere on the page is enough to unlock muted playback.
- */
-function DemoVideo() {
-    const ref = useRef<HTMLVideoElement>(null);
-
-    useEffect(() => {
-        const video = ref.current;
-        if (!video) return;
-
-        // React sets `muted` as a property after hydration rather than
-        // rendering the attribute, and iOS checks for it before it will
-        // autoplay — so it is set here, before the first play().
-        video.muted = true;
-        video.defaultMuted = true;
-
-        let visible = false;
-        const play = () => {
-            if (visible) video.play().catch(() => {});
-        };
-
-        // A gesture unlocks playback where autoplay was refused. Passive and
-        // listened for until the video is actually running.
-        const unlock = () => {
-            if (!visible) return;
-            video.play().then(removeUnlock, () => {});
-        };
-        const events = ["touchstart", "touchend", "click", "scroll"] as const;
-        const removeUnlock = () =>
-            events.forEach((e) => window.removeEventListener(e, unlock));
-        events.forEach((e) => window.addEventListener(e, unlock, { passive: true }));
-        video.addEventListener("playing", removeUnlock, { once: true });
-
-        const io = new IntersectionObserver(
-            ([entry]) => {
-                visible = entry.isIntersecting;
-                if (visible) play();
-                else video.pause();
-            },
-            { threshold: 0.25 },
-        );
-        io.observe(video);
-        return () => {
-            io.disconnect();
-            removeUnlock();
-        };
-    }, []);
-
-    return (
-        <video
-            ref={ref}
-            src="/marketeer/demo.mp4"
-            poster="/marketeer/demo-poster.webp"
-            autoPlay
-            muted
-            loop
-            playsInline
-            disablePictureInPicture
-            disableRemotePlayback
-            preload="auto"
-            tabIndex={-1}
-            aria-label="Marketeer demo: a live Nvidia market tile is picked and the branded video is built and edited in the studio"
-            className="mk-demo pointer-events-none block aspect-video h-auto w-full"
-        />
-    );
-}
 
 const AWARDS = [
     {
@@ -162,7 +88,12 @@ export default function Marketeer() {
                     light sheet, where its dark edges would otherwise bleed. */}
                 <Reveal scale className="mt-10 sm:mt-14">
                     <div className="overflow-hidden bg-(--mk-tile) shadow-[0_0_0_1px_var(--mk-line-2)]">
-                        <DemoVideo />
+                        <AmbientVideo
+                            src="/marketeer/demo.mp4"
+                            poster="/marketeer/demo-poster.webp"
+                            label="Marketeer demo: a live Nvidia market tile is picked and the branded video is built and edited in the studio"
+                            className="aspect-video"
+                        />
                     </div>
                 </Reveal>
 

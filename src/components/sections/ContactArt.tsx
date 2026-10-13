@@ -11,6 +11,12 @@ import { useRef } from "react";
  * for its parent to arrive before it starts, so the piece reads as one
  * thing spreading rather than lines appearing.
  *
+ * Ten words in three tiers, set on an even grid so no two labels crowd
+ * each other. A root leaves from *below* its parent's word rather than
+ * from its node, so no line ever runs through a label, and the bends
+ * are kept gentle enough to read as growth, not scribble. There are no
+ * rootlets: at this spacing they read as stray marks, not texture.
+ *
  * The geometry is generated once, at module load, from a fixed seed, so
  * server and client draw the same roots and every visit sees the same
  * tree. The panel, the grain and the colours are `.contact-art` in
@@ -19,39 +25,39 @@ import { useRef } from "react";
 
 type Pt = { x: number; y: number };
 
-type Thought = { id: string; word: string; at: Pt; parent?: string };
+type Thought = { id: string; word: string; at: Pt; tier: number; parent?: string };
 
-/* The tree. Marketing spreads down the left, software down the right,
-   product sits between them. A thought hangs off the one it grew from,
-   so the order here is the order they are reached. Coordinates are in
-   the 400×600 box; labels in a tier are spaced so none overlap. */
+/* Three tiers, 140 apart. Marketing spreads down the left, software
+   down the right, product drops straight through the middle. Labels
+   are centred on their nodes and spaced so the widest of them clears
+   its neighbours. Coordinates are in the 400×460 box. */
+const TIERS = [130, 270, 410];
+
 const THOUGHTS: Thought[] = [
-    { id: "marketing", word: "marketing", at: { x: 70, y: 150 } },
-    { id: "product", word: "product", at: { x: 200, y: 175 } },
-    { id: "software", word: "software", at: { x: 330, y: 150 } },
-    { id: "brand", word: "brand", at: { x: 40, y: 270 }, parent: "marketing" },
-    { id: "seo", word: "seo", at: { x: 130, y: 265 }, parent: "marketing" },
-    { id: "ux", word: "ux", at: { x: 205, y: 290 }, parent: "product" },
-    { id: "react", word: "react", at: { x: 260, y: 268 }, parent: "software" },
-    { id: "backend", word: "backend", at: { x: 360, y: 275 }, parent: "software" },
-    { id: "story", word: "storytelling", at: { x: 30, y: 385 }, parent: "brand" },
-    { id: "content", word: "content", at: { x: 170, y: 390 }, parent: "seo" },
-    { id: "next", word: "next.js", at: { x: 250, y: 380 }, parent: "react" },
-    { id: "data", word: "databases", at: { x: 368, y: 385 }, parent: "backend" },
-    { id: "copy", word: "copywriting", at: { x: 45, y: 480 }, parent: "story" },
-    { id: "analytics", word: "analytics", at: { x: 190, y: 485 }, parent: "content" },
-    { id: "ts", word: "typescript", at: { x: 345, y: 478 }, parent: "next" },
-    { id: "campaigns", word: "campaigns", at: { x: 60, y: 560 }, parent: "copy" },
-    { id: "growth", word: "growth", at: { x: 200, y: 562 }, parent: "analytics" },
-    { id: "automation", word: "automation", at: { x: 352, y: 558 }, parent: "data" },
+    { id: "marketing", word: "marketing", at: { x: 78, y: TIERS[0] }, tier: 1 },
+    { id: "product", word: "product", at: { x: 200, y: TIERS[0] }, tier: 1 },
+    { id: "software", word: "software", at: { x: 322, y: TIERS[0] }, tier: 1 },
+    { id: "brand", word: "brand", at: { x: 56, y: TIERS[1] }, tier: 2, parent: "marketing" },
+    { id: "content", word: "content", at: { x: 148, y: TIERS[1] }, tier: 2, parent: "marketing" },
+    { id: "next", word: "next.js", at: { x: 252, y: TIERS[1] }, tier: 2, parent: "software" },
+    { id: "backend", word: "backend", at: { x: 344, y: TIERS[1] }, tier: 2, parent: "software" },
+    { id: "growth", word: "growth", at: { x: 104, y: TIERS[2] }, tier: 3, parent: "content" },
+    { id: "ux", word: "ux", at: { x: 200, y: TIERS[2] }, tier: 3, parent: "product" },
+    { id: "automation", word: "automation", at: { x: 298, y: TIERS[2] }, tier: 3, parent: "backend" },
 ];
 
 const SEED: Pt = { x: 200, y: 28 };
+const W = 400;
+const H = 460;
 
-/* Timings, in seconds. A root takes GROW to reach its word, and the
-   next tier starts as it lands. */
+/* A label's baseline sits this far under its node, and a root leaves
+   from this far under it — clear of the word's descenders. */
+const LABEL_DROP = 22;
+const ROOT_DROP = 32;
+
+/* Seconds a root takes per tier it crosses; the next tier starts as it
+   lands. */
 const GROW = 0.9;
-const HAIR = 0.7;
 
 function mulberry32(seed: number) {
     let a = seed;
@@ -64,76 +70,44 @@ function mulberry32(seed: number) {
     };
 }
 
-function bezierAt(p0: Pt, p1: Pt, p2: Pt, p3: Pt, t: number): Pt {
-    const u = 1 - t;
-    const a = u * u * u;
-    const b = 3 * u * u * t;
-    const c = 3 * u * t * t;
-    const d = t * t * t;
-    return {
-        x: a * p0.x + b * p1.x + c * p2.x + d * p3.x,
-        y: a * p0.y + b * p1.y + c * p2.y + d * p3.y,
-    };
-}
-
 const f = (n: number) => n.toFixed(1);
 
-type Root = { d: string; delay: number; width: number };
-type Label = { word: string; at: Pt; delay: number; anchor: "start" | "middle" | "end" };
+type Root = { d: string; delay: number; width: number; duration: number };
+type Label = { word: string; at: Pt; delay: number };
 
 function grow() {
     const rand = mulberry32(20261014);
     const byId = new Map(THOUGHTS.map((t) => [t.id, t]));
-    const depth = (t: Thought): number => (t.parent ? depth(byId.get(t.parent)!) + 1 : 0);
 
     const roots: Root[] = [];
-    const hairs: Root[] = [];
     const labels: Label[] = [];
 
     for (const t of THOUGHTS) {
-        const level = depth(t);
-        const from = t.parent ? byId.get(t.parent)!.at : SEED;
+        const parent = t.parent ? byId.get(t.parent)! : null;
+        const from = parent ? { x: parent.at.x, y: parent.at.y + ROOT_DROP } : SEED;
         const to = t.at;
-        const delay = level * GROW;
+        const fromTier = parent ? parent.tier : 0;
+        const delay = fromTier * GROW;
+        const span = (t.tier - fromTier) * GROW;
 
-        /* Roots fall first and wander sideways after, so the controls
-           sit below the start and above the end, nudged off the line. */
+        /* Roots fall first and drift sideways after: the first control
+           sits straight under the start, the second straight over the
+           end, each nudged only a little so the curve stays smooth. */
         const dy = to.y - from.y;
-        const c1 = { x: from.x + (rand() - 0.5) * 50, y: from.y + dy * (0.35 + rand() * 0.2) };
-        const c2 = { x: to.x + (rand() - 0.5) * 60, y: to.y - dy * (0.3 + rand() * 0.2) };
+        const c1 = { x: from.x + (rand() - 0.5) * 16, y: from.y + dy * 0.5 };
+        const c2 = { x: to.x + (rand() - 0.5) * 16, y: to.y - dy * 0.45 };
 
         roots.push({
             d: `M${f(from.x)} ${f(from.y)} C${f(c1.x)} ${f(c1.y)} ${f(c2.x)} ${f(c2.y)} ${f(to.x)} ${f(to.y)}`,
             delay,
-            width: Math.max(0.7, 2.4 - level * 0.45),
+            width: Math.max(1, 2.2 - t.tier * 0.4),
+            duration: span,
         });
 
-        /* Rootlets: short hairs off the main root, each starting as the
-           root passes the point it grows from. */
-        const count = 2 + Math.floor(rand() * 3);
-        for (let i = 0; i < count; i++) {
-            const at = 0.2 + rand() * 0.65;
-            const p = bezierAt(from, c1, c2, to, at);
-            const side = rand() < 0.5 ? -1 : 1;
-            const len = 18 + rand() * 30;
-            const end = { x: p.x + side * len, y: p.y + len * (0.5 + rand() * 0.6) };
-            const mid = { x: p.x + side * len * 0.6, y: p.y + len * 0.1 };
-            hairs.push({
-                d: `M${f(p.x)} ${f(p.y)} Q${f(mid.x)} ${f(mid.y)} ${f(end.x)} ${f(end.y)}`,
-                delay: delay + at * GROW,
-                width: 0.9,
-            });
-        }
-
-        labels.push({
-            word: t.word,
-            at: to,
-            delay: delay + GROW * 0.85,
-            anchor: to.x < 110 ? "start" : to.x > 290 ? "end" : "middle",
-        });
+        labels.push({ word: t.word, at: to, delay: delay + span * 0.9 });
     }
 
-    return { roots, hairs, labels };
+    return { roots, labels };
 }
 
 const TREE = grow();
@@ -144,11 +118,11 @@ export default function ContactArt() {
     const reduce = useReducedMotion();
     const shown = inView || !!reduce;
 
-    const draw = (r: Root, duration: number) => ({
+    const draw = (r: Root) => ({
         initial: reduce ? false : { pathLength: 0, opacity: 0 },
         animate: shown ? { pathLength: 1, opacity: 1 } : undefined,
         transition: {
-            pathLength: { duration, delay: r.delay, ease: [0.33, 0, 0.2, 1] as const },
+            pathLength: { duration: r.duration, delay: r.delay, ease: [0.33, 0, 0.2, 1] as const },
             opacity: { duration: 0.01, delay: r.delay },
         },
     });
@@ -157,20 +131,15 @@ export default function ContactArt() {
         <div ref={ref} aria-hidden className="contact-art h-full min-h-[30rem] lg:min-h-[36rem]">
             <svg
                 className="contact-art__svg"
-                viewBox="0 0 400 600"
+                viewBox={`0 0 ${W} ${H}`}
                 preserveAspectRatio="xMidYMid meet"
                 fill="none"
                 strokeLinecap="round"
             >
-                <g className="contact-art__hairs">
-                    {TREE.hairs.map((h, i) => (
-                        <m.path key={i} d={h.d} strokeWidth={h.width} {...draw(h, HAIR)} />
-                    ))}
-                </g>
 
                 <g className="contact-art__roots">
                     {TREE.roots.map((r, i) => (
-                        <m.path key={i} d={r.d} strokeWidth={r.width} {...draw(r, GROW)} />
+                        <m.path key={i} d={r.d} strokeWidth={r.width} {...draw(r)} />
                     ))}
                 </g>
 
@@ -187,8 +156,8 @@ export default function ContactArt() {
                         <text
                             className="contact-art__word"
                             x={l.at.x}
-                            y={l.at.y + 22}
-                            textAnchor={l.anchor}
+                            y={l.at.y + LABEL_DROP}
+                            textAnchor="middle"
                         >
                             {l.word}
                         </text>

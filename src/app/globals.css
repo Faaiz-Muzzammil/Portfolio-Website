@@ -1417,69 +1417,106 @@ summary {
    The margins report which department you are in. The page stays
    paper. */
 
-/* ---- The turn ----------------------------------------------------
-   "I Do Both." is a block of the accent ink with paper-coloured type on
-   it — the site's own inversion device, in the one colour the site has.
+/* ---- The cover's grid -------------------------------------------
+   Two areas: the main stack and the portrait. On a phone the portrait
+   is a thumbnail above the headline; at `lg` it is a column running the
+   full height of the stack, so its top meets the headline and its foot
+   meets the social row. `--fig-w` is declared with the rest of the
+   cover's tokens in `Hero.tsx`. ------------------------------------- */
 
-   THE TWO THEMES GET TWO DIFFERENT BLOCKS. A filled block is a light
-   source on a dark page and a printed ink on a white one — opposite
-   jobs — so running one treatment on both made the light theme look
-   like the dark one rendered badly.
-
-     dark    #E85C33 block, #12100E letters   5.43 : 1
-     light   #C8401A block, #FFFFFF letters   5.00 : 1
-
-   On black the block glows and the type is cut out of it. On white it
-   cannot out-glow the page, so it stops trying and becomes ink instead,
-   which is the inversion this site already runs on every button. The
-   letters flip and the block flips against them, which is why neither
-   can be `--ink` or `--paper`: those two flip *together*, and what is
-   wanted here is one moving opposite the other. Both figures clear AA
-   for normal text, and this is large text, which needs only 3:1.
-
-   The values are declared in `Hero.tsx` beside the rest of the cover's
-   tokens; this rule only spends them.
-
-   THE BLOCK HANGS LEFT by exactly its own left padding, so the ink
-   bleeds into the margin and the *letters* keep the same left edge as
-   the two lines above them. Aligning the block instead would indent the
-   sentence at the one line that has to look most certain of itself.
-
-   The mask that clips the row needs more clearance here than on the two
-   setup lines, because a filled block stands proud of the type on all
-   four sides — hence the extra padding, taken straight back out again
-   as negative margin so the layout never sees it. --------------- */
-
-.hero-turn {
-  display: inline-block;
-  padding: 0.06em 0.16em 0.1em;
-  margin-left: -0.16em;
-  background-color: var(--hero-accent);
-  color: var(--hero-turn-ink);
-
-  /* 800 against the setup lines' 400 — the top of Bricolage's axis, and
-     the same figure every heading on the site turns on. The variable
-     axis carries it, so nothing reflows but this line's own width, and
-     it is the last line, so nothing below it moves at all.
-
-     TRACKING TIGHTENS WITH THE WEIGHT. Heavier stems eat their own
-     sidebearings, so type set at 800 on the tracking chosen for 400
-     reads loose — the counters stay put while the space between the
-     letters does not. A further -0.015em brings the block back to the
-     colour the setup lines have. */
-  font-weight: 800;
-  letter-spacing: -0.05em;
-
-  /* Both copies, so a wrap can never leave half the sentence outside
-     the block. It has room at every width the site supports; this is
-     the guarantee rather than the expectation. */
-  white-space: nowrap;
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "fig"
+    "main";
+  row-gap: 2.5rem;
 }
 
-/* The row that carries it, given the clearance a filled block needs. */
-.hero-line-turn {
-  padding-block: 0.14em 0.22em;
-  margin-block: -0.14em -0.22em;
+@media (min-width: 64rem) {
+  .hero-grid {
+    grid-template-columns: minmax(0, 1fr) var(--fig-w);
+    grid-template-areas: "main fig";
+    column-gap: clamp(3rem, 5vw, 5rem);
+  }
+}
+
+/* ---- The plate's panel ------------------------------------------
+   The right half of the cover's plate, beside the portrait, carrying
+   the branch (`HeroBranch`). Photo and panel are one object at
+   every width.
+
+   GLOSS, THEN GRAIN. The ground is lit rather than flat: a soft light
+   falls from the top edge beside the photo and dies into the far
+   corner, and a faint diagonal sheen crosses it the way light crosses
+   a lacquered surface. The site's `--grain` goes over all of it, the
+   same texture as the contact piece — and the gradient is what gives
+   the grain something to show on; over a flat near-black it vanishes.
+
+   All of it is greys, set per theme: a pale lit sheet on the light
+   page, a dark one lit from the same corner on the black. Static, like
+   every grain here that is not reporting something live. ----------- */
+
+.hero-panel {
+  --panel-light: #FFFFFF;
+  --panel-mid: #E6E6E6;
+  --panel-deep: #C9C9C9;
+  --panel-sheen: rgb(255 255 255 / 0.7);
+  --panel-edge: rgb(255 255 255 / 0.9);
+  --panel-grain: 0.5;
+  --panel-blend: multiply;
+  /* The branch. White on the dark plate as asked; on the pale one
+     white would vanish into the sheen, so it is drawn in ink there. */
+  --panel-ink: #1A1A1A;
+
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(
+      112deg,
+      transparent 28%,
+      var(--panel-sheen) 46%,
+      transparent 64%
+    ),
+    radial-gradient(
+      140% 160% at 0% 0%,
+      var(--panel-light) 0%,
+      var(--panel-mid) 42%,
+      var(--panel-deep) 100%
+    );
+  box-shadow: inset 0 1px 0 var(--panel-edge);
+}
+
+.hero-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--grain);
+  background-size: 180px;
+  opacity: var(--panel-grain);
+  mix-blend-mode: var(--panel-blend);
+}
+
+[data-theme="dark"] .hero-panel {
+  --panel-light: #4A4A4A;
+  --panel-mid: #1E1E1E;
+  --panel-deep: #0A0A0A;
+  --panel-sheen: rgb(255 255 255 / 0.11);
+  --panel-edge: rgb(255 255 255 / 0.1);
+  --panel-grain: 0.6;
+  --panel-blend: overlay;
+  --panel-ink: #FFFFFF;
+}
+
+.hero-branch {
+  /* Limbs; the buds are filled below. */
+  stroke: var(--panel-ink);
+}
+
+.hero-branch__bud {
+  fill: var(--panel-ink);
+  stroke: none;
 }
 
 /* ---- Live marks --------------------------------------------------
@@ -1785,12 +1822,8 @@ summary {
    box is close enough to one em that it would otherwise shear the
    descender straight off.
 
-   ON THE COVER IT MASKS A BEAT, NOT A LINE, and that is the whole
-   structure of the headline. The two setups share one of these
-   because they are one unit of the rhythm; the turn gets its own.
-   Above 1024px the pair is a single line inside its mask and below it
-   the pair wraps to two — either way it slides in as one object,
-   because it is one object. */
+   On the cover each beat of the headline gets one of these, so the
+   three lines slide in on their own stagger. */
 .line-mask-display {
   display: block;
   overflow: hidden;
@@ -1941,79 +1974,6 @@ summary {
 
 .tnum {
   font-variant-numeric: tabular-nums;
-}
-
-/* ---- The cover's plate -------------------------------------------
-   The portrait, given an edge and a pair of registration marks.
-
-   ── THE RULE IS FIXING A REAL FAULT, NOT DECORATING ──────────────
-
-   The photograph is graded to near-black through its lower half — the
-   shirt, the balcony wall — and the dark theme's ground is #000000.
-   With no edge on it those two are the same colour, so the bottom of
-   the plate did not end anywhere: it dissolved into the page, and what
-   was left read as a lighter patch on the background rather than as a
-   picture sitting on it. A hairline at `--line-2` is enough to say
-   where the plate stops. On the light theme it does the same job
-   against white, where the sky at the top of the frame is the half
-   that disappears.
-
-   THIS IS WHAT THE MASK WAS PAPERING OVER. A `.fig-grade` class used to
-   fade the image out toward its foot — 58% on the tall desktop crop,
-   90% on the phone — which hid the undefined edge by making the whole
-   bottom of the picture undefined on purpose. It is gone. Deleting two
-   fifths of a photograph to avoid drawing a one-pixel line is a bad
-   trade, and the line is also the better-looking answer.
-
-   ── THE MARKS ────────────────────────────────────────────────────
-
-   Two corner brackets, top-left and bottom-right, sitting ten pixels
-   outside the plate. They are crop marks: the corner registration a
-   press sheet carries to show where the trim falls. That is the only
-   ornament vocabulary this site has any business borrowing — it is
-   monochrome, it is hairline, it is square, and it is drawn from the
-   same printing world as the departments, the folios and the measure.
-
-   A DIAGONAL PAIR, NOT FOUR. Four corners is a frame, and a frame
-   around a photograph on a page with no other framed object is a
-   picture in a box. Two opposite corners imply the rectangle without
-   closing it, which is what a crop mark does — it registers the plate
-   rather than containing it.
-
-   `transparent` on the two unwanted sides rather than `border-width: 0`,
-   so each mark keeps its full box and the two arms stay exactly the
-   same length. Set the width to zero and the corner shifts.
-
-   They sit outside the plate, so nothing in the chain above may clip:
-   `Reveal` and `Parallax` both render plain wrappers, and ten pixels
-   is well inside the page gutter at every width. ------------------ */
-
-.plate {
-  border: 1px solid var(--line-2);
-}
-
-.plate::before,
-.plate::after {
-  content: "";
-  position: absolute;
-  width: 1.25rem;
-  height: 1.25rem;
-  border: 1px solid var(--line);
-  pointer-events: none;
-}
-
-.plate::before {
-  top: -0.625rem;
-  left: -0.625rem;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-}
-
-.plate::after {
-  right: -0.625rem;
-  bottom: -0.625rem;
-  border-left-color: transparent;
-  border-top-color: transparent;
 }
 
 /* A `.write-on` rule lived here: the contact form's message field set
@@ -2304,7 +2264,6 @@ summary {
 .contact-art {
   --art-ground: color-mix(in srgb, var(--tint-contact) 18%, #FFF8F6);
   --art-root: var(--tint-contact-ink);
-  --art-hair: color-mix(in srgb, var(--tint-contact-ink) 45%, transparent);
   --art-word: var(--ink);
   --art-grain: 0.28;
 
@@ -2318,7 +2277,6 @@ summary {
 [data-theme="dark"] .contact-art {
   --art-ground: #1A0E14;
   --art-root: var(--tint-contact);
-  --art-hair: color-mix(in srgb, var(--tint-contact) 40%, transparent);
   --art-word: #F4E6E9;
   --art-grain: 0.2;
 }
@@ -2333,10 +2291,6 @@ summary {
 
 .contact-art__roots {
   stroke: var(--art-root);
-}
-
-.contact-art__hairs {
-  stroke: var(--art-hair);
 }
 
 .contact-art__seed {
@@ -2505,11 +2459,125 @@ summary {
   box-shadow: 0 0 0 1px var(--mk-line-2), var(--mk-crest-shadow);
 }
 
+/* ============================================================
+   OVERRIDE
+   ------------------------------------------------------------
+   The webcam shooter, set as a second plate above the capstone.
+
+   Built exactly like Marketeer's, on the game's own colours: the
+   black its menus sit on and the one gold they are drawn in
+   (#F4D58D). Two sheets again, for the same reason:
+
+     light   a paper a shade warmer than Marketeer's, so the two
+             plates read as two inserts rather than one long one;
+             the gold pulled down to an ochre for the label line
+             (5.5:1 on the sheet), and kept at full strength only
+             as fill — the underline and the gesture keys.
+     dark    the game's true black, cream type, the gold at full
+             strength (14.8:1), and the gold as the button.
+
+   The gesture keys are the game's own buttons in miniature: a
+   gold disc with a black glyph on the dark sheet, inverted on
+   the light one so the disc still has an edge.
+   ============================================================ */
+
+.override {
+  --ov-ground: #F3EEE2;
+  --ov-ink: #0A0A0A;
+  --ov-ink-2: #3B3A36;
+  --ov-ink-3: #6B675C;
+  --ov-line: rgba(10, 10, 10, 0.10);
+  --ov-line-2: rgba(10, 10, 10, 0.18);
+
+  --ov-accent: #7A5A0B;      /* the label: gold as type */
+  --ov-mark: #EBC662;        /* the underline: gold as fill */
+  --ov-btn: #0A0A0A;
+  --ov-btn-fg: #FFFFFF;
+  --ov-btn-hover: #F4D58D;
+  --ov-btn-hover-fg: #0A0A0A;
+  --ov-key: #0A0A0A;
+  --ov-key-fg: #F4D58D;
+  --ov-tile: #000000;
+  --ov-grain-blend: multiply;
+  --ov-grain: 0.05;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--ov-ground);
+  color: var(--ov-ink);
+  box-shadow: inset 0 0 0 1px var(--ov-line);
+}
+
+[data-theme="dark"] .override {
+  --ov-ground: #000000;
+  --ov-ink: #F7F1E1;
+  --ov-ink-2: rgba(247, 241, 225, 0.72);
+  --ov-ink-3: rgba(247, 241, 225, 0.52);
+  --ov-line: rgba(247, 241, 225, 0.12);
+  --ov-line-2: rgba(247, 241, 225, 0.22);
+
+  --ov-accent: #F4D58D;
+  --ov-mark: #F4D58D;
+  --ov-btn: #F4D58D;
+  --ov-btn-fg: #000000;
+  --ov-btn-hover: #F7F1E1;
+  --ov-btn-hover-fg: #000000;
+  --ov-key: #F4D58D;
+  --ov-key-fg: #000000;
+  --ov-grain-blend: overlay;
+  --ov-grain: 0.06;
+
+  color-scheme: dark;
+}
+
+.override::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--grain);
+  opacity: var(--ov-grain);
+  mix-blend-mode: var(--ov-grain-blend);
+}
+
+.ov-underline {
+  background-image: linear-gradient(var(--ov-mark), var(--ov-mark));
+  background-repeat: no-repeat;
+  background-position: 0 96%;
+  background-size: 100% 0.08em;
+  padding-bottom: 0.04em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+[data-theme="dark"] .ov-underline {
+  background-size: 100% 0.06em;
+}
+
+.ov-button {
+  background-color: var(--ov-btn);
+  color: var(--ov-btn-fg);
+  --sweep-fill: var(--ov-btn-hover);
+  --sweep-fg: var(--ov-btn-hover-fg);
+}
+
+.ov-button:focus-visible {
+  outline: 2px solid var(--ov-ink);
+  outline-offset: 3px;
+}
+
+.ov-key {
+  background-color: var(--ov-key);
+  color: var(--ov-key-fg);
+}
+
 /* The demo is ambient, not a player: iOS draws its own play button over
    a video it has not started (Low Power Mode), so that is hidden too. */
-.mk-demo::-webkit-media-controls,
-.mk-demo::-webkit-media-controls-start-playback-button,
-.mk-demo::-webkit-media-controls-overlay-play-button {
+.ambient-video::-webkit-media-controls,
+.ambient-video::-webkit-media-controls-start-playback-button,
+.ambient-video::-webkit-media-controls-overlay-play-button {
   display: none !important;
   -webkit-appearance: none;
 }

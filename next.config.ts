@@ -210,6 +210,9 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 2678400,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    /* 75 is the default; 90 is the cover portrait, the one photograph
+       on the site large enough for compression to show. */
+    qualities: [75, 90],
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
@@ -227,10 +230,7 @@ const nextConfig: NextConfig = {
     // `/dist/ssr` directly; the client ones could not.
     optimizePackageImports: [
       '@phosphor-icons/react',
-      '@number-flow/react',
-      'lucide-react',
       'framer-motion',
-      '@icons-pack/react-simple-icons',
     ],
   },
 };

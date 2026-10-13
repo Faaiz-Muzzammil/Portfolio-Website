@@ -9,6 +9,7 @@ import { cn } from "@/lib/cn";
 import RunningHead from "@/components/ui/RunningHead";
 import Reveal from "@/components/motion/Reveal";
 import Marketeer from "@/components/sections/Marketeer";
+import Override from "@/components/sections/Override";
 
 /**
  * The features, as a magazine index rather than a card grid.
@@ -154,8 +155,10 @@ export default function Projects() {
                 </ul>
             </Reveal>
 
-            {/* The capstone closes the department as an insert of its own
-                rather than as a seventh row — see `Marketeer`. */}
+            {/* The two inserts close the department as plates of their own
+                rather than as more rows — see `Override` and `Marketeer`.
+                The capstone goes last, so the department ends on it. */}
+            <Override />
             <Marketeer />
         </div>
     );

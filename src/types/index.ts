@@ -9,15 +9,6 @@ export interface PersonalInfo {
     available: boolean;
 }
 
-export interface Stat {
-    /** Numeric so the hero counter can animate up to it. */
-    value: number;
-    prefix?: string;
-    suffix?: string;
-    /** Names the thing measured, so the number reads on its own. */
-    label: string;
-}
-
 export interface SocialLink {
     name: string;
     url: string;
