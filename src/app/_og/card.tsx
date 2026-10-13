@@ -45,7 +45,7 @@ const BAR = 64;
 const BLACK = "#000000";
 const FRAME = "#0E0E0E";
 const WHITE = "#FFFFFF";
-const DIM = "#8A8A8A";
+const DIM = "#A3A3A3";
 
 const DISPLAY = "Bricolage Grotesque";
 const MONO = "Geist Mono";
@@ -82,10 +82,13 @@ export async function loadStill() {
     return `data:image/jpeg;base64,${still.toString("base64")}`;
 }
 
+/* Sized for the phone, not the 1200px canvas: a chat app draws this card
+   about 360px wide, a third of its size, and at 17px the credit came out
+   near 5px and unreadable. 24px survives as roughly 7–8px. */
 const credit = {
     fontFamily: MONO,
-    fontSize: 17,
-    letterSpacing: 3,
+    fontSize: 24,
+    letterSpacing: 3.5,
     textTransform: "uppercase" as const,
 };
 
@@ -98,7 +101,7 @@ function Bar({ left, right }: { left?: string; right?: string }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                padding: "0 40px",
+                padding: "0 48px",
                 background: BLACK,
             }}
         >
