@@ -121,6 +121,116 @@ type CardProps = {
 };
 
 export function Card({ meta, beats, beatSize, standfirst, footer, status, avatar }: CardProps) {
+    if (avatar) {
+        return (
+            <div
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    background: INK,
+                    color: PAPER,
+                    padding: "52px 64px",
+                    fontFamily: DISPLAY,
+                }}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        paddingBottom: 18,
+                        borderBottom: `2px solid ${PAPER}`,
+                    }}
+                >
+                    <span style={{ ...coord, color: PAPER }}>Faaiz Muzzammil</span>
+                    <span style={{ ...coord, color: "#B7B7B7" }}>Portfolio / 2026</span>
+                </div>
+
+                <div
+                    style={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 54,
+                    }}
+                >
+                    {/* ImageResponse uses a data URI at build time; next/image
+                        cannot optimize this generated asset. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src={avatar}
+                        alt=""
+                        width={300}
+                        height={300}
+                        style={{
+                            width: 300,
+                            height: 300,
+                            objectFit: "cover",
+                            objectPosition: "50% 28%",
+                            borderRadius: 9999,
+                            border: `2px solid ${PAPER}`,
+                        }}
+                    />
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            width: 390,
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                fontSize: 74,
+                                fontWeight: 800,
+                                letterSpacing: -3,
+                                lineHeight: 0.94,
+                            }}
+                        >
+                            Faaiz
+                            <br />
+                            Muzzammil
+                        </div>
+                        <div
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                marginTop: 24,
+                                color: "#B7B7B7",
+                                fontFamily: MONO,
+                                fontSize: 18,
+                                letterSpacing: 1,
+                            }}
+                        >
+                            FULL-STACK DEVELOPER
+                            <br />
+                            & MARKETER
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        paddingTop: 18,
+                        borderTop: `1px solid ${HAIRLINE}`,
+                        color: "#B7B7B7",
+                        ...coord,
+                    }}
+                >
+                    <span>Islamabad, Pakistan</span>
+                    <span style={{ color: PAPER }}>faaizmuzzammil.dev</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div
             style={{
