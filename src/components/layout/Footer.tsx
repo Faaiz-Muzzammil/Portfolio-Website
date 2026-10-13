@@ -4,6 +4,7 @@ import { ArrowUp, GithubLogo, LinkedinLogo } from "@phosphor-icons/react";
 
 import { personalInfo, socialLinks } from "@/data";
 import { scrollToTop } from "@/lib/sections";
+import { PressAnchor, PressButton } from "@/components/motion/Press";
 
 const SOCIAL_ICONS = {
     github: GithubLogo,
@@ -86,31 +87,28 @@ export default function Footer() {
                                 const Icon =
                                     SOCIAL_ICONS[link.icon as keyof typeof SOCIAL_ICONS];
                                 return (
-                                    <a
+                                    <PressAnchor
                                         key={link.name}
                                         href={link.url}
                                         aria-label={link.name}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="grid size-10 place-items-center text-ink-3 shadow-[0_0_0_1px_var(--line)] transition-[color,background-color,transform] duration-300 hover:bg-ink hover:text-paper active:scale-[0.97] motion-reduce:active:scale-100"
+                                        className="sweep grid size-10 place-items-center text-ink-3 shadow-[0_0_0_1px_var(--line)]"
                                     >
                                         <Icon size={16} aria-hidden />
-                                    </a>
+                                    </PressAnchor>
                                 );
                             })}
 
-                            <button
-                                type="button"
+                            <PressButton
                                 onClick={scrollToTop}
                                 aria-label="Back to top"
-                                className="group/top grid size-10 place-items-center text-ink-3 shadow-[0_0_0_1px_var(--line)] transition-[color,background-color,transform] duration-300 hover:bg-ink hover:text-paper active:scale-[0.97] motion-reduce:active:scale-100"
+                                className="sweep grid size-10 place-items-center text-ink-3 shadow-[0_0_0_1px_var(--line)]"
                             >
-                                <ArrowUp
-                                    size={16}
-                                    aria-hidden
-                                    className="transition-transform duration-400 group-hover/top:-translate-y-0.5"
-                                />
-                            </button>
+                                <span className="sweep-nudge [--nudge-x:0] [--nudge-y:-2px]">
+                                    <ArrowUp size={16} aria-hidden />
+                                </span>
+                            </PressButton>
                         </div>
                     </div>
                 </div>

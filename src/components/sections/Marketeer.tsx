@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { ArrowUpRight, Sparkle } from "@phosphor-icons/react/dist/ssr";
 
 import Reveal from "@/components/motion/Reveal";
+import { PressAnchor } from "@/components/motion/Press";
 
 const SITE_URL = "https://www.marketeer.studio";
 
@@ -141,20 +142,17 @@ export default function Marketeer() {
                             by a person, in under a minute.
                         </p>
 
-                        <a
+                        <PressAnchor
                             href={SITE_URL}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mk-button group/mk relative isolate mt-6 inline-flex h-10 items-center gap-2 overflow-hidden px-4 text-[0.8125rem] font-medium active:scale-[0.98]"
+                            className="mk-button sweep mt-6 inline-flex h-10 items-center gap-2 px-4 text-[0.8125rem] font-medium"
                         >
                             Visit marketeer.studio
-                            <ArrowUpRight
-                                size={14}
-                                weight="bold"
-                                aria-hidden
-                                className="transition-transform duration-400 group-hover/mk:-translate-y-0.5 group-hover/mk:translate-x-0.5"
-                            />
-                        </a>
+                            <span className="sweep-nudge [--nudge-x:2px] [--nudge-y:-2px]">
+                                <ArrowUpRight size={14} weight="bold" aria-hidden />
+                            </span>
+                        </PressAnchor>
                     </div>
                 </Reveal>
 

@@ -634,6 +634,15 @@
   --shadow-soft: var(--shadow-1);
 }
 
+/* Motion. The same figures as `src/lib/motion.ts` — `EASE` and
+   `DURATION` there, these here. Change one, change both. */
+:root {
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-quick: 200ms;
+  --motion-base: 300ms;
+  --motion-sweep: 500ms;
+}
+
 /* ============================================================
    TOKENS
    `@theme inline` inlines values into utilities. Hand-written CSS
@@ -641,6 +650,9 @@
    ============================================================ */
 
 @theme inline {
+  /* `ease-expo` — the site's one curve, for hand-set transitions. */
+  --ease-expo: var(--motion-ease);
+
   --color-paper: var(--paper);
   --color-paper-2: var(--paper-2);
   --color-surface: var(--surface);
@@ -2130,6 +2142,85 @@ summary {
   background-size: 100% 1px;
 }
 
+/* ---- The sweep: every filled control's hover --------------------
+   The fill rises from the bottom edge rather than cross-fading, and the
+   control inverts: paper over an ink control, ink over a paper one —
+   never a different hue. One rule for the buttons, the nav's Contact,
+   the footer's icon squares, the send and Marketeer's link, which
+   used to carry five hand-copied versions of it.
+
+   A control sets `--sweep-fill` and `--sweep-fg`; it keeps its own
+   resting colours. Children inherit `currentColor`, so icons and
+   labels turn with the fill without a class of their own.
+
+   HOVER ONLY WHERE HOVER EXISTS. On a phone `:hover` sticks to the
+   last thing tapped, so a button would stay swept after the tap until
+   the next touch elsewhere. Touch gets the press (framer-motion's
+   `whileTap`, see `Press.tsx`) and nothing that lingers.
+
+   `[data-swept]` holds the fill on — the send uses it while it is
+   sending and once it has sent, so the state reads as the button
+   having been taken, not as a hover the pointer left behind. ------ */
+
+.sweep {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition:
+    color var(--motion-sweep) var(--motion-ease),
+    border-color var(--motion-sweep) var(--motion-ease);
+}
+
+.sweep::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--sweep-fill, var(--ink));
+  transform: translateY(101%);
+  transition: transform var(--motion-sweep) var(--motion-ease);
+}
+
+.sweep:focus-visible,
+.sweep[data-swept] {
+  color: var(--sweep-fg, var(--paper));
+}
+
+.sweep:focus-visible::before,
+.sweep[data-swept]::before {
+  transform: none;
+}
+
+/* A send that is busy is disabled so it cannot fire twice, but it is
+   not *unavailable* — the generic disabled fade would make the moment
+   of sending look like a fault. */
+.sweep[data-swept]:disabled {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .sweep:hover {
+    color: var(--sweep-fg, var(--paper));
+  }
+
+  .sweep:hover::before {
+    transform: none;
+  }
+}
+
+/* An icon or arrow that travels with the hover: `.sweep-nudge` on a
+   child of any `.sweep` (or `.group`) moves on the same curve. */
+.sweep-nudge {
+  transition: transform var(--motion-sweep) var(--motion-ease);
+}
+
+@media (hover: hover) {
+  .sweep:hover .sweep-nudge,
+  .group:hover .sweep-nudge {
+    transform: translate(var(--nudge-x, 0.25rem), var(--nudge-y, 0));
+  }
+}
+
 /* ============================================================
    UTILITIES
    ============================================================ */
@@ -2392,43 +2483,18 @@ summary {
 }
 
 /* The action: an ink block on the light sheet, the lime on the dark
-   one, and the fill sweeping up from the bottom edge on hover like
-   every other button on the site. */
+   one. It is a `.sweep` like every other button on the site; this only
+   supplies the department's own colours. */
 .mk-button {
   background-color: var(--mk-btn);
   color: var(--mk-btn-fg);
-  transition: color 0.4s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s;
-}
-
-.mk-button::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background-color: var(--mk-btn-hover);
-  transform: translateY(100%);
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.mk-button:hover,
-.mk-button:focus-visible {
-  color: var(--mk-btn-hover-fg);
-}
-
-.mk-button:hover::before,
-.mk-button:focus-visible::before {
-  transform: none;
+  --sweep-fill: var(--mk-btn-hover);
+  --sweep-fg: var(--mk-btn-hover-fg);
 }
 
 .mk-button:focus-visible {
   outline: 2px solid var(--mk-ink);
   outline-offset: 3px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mk-button::before {
-    transition: none;
-  }
 }
 
 /* A medal, not a logo wall: each crest seated on a white disc so the

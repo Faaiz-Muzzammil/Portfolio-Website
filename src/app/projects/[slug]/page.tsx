@@ -256,7 +256,7 @@ export default async function ProjectDetail({
                                     size={11}
                                     weight="bold"
                                     aria-hidden
-                                    className="transition-transform duration-400 group-hover/nav:-translate-x-1"
+                                    className="transition-transform duration-500 ease-expo group-hover/nav:-translate-x-1"
                                 />
                                 Previous
                             </span>
@@ -279,7 +279,7 @@ export default async function ProjectDetail({
                                     size={11}
                                     weight="bold"
                                     aria-hidden
-                                    className="transition-transform duration-400 group-hover/nav:translate-x-1"
+                                    className="transition-transform duration-500 ease-expo group-hover/nav:translate-x-1"
                                 />
                             </span>
                             <span className="rule-draw display mt-2 inline-block text-h3 text-ink">

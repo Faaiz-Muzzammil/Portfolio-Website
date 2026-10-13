@@ -10,6 +10,7 @@ import {
 
 import { personalInfo, socialLinks } from "@/data";
 import Button from "@/components/ui/Button";
+import { PressAnchor } from "@/components/motion/Press";
 import Reveal from "@/components/motion/Reveal";
 import Parallax from "@/components/motion/Parallax";
 
@@ -372,6 +373,7 @@ export default function Hero() {
                             href="#work"
                             variant="accent"
                             size="lg"
+                            className="[--nudge-x:0] [--nudge-y:0.2rem]"
                             iconRight={<ArrowDown size={16} weight="bold" aria-hidden />}
                         >
                             View Work
@@ -413,15 +415,15 @@ export default function Hero() {
 
                             return (
                                 <li key={link.name}>
-                                    <a
+                                    <PressAnchor
                                         href={link.url}
                                         target={link.icon === "mail" ? undefined : "_blank"}
                                         rel="noopener noreferrer"
                                         aria-label={link.name}
-                                        className="block p-1 text-ink-3 transition-[color,transform] duration-300 hover:text-ink focus-visible:text-ink active:scale-[0.92] active:text-ink motion-reduce:active:scale-100"
+                                        className="block p-1 text-ink-3 transition-colors duration-300 ease-expo hover:text-ink focus-visible:text-ink active:text-ink"
                                     >
                                         <Icon size={19} aria-hidden />
-                                    </a>
+                                    </PressAnchor>
                                 </li>
                             );
                         })}

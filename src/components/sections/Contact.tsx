@@ -1,16 +1,18 @@
 "use client";
 
 import { AnimatePresence, m } from "framer-motion";
-import { ArrowRight, Check, CheckCircle, Warning } from "@phosphor-icons/react";
+import { Check, CheckCircle, Warning } from "@phosphor-icons/react";
 import { useEffect, useId, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { personalInfo } from "@/data";
 import { cn } from "@/lib/cn";
+import { DURATION, EASE, notice } from "@/lib/motion";
 import { CONTACT_LIMITS, contactSchema, type ContactInput } from "@/lib/validation/contact";
 import RunningHead from "@/components/ui/RunningHead";
 import Magnetic from "@/components/motion/Magnetic";
+import SendButton from "@/components/ui/SendButton";
 import Reveal from "@/components/motion/Reveal";
 import ContactArt from "@/components/sections/ContactArt";
 
@@ -83,7 +85,7 @@ type FieldName = (typeof FIELD_ORDER)[number];
    edge paints the same line and occupies no space. */
 const FIELD =
     "w-full border-x-0 border-t-0 border-b bg-transparent px-0 py-3 text-body text-ink " +
-    "transition-[color,border-color,box-shadow] duration-300 placeholder:text-ink-4 " +
+    "transition-[color,border-color,box-shadow] duration-300 ease-expo placeholder:text-ink-4 " +
     "focus:outline-none! focus:border-ink focus:shadow-[inset_0_-1px_0_0_var(--ink)]";
 
 /* The caption goes to full ink while its own field has focus, so the
@@ -92,10 +94,12 @@ const FIELD =
    `peer-focus`, because the label precedes the input in the DOM and a
    peer selector can only look forward. */
 const LABEL =
-    "coord mb-1 block text-coord text-ink-3 transition-colors duration-300 group-focus-within:text-ink";
+    "coord mb-1 block text-coord text-ink-3 transition-colors duration-300 ease-expo group-focus-within:text-ink";
 
 export default function Contact() {
     const [status, setStatus] = useState<Status>({ kind: "idle" });
+    /* Counts refused attempts; each bump shakes the send once. */
+    const [refusals, setRefusals] = useState(0);
     const uid = useId();
     const formRef = useRef<HTMLFormElement>(null);
 
@@ -167,6 +171,7 @@ export default function Contact() {
                 kind: "error",
                 message: "You're offline. Reconnect and send again — your message is still here.",
             });
+            setRefusals((n) => n + 1);
             return;
         }
 
@@ -196,6 +201,7 @@ export default function Contact() {
                     message: json.error ?? "That didn't send.",
                     mailto: json.mailto,
                 });
+                setRefusals((n) => n + 1);
                 return;
             }
 
@@ -210,6 +216,7 @@ export default function Contact() {
                     : "Network problem — check your connection and try again.",
                 mailto: personalInfo.email,
             });
+            setRefusals((n) => n + 1);
         }
     };
 
@@ -219,6 +226,7 @@ export default function Contact() {
     const onInvalid = (invalid: Partial<Record<keyof ContactInput, unknown>>) => {
         const count = FIELD_ORDER.filter((name) => invalid[name]).length;
         setStatus({ kind: "invalid", count });
+        setRefusals((n) => n + 1);
     };
 
     const isSending = status.kind === "sending" || isSubmitting;
@@ -255,7 +263,7 @@ export default function Contact() {
                     initial={{ opacity: 0, scale: 0.6 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.6 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: DURATION.quick, ease: EASE }}
                     aria-hidden
                     className="pointer-events-none absolute right-0 bottom-3.5 text-ink-3"
                 >
@@ -271,10 +279,10 @@ export default function Contact() {
                 <m.p
                     key={String(errors[name]?.message)}
                     id={`${uid}-${name}-error`}
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.2 }}
+                    variants={notice}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
                     className="mt-2 flex items-center gap-1.5 text-caption text-danger"
                 >
                     <Warning size={13} weight="fill" aria-hidden />
@@ -452,27 +460,12 @@ export default function Contact() {
 
                         <div className="mt-12 flex flex-col sm:flex-row sm:justify-end">
                             <Magnetic strength={0.2} innerStrength={0.08}>
-                                <button
-                                    type="submit"
-                                    disabled={isSending}
-                                    aria-busy={isSending}
-                                    className="group/send relative inline-flex h-12 w-full items-center justify-center gap-2.5 overflow-hidden bg-accent px-7 text-[0.9375rem] font-medium text-accent-fg transition-transform duration-300 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-60 sm:w-auto"
-                                >
-                                    <span className="absolute inset-0 translate-y-full bg-ink transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/send:translate-y-0 motion-reduce:hidden" />
-                                    <span className="relative z-10 flex items-center gap-2.5 transition-colors duration-300 group-hover/send:text-paper">
-                                        {isSending ? (
-                                            <>
-                                                <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                                Sending
-                                            </>
-                                        ) : (
-                                            <>
-                                                Send message
-                                                <ArrowRight size={16} weight="bold" aria-hidden />
-                                            </>
-                                        )}
-                                    </span>
-                                </button>
+                                <SendButton
+                                    state={
+                                        isSending ? "sending" : status.kind === "sent" ? "sent" : "idle"
+                                    }
+                                    refusals={refusals}
+                                />
                             </Magnetic>
                         </div>
 
@@ -485,9 +478,10 @@ export default function Contact() {
                                        moment the reader is finished with it. */
                                     <m.p
                                         key="sent"
-                                        initial={{ opacity: 0, y: 6 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0 }}
+                                        variants={notice}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
                                         className="flex items-center gap-2 border-l-2 border-ink py-1 pl-4 text-caption text-ink"
                                     >
                                         <CheckCircle size={16} weight="fill" aria-hidden />
@@ -498,9 +492,10 @@ export default function Contact() {
                                 {status.kind === "invalid" && (
                                     <m.p
                                         key="invalid"
-                                        initial={{ opacity: 0, y: 6 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0 }}
+                                        variants={notice}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
                                         className="flex items-center gap-2 border-l-2 border-danger py-1 pl-4 text-caption text-danger"
                                     >
                                         <Warning size={16} weight="fill" aria-hidden />
@@ -513,9 +508,10 @@ export default function Contact() {
                                 {status.kind === "error" && (
                                     <m.p
                                         key="error"
-                                        initial={{ opacity: 0, y: 6 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0 }}
+                                        variants={notice}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
                                         className="flex flex-wrap items-center gap-x-1.5 gap-y-1 border-l-2 border-danger py-1 pl-4 text-caption text-danger"
                                     >
                                         <Warning size={16} weight="fill" aria-hidden />

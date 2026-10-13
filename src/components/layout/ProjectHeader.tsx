@@ -5,6 +5,7 @@ import { ArrowLeft, Moon, Sun } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
 
 import { transitionTheme } from "@/lib/theme-transition";
+import { PressButton } from "@/components/motion/Press";
 
 /**
  * Slim chrome for project detail pages. The full SiteChrome doesn't belong
@@ -22,19 +23,18 @@ export default function ProjectHeader() {
             <div className="mx-auto flex h-14 w-full max-w-site items-center justify-between px-4 sm:px-10">
                 <Link
                     href="/#work"
-                    className="group/back coord inline-flex items-center gap-2 text-coord text-ink-2 transition-colors hover:text-ink"
+                    className="group coord inline-flex items-center gap-2 text-coord text-ink-2 transition-colors duration-300 ease-expo hover:text-ink"
                 >
                     <ArrowLeft
                         size={13}
                         weight="bold"
                         aria-hidden
-                        className="transition-transform duration-400 group-hover/back:-translate-x-1"
+                        className="sweep-nudge [--nudge-x:-0.25rem]"
                     />
                     All work
                 </Link>
 
-                <button
-                    type="button"
+                <PressButton
                     onClick={() =>
                         transitionTheme(
                             setTheme,
@@ -42,11 +42,11 @@ export default function ProjectHeader() {
                         )
                     }
                     aria-label="Toggle colour theme"
-                    className="grid size-9 place-items-center text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink"
+                    className="grid size-9 place-items-center text-ink-3 transition-[color,background-color] duration-300 ease-expo hover:bg-surface-2 hover:text-ink"
                 >
                     <Sun size={16} className="icon-when-light" aria-hidden />
                     <Moon size={16} className="icon-when-dark" aria-hidden />
-                </button>
+                </PressButton>
             </div>
         </header>
     );

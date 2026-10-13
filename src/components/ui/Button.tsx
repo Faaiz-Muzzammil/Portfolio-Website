@@ -1,21 +1,27 @@
-import Link from "next/link";
+"use client";
+
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { PressAnchor, PressButton, PressLink } from "@/components/motion/Press";
 
 /* `solid` and `ghost` variants used to live here with no call sites. */
 type Variant = "accent" | "outline";
 type Size = "md" | "lg";
 
-/* Square, like every other marker on the page. The hover fill sweeps up from
-   the bottom edge rather than cross-fading, and it always arrives *darker* —
-   never a different hue. Ember means "now"; a button under the cursor is not
-   a live state, so it has no business borrowing that colour.
-   `before:` holds the incoming colour; the label sits above it at z-10. */
+/* Square, like every other marker on the page. The hover is the shared
+   `.sweep` (globals.css): the fill rises from the bottom edge and the
+   button *inverts* — never a different hue. The press is the shared
+   spring (`Press.tsx`).
+
+   THE ACCENT BUTTON SWEEPS TO PAPER, NOT INK. `--accent` resolves to the
+   ink itself in both themes, so the old ink sweep painted ink over ink
+   and the hover was invisible. Inverting is how this page already says
+   "emphasis"; the border is the accent's own colour, so it is invisible
+   at rest and holds the button's edge once the paper is in. */
 const VARIANTS: Record<Variant, string> = {
-    accent:
-        "bg-accent text-accent-fg before:bg-ink hover:text-paper",
+    accent: "border border-accent bg-accent text-accent-fg [--sweep-fill:var(--paper)] [--sweep-fg:var(--ink)]",
     outline:
-        "border border-line-2 text-ink before:bg-ink hover:border-ink hover:text-paper",
+        "border border-line-2 text-ink [--sweep-fill:var(--ink)] [--sweep-fg:var(--paper)] hover:border-ink focus-visible:border-ink",
 };
 
 const SIZES: Record<Size, string> = {
@@ -24,13 +30,14 @@ const SIZES: Record<Size, string> = {
 };
 
 const BASE =
-    "group/btn relative isolate inline-flex select-none items-center justify-center overflow-hidden " +
-    "font-medium transition-colors duration-400 " +
-    "before:absolute before:inset-0 before:-z-10 before:translate-y-full " +
-    "before:transition-transform before:duration-500 before:ease-[cubic-bezier(0.22,1,0.36,1)] " +
-    "hover:before:translate-y-0 " +
-    "active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 " +
-    "motion-reduce:before:hidden motion-reduce:active:scale-100";
+    "sweep inline-flex select-none items-center justify-center font-medium " +
+    "disabled:pointer-events-none disabled:opacity-50";
+
+/** The classes a `Button` wears, for a control that needs its own
+    markup (the contact form's send) but must look like the rest. */
+export function buttonClasses(variant: Variant = "outline", size: Size = "md", className?: string) {
+    return cn(BASE, VARIANTS[variant], SIZES[size], className);
+}
 
 type CommonProps = {
     variant?: Variant;
@@ -63,14 +70,14 @@ export default function Button(props: ButtonProps | AnchorProps) {
         ...rest
     } = props;
 
-    const classes = cn(BASE, VARIANTS[variant], SIZES[size], className);
+    const classes = buttonClasses(variant, size, className);
 
     const content = (
         <>
             {iconLeft}
             <span>{children}</span>
             {iconRight && (
-                <span className="transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/btn:translate-x-1">
+                <span className="sweep-nudge">
                     {iconRight}
                 </span>
             )}
@@ -84,30 +91,38 @@ export default function Button(props: ButtonProps | AnchorProps) {
 
         if (isExternal || href.endsWith(".pdf")) {
             return (
-                <a
+                <PressAnchor
                     href={href}
                     className={classes}
                     {...(/^(https?:)?\/\//.test(href)
                         ? { target: "_blank", rel: "noopener noreferrer" }
                         : {})}
-                    {...anchorRest}
+                    {...(anchorRest as React.ComponentProps<typeof PressAnchor>)}
                 >
                     {content}
-                </a>
+                </PressAnchor>
             );
         }
 
         return (
-            <Link href={href} className={classes} {...anchorRest}>
+            <PressLink
+                href={href}
+                className={classes}
+                {...(anchorRest as Omit<React.ComponentProps<typeof PressLink>, "href">)}
+            >
                 {content}
-            </Link>
+            </PressLink>
         );
     }
 
     const buttonRest = rest as React.ButtonHTMLAttributes<HTMLButtonElement>;
     return (
-        <button type={buttonRest.type ?? "button"} className={classes} {...buttonRest}>
+        <PressButton
+            type={buttonRest.type ?? "button"}
+            className={classes}
+            {...(buttonRest as React.ComponentProps<typeof PressButton>)}
+        >
             {content}
-        </button>
+        </PressButton>
     );
 }

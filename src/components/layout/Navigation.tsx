@@ -16,6 +16,7 @@ import { navItems } from "@/data";
 import { cn } from "@/lib/cn";
 import { springSnappy } from "@/lib/motion";
 import { transitionTheme } from "@/lib/theme-transition";
+import { PressAnchor, PressButton } from "@/components/motion/Press";
 
 const ICONS = {
     home: House,
@@ -146,7 +147,7 @@ export default function Navigation({
                         const Icon = ICONS[item.icon];
 
                         return (
-                            <a
+                            <PressAnchor
                                 key={item.name}
                                 href={item.href}
                                 ref={(el) => {
@@ -179,13 +180,11 @@ export default function Navigation({
                                        equally, which is what keeps them from
                                        packing left and leaving a hole.
 
-                                       `transition-[color,transform]`, not
-                                       `transition-colors`: the press needs
-                                       the transform tweened too, or the
-                                       release snaps back instantly and the
-                                       tap reads as a glitch rather than as
-                                       a button coming back up. */
-                                    "relative flex h-11 items-center justify-center gap-2 px-2.5 transition-[color,transform] duration-300 active:scale-[0.97] motion-reduce:active:scale-100 max-sm:min-w-0 max-sm:flex-1 sm:h-10 sm:px-3.5",
+                                       The press is the shared spring
+                                       (`PressAnchor`), so the release
+                                       always plays back up rather than
+                                       snapping. */
+                                    "relative flex h-11 items-center justify-center gap-2 px-2.5 transition-colors duration-300 ease-expo max-sm:min-w-0 max-sm:flex-1 sm:h-10 sm:px-3.5",
                                     /* `--tint-fg`, not `--accent-fg`. The
                                        marker under this label is a light
                                        tint on every section but the cover,
@@ -208,7 +207,7 @@ export default function Navigation({
                                     {item.name}
                                 </span>
                                 <span className="sr-only sm:hidden">{item.name}</span>
-                            </a>
+                            </PressAnchor>
                         );
                     })}
                 </div>
@@ -218,8 +217,7 @@ export default function Navigation({
                 {/* Icons swap in CSS via [data-theme], which next-themes sets in a
                     blocking pre-hydration script — so no `mounted` guard, and the
                     nav never pops in after hydration. */}
-                <button
-                    type="button"
+                <PressButton
                     onClick={() =>
                         transitionTheme(
                             setTheme,
@@ -230,35 +228,29 @@ export default function Navigation({
                     /* Square at 44 on a phone, 40×40 from `sm`. It was `w-9`
                        — 36px — which is the narrowest thing in the bar and
                        the one control a thumb is most likely to clip. */
-                    className="grid h-11 w-11 place-items-center text-ink-3 transition-[color,background-color,transform] duration-300 hover:bg-surface-2 hover:text-ink active:scale-[0.97] motion-reduce:active:scale-100 sm:h-10 sm:w-10"
+                    className="grid h-11 w-11 place-items-center text-ink-3 transition-[color,background-color] duration-300 ease-expo hover:bg-surface-2 hover:text-ink sm:h-10 sm:w-10"
                 >
                     <Sun size={16} className="icon-when-light" aria-hidden />
                     <Moon size={16} className="icon-when-dark" aria-hidden />
-                </button>
+                </PressButton>
 
-                <a
+                <PressAnchor
                     href="#contact"
                     onClick={(e) => {
                         e.preventDefault();
                         onNavigate("contact");
                     }}
-                    className="group/cta relative flex h-11 items-center gap-2 overflow-hidden bg-ink px-3.5 text-paper transition-transform duration-300 active:scale-[0.97] motion-reduce:active:scale-100 sm:h-10 sm:px-4"
+                    className="sweep flex h-11 items-center gap-2 border border-ink bg-ink px-3.5 text-paper [--sweep-fill:var(--paper)] [--sweep-fg:var(--ink)] sm:h-10 sm:px-4"
                 >
-                    <span className="absolute inset-0 translate-y-full bg-accent transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/cta:translate-y-0 motion-reduce:hidden" />
-                    <ChatCircle
-                        size={14}
-                        weight="fill"
-                        aria-hidden
-                        className="relative z-10 transition-colors duration-300 group-hover/cta:text-accent-fg"
-                    />
+                    <ChatCircle size={14} weight="fill" aria-hidden />
                     {/* "Contact", not "Hire me" — it is the same destination the
                         rail and the footer call Contact, and a control keeps one
                         name everywhere it appears. */}
-                    <span className="coord relative z-10 hidden text-coord transition-colors duration-300 group-hover/cta:text-accent-fg sm:inline">
+                    <span className="coord hidden text-coord sm:inline">
                         Contact
                     </span>
                     <span className="sr-only sm:hidden">Contact</span>
-                </a>
+                </PressAnchor>
             </div>
         </m.nav>
     );

@@ -48,7 +48,7 @@ export default function Projects() {
                         return (
                             <li
                                 key={project.id}
-                                className="border-t border-line transition-colors duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] has-[a:hover]:border-line-2"
+                                className="border-t border-line transition-colors duration-500 ease-expo has-[a:hover]:border-line-2"
                             >
                                 <Link
                                     href={`/projects/${project.slug}`}
@@ -56,7 +56,7 @@ export default function Projects() {
                                     onFocus={() => setHovered(index)}
                                     onBlur={() => setHovered(null)}
                                     className={cn(
-                                        "hang group/row relative block py-8 transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:py-9",
+                                        "hang group/row relative block py-8 transition-opacity duration-500 ease-expo sm:py-9",
                                         dimmed ? "opacity-30" : "opacity-100",
                                     )}
                                 >
@@ -99,7 +99,7 @@ export default function Projects() {
                                         with nothing at all — the row simply
                                         navigates, half a second later, with
                                         no sign it registered the finger. */}
-                                    <div className="grid grid-cols-12 gap-y-5 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/row:translate-x-1.5 group-active/row:translate-x-1.5 motion-reduce:transform-none sm:gap-x-8">
+                                    <div className="grid grid-cols-12 gap-y-5 transition-transform duration-500 ease-expo group-hover/row:translate-x-1.5 group-active/row:translate-x-1.5 motion-reduce:transform-none sm:gap-x-8">
                                         <div className="col-span-12 lg:col-span-6">
                                             <h3 className="display text-h2 leading-[1] text-ink">
                                                 {project.title}
@@ -125,7 +125,7 @@ export default function Projects() {
                                                     size={15}
                                                     weight="bold"
                                                     aria-hidden
-                                                    className="ml-auto text-ink-4 transition-[transform,color] duration-400 group-hover/row:-translate-y-0.5 group-hover/row:translate-x-0.5 group-hover/row:text-ink"
+                                                    className="ml-auto text-ink-4 transition-[transform,color] duration-500 ease-expo group-hover/row:-translate-y-0.5 group-hover/row:translate-x-0.5 group-hover/row:text-ink"
                                                 />
                                             </p>
 

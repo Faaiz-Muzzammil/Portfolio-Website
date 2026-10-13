@@ -21,26 +21,36 @@ type Pt = { x: number; y: number };
 
 type Thought = { id: string; word: string; at: Pt; parent?: string };
 
-/* The tree. A thought hangs off the one it grew from, so the order here
-   is the order they are reached. Coordinates are in the 400×600 box. */
+/* The tree. Marketing spreads down the left, software down the right,
+   product sits between them. A thought hangs off the one it grew from,
+   so the order here is the order they are reached. Coordinates are in
+   the 400×600 box; labels in a tier are spaced so none overlap. */
 const THOUGHTS: Thought[] = [
-    { id: "family", word: "family", at: { x: 92, y: 165 } },
-    { id: "work", word: "hard work", at: { x: 300, y: 180 } },
-    { id: "marketing", word: "marketing", at: { x: 205, y: 290 } },
-    { id: "curiosity", word: "curiosity", at: { x: 58, y: 315 }, parent: "family" },
-    { id: "discipline", word: "discipline", at: { x: 338, y: 330 }, parent: "work" },
-    { id: "story", word: "storytelling", at: { x: 128, y: 430 }, parent: "marketing" },
-    { id: "people", word: "people", at: { x: 285, y: 445 }, parent: "marketing" },
-    { id: "patience", word: "patience", at: { x: 62, y: 545 }, parent: "curiosity" },
-    { id: "growth", word: "growth", at: { x: 205, y: 552 }, parent: "story" },
-    { id: "craft", word: "craft", at: { x: 340, y: 548 }, parent: "discipline" },
+    { id: "marketing", word: "marketing", at: { x: 70, y: 150 } },
+    { id: "product", word: "product", at: { x: 200, y: 175 } },
+    { id: "software", word: "software", at: { x: 330, y: 150 } },
+    { id: "brand", word: "brand", at: { x: 40, y: 270 }, parent: "marketing" },
+    { id: "seo", word: "seo", at: { x: 130, y: 265 }, parent: "marketing" },
+    { id: "ux", word: "ux", at: { x: 205, y: 290 }, parent: "product" },
+    { id: "react", word: "react", at: { x: 260, y: 268 }, parent: "software" },
+    { id: "backend", word: "backend", at: { x: 360, y: 275 }, parent: "software" },
+    { id: "story", word: "storytelling", at: { x: 30, y: 385 }, parent: "brand" },
+    { id: "content", word: "content", at: { x: 170, y: 390 }, parent: "seo" },
+    { id: "next", word: "next.js", at: { x: 250, y: 380 }, parent: "react" },
+    { id: "data", word: "databases", at: { x: 368, y: 385 }, parent: "backend" },
+    { id: "copy", word: "copywriting", at: { x: 45, y: 480 }, parent: "story" },
+    { id: "analytics", word: "analytics", at: { x: 190, y: 485 }, parent: "content" },
+    { id: "ts", word: "typescript", at: { x: 345, y: 478 }, parent: "next" },
+    { id: "campaigns", word: "campaigns", at: { x: 60, y: 560 }, parent: "copy" },
+    { id: "growth", word: "growth", at: { x: 200, y: 562 }, parent: "analytics" },
+    { id: "automation", word: "automation", at: { x: 352, y: 558 }, parent: "data" },
 ];
 
 const SEED: Pt = { x: 200, y: 28 };
 
 /* Timings, in seconds. A root takes GROW to reach its word, and the
    next tier starts as it lands. */
-const GROW = 1.1;
+const GROW = 0.9;
 const HAIR = 0.7;
 
 function mulberry32(seed: number) {
@@ -95,7 +105,7 @@ function grow() {
         roots.push({
             d: `M${f(from.x)} ${f(from.y)} C${f(c1.x)} ${f(c1.y)} ${f(c2.x)} ${f(c2.y)} ${f(to.x)} ${f(to.y)}`,
             delay,
-            width: 2.4 - level * 0.5,
+            width: Math.max(0.7, 2.4 - level * 0.45),
         });
 
         /* Rootlets: short hairs off the main root, each starting as the
