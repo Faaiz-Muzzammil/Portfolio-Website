@@ -1,5 +1,3 @@
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
-
 import { experience } from "@/data";
 import RunningHead from "@/components/ui/RunningHead";
 import Reveal from "@/components/motion/Reveal";
@@ -16,8 +14,8 @@ import Reveal from "@/components/motion/Reveal";
  * the waypoint dots are gone with it — the dates were already doing that job,
  * and drawing it twice is what made the old version look like a diagram.
  *
- * Only roles still held are marked live, because they are the only ones
- * that are still true.
+ * Company names are set as plain text, not links — the entries are the
+ * record, not a way off the page.
  */
 export default function Experience() {
     return (
@@ -46,10 +44,7 @@ export default function Experience() {
                                 of the measure away from the entry it dates,
                                 which is a void, not a margin. */}
                             <div className="col-span-12 sm:col-span-4 lg:col-span-2">
-                                <p className="coord flex items-center gap-2.5 text-coord text-ink">
-                                    {job.period.endsWith("Present") && (
-                                        <span aria-hidden className="live-mark size-2" />
-                                    )}
+                                <p className="coord text-coord text-ink">
                                     {job.period}
                                 </p>
                                 {job.location && (
@@ -63,30 +58,9 @@ export default function Experience() {
                                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                                     <h3 className="display text-h3 text-ink">{job.role}</h3>
 
-                                    {job.companyUrl ? (
-                                        <a
-                                            href={job.companyUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group/link inline-flex items-baseline gap-1 text-body"
-                                        >
-                                            <span className="rule-draw text-accent-ink">
-                                                {job.company}
-                                            </span>
-                                            <ArrowUpRight
-                                                size={12}
-                                                weight="bold"
-                                                aria-hidden
-                                                className="self-center text-accent-ink transition-transform duration-300 group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5"
-                                            />
-                                        </a>
-                                    ) : (
-                                        /* No URL means no link — a dead href is
-                                           worse than plain text. */
-                                        <span className="text-body text-ink-3">
-                                            {job.company}
-                                        </span>
-                                    )}
+                                    <span className="text-body text-ink-3">
+                                        {job.company}
+                                    </span>
                                 </div>
 
                                 {job.bullets.length > 0 && (
