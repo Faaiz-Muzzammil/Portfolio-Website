@@ -101,6 +101,13 @@ export const viewport: Viewport = {
 const TITLE = "Faaiz Muzzammil — Full-stack Developer & Marketer";
 const DESCRIPTION =
     "Full-stack developer in Islamabad. I build apps and AI agents — then do the growth work that gets them used.";
+const OG_IMAGE = {
+    url: "/opengraph-image",
+    width: 1200,
+    height: 630,
+    type: "image/png",
+    alt: "Faaiz Muzzammil — Engineers build. Marketers sell. I do both.",
+};
 
 export const metadata: Metadata = {
     metadataBase: new URL("https://faaizmuzzammil.dev"),
@@ -146,19 +153,13 @@ export const metadata: Metadata = {
         locale: "en_US",
         siteName: "Faaiz Muzzammil",
         url: "/",
+        images: [OG_IMAGE],
     },
-    /* No `images` key, deliberately. Next copies openGraph.images across
-       to twitter:image whenever twitter omits the property, so the one
-       card serves both — adding a twitter-image.tsx would mean a second
-       1200×630 render of an identical design on every build. `card` is
-       set because the default is `summary`, the small square crop.
-
-       No `site` or `creator`: there is no X account in the social links,
-       and an invented handle attributes the card to someone else. */
     twitter: {
         card: "summary_large_image",
         title: TITLE,
         description: DESCRIPTION,
+        images: [OG_IMAGE],
     },
     robots: {
         index: true,

@@ -20,6 +20,11 @@ import Magnetic from "@/components/motion/Magnetic";
 import Reveal from "@/components/motion/Reveal";
 
 const SITE = "https://faaizmuzzammil.dev";
+const OG_IMAGE = {
+    width: 1200,
+    height: 630,
+    type: "image/png",
+};
 
 /** Unknown slugs 404 at build time rather than attempting a dynamic render. */
 export const dynamicParams = false;
@@ -46,11 +51,19 @@ export async function generateMetadata({
             description: project.description,
             type: "article",
             url: `${SITE}/projects/${project.slug}`,
+            images: [
+                {
+                    ...OG_IMAGE,
+                    url: `/projects/${project.slug}/opengraph-image`,
+                    alt: `${project.title} — ${personalInfo.name}`,
+                },
+            ],
         },
         twitter: {
             card: "summary_large_image",
             title: `${project.title} — ${personalInfo.name}`,
             description: project.description,
+            images: [`/projects/${project.slug}/opengraph-image`],
         },
     };
 }
