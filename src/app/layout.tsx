@@ -183,6 +183,9 @@ export default function RootLayout({
             suppressHydrationWarning
         >
             <body className="min-h-screen antialiased">
+                <a className="skip-link" href="#main">
+                    Skip to content
+                </a>
                 {/* The gate on the cover's entrance, closed before anything
                     below it is parsed.
 

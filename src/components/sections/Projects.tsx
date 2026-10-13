@@ -29,9 +29,6 @@ export default function Projects() {
             <RunningHead
                 id="work-title"
                 dept="work"
-                number="01"
-                name="Work"
-                meta="2023 — 2025"
                 title="Six things I actually"
                 accentTitle="finished."
             />

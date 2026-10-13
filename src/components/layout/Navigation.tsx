@@ -74,13 +74,6 @@ export default function Navigation({
         );
     }, [activeId]);
 
-    /* eslint-disable-next-line react-hooks/set-state-in-effect -- this is
-       the measure-then-position pattern the rule has no exception for. The
-       marker's x and width can only be read from the laid-out DOM, so the
-       write cannot be hoisted out of an effect or derived during render;
-       `useLayoutEffect` is correct precisely because it lands before paint,
-       and the guard above makes the write a no-op once the geometry has
-       settled. */
     useLayoutEffect(measure, [measure]);
 
     useEffect(() => {

@@ -16,8 +16,8 @@ import Reveal from "@/components/motion/Reveal";
  * the waypoint dots are gone with it — the dates were already doing that job,
  * and drawing it twice is what made the old version look like a diagram.
  *
- * The role currently held is the only entry marked live, because it is the
- * only one that is still true.
+ * Only roles still held are marked live, because they are the only ones
+ * that are still true.
  */
 export default function Experience() {
     return (
@@ -25,9 +25,6 @@ export default function Experience() {
             <RunningHead
                 id="experience-title"
                 dept="experience"
-                number="02"
-                name="Experience"
-                meta={`${experience.length} roles · dev, growth, legal`}
                 title="Code, growth, and"
                 accentTitle="paperwork."
             />
@@ -50,7 +47,7 @@ export default function Experience() {
                                 which is a void, not a margin. */}
                             <div className="col-span-12 sm:col-span-4 lg:col-span-2">
                                 <p className="coord flex items-center gap-2.5 text-coord text-ink">
-                                    {index === 0 && (
+                                    {job.period.endsWith("Present") && (
                                         <span aria-hidden className="live-mark size-2" />
                                     )}
                                     {job.period}
@@ -92,20 +89,22 @@ export default function Experience() {
                                     )}
                                 </div>
 
-                                <ul className="mt-5 space-y-2.5">
-                                    {job.bullets.map((bullet) => (
-                                        <li
-                                            key={bullet}
-                                            className="relative max-w-[68ch] pl-5 text-body text-pretty text-ink-2"
-                                        >
-                                            <span
-                                                aria-hidden
-                                                className="absolute top-[0.75em] left-0 h-px w-2.5 bg-line-2"
-                                            />
-                                            {bullet}
-                                        </li>
-                                    ))}
-                                </ul>
+                                {job.bullets.length > 0 && (
+                                    <ul className="mt-5 space-y-2.5">
+                                        {job.bullets.map((bullet) => (
+                                            <li
+                                                key={bullet}
+                                                className="relative max-w-[68ch] pl-5 text-body text-pretty text-ink-2"
+                                            >
+                                                <span
+                                                    aria-hidden
+                                                    className="absolute top-[0.75em] left-0 h-px w-2.5 bg-line-2"
+                                                />
+                                                {bullet}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
                         </div>
                     </Reveal>

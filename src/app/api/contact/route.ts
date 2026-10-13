@@ -60,10 +60,39 @@ function sweep(now: number) {
     }
 }
 
+/* Capped because it becomes a Map key: an attacker controls this header
+   anywhere the platform does not overwrite it, and an unbounded key is
+   unbounded memory. */
 function getClientIP(req: NextRequest) {
     const forwarded = req.headers.get("x-forwarded-for");
-    if (forwarded) return forwarded.split(",")[0].trim();
-    return req.headers.get("x-real-ip") ?? "unknown";
+    const ip = forwarded ? forwarded.split(",")[0].trim() : req.headers.get("x-real-ip");
+    return (ip || "unknown").slice(0, 64);
+}
+
+/* The form posts ~5KB at most (4000-character message plus three short
+   fields, JSON-escaped). Anything much larger is not this form. */
+const MAX_BODY_BYTES = 16 * 1024;
+const UPSTREAM_TIMEOUT_MS = 10_000;
+
+/* CROSS-SITE POSTS ARE REFUSED. A JSON POST from another origin is not a
+   "simple" request, so a browser would preflight it and fail anyway — but
+   that relies on the Content-Type check below holding, and on no one ever
+   adding CORS headers here. Checking the origin directly makes the rule
+   explicit: this endpoint serves this site's form and nothing else.
+   `Sec-Fetch-Site` is the modern signal; `Origin` covers older agents.
+   A request with neither is a non-browser client, which no header check
+   could stop anyway — the rate limit and honeypot are for those. */
+function isSameOrigin(req: NextRequest) {
+    const site = req.headers.get("sec-fetch-site");
+    if (site && site !== "same-origin" && site !== "none") return false;
+
+    const origin = req.headers.get("origin");
+    if (!origin) return true;
+    try {
+        return new URL(origin).host === (req.headers.get("host") ?? req.nextUrl.host);
+    } catch {
+        return false;
+    }
 }
 
 function checkRateLimit(ip: string): { allowed: boolean; message?: string } {
@@ -110,9 +139,28 @@ function headerSafe(value: string) {
 
 export async function POST(req: NextRequest) {
     try {
+        if (!isSameOrigin(req)) {
+            return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+        }
+
+        if (!req.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+            return NextResponse.json({ error: "Please send the form again." }, { status: 415 });
+        }
+
+        /* Content-Length is checked first so an honest oversized request
+           is refused unread; the length of what was actually read is
+           checked second, because the header is the client's claim. */
+        if (Number(req.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
+            return NextResponse.json({ error: "That message is too large." }, { status: 413 });
+        }
+
         let body: unknown;
         try {
-            body = await req.json();
+            const raw = await req.text();
+            if (raw.length > MAX_BODY_BYTES) {
+                return NextResponse.json({ error: "That message is too large." }, { status: 413 });
+            }
+            body = JSON.parse(raw);
         } catch {
             return NextResponse.json(
                 { error: "Please send the form again." },
@@ -138,7 +186,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const { name, email, message, honeypot } = parsed.data;
+        const { name, email, subject, message, honeypot } = parsed.data;
 
         // Bots fill the hidden field. Report success, send nothing.
         if (honeypot) return NextResponse.json({ ok: true });
@@ -175,17 +223,27 @@ export async function POST(req: NextRequest) {
                 Authorization: `Bearer ${apiKey}`,
                 "Content-Type": "application/json",
             },
+            /* Without a ceiling a hung upstream holds the function open
+               until the platform kills it, and the visitor's own 15s
+               client timeout fires first with a less useful message. */
+            signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
             body: JSON.stringify({
                 from: process.env.CONTACT_FROM ?? DEFAULT_FROM,
                 to: [TO_EMAIL],
                 reply_to: email,
-                subject: `[Portfolio] Message from ${headerSafe(name)}`,
+                subject: subject
+                    ? `[Portfolio] ${headerSafe(subject)} — ${headerSafe(name)}`
+                    : `[Portfolio] Message from ${headerSafe(name)}`,
                 /* Exactly what the visitor typed, field by field — the
                    mail is the submission, not a notice that one arrived. */
-                text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+                text:
+                    `Name: ${name}\nEmail: ${email}\n` +
+                    (subject ? `Subject: ${subject}\n` : "") +
+                    `\nMessage:\n${message}`,
                 html:
                     `<p><strong>Name:</strong> ${escapeHtml(name)}</p>` +
                     `<p><strong>Email:</strong> <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></p>` +
+                    (subject ? `<p><strong>Subject:</strong> ${escapeHtml(subject)}</p>` : "") +
                     `<p><strong>Message:</strong></p>` +
                     `<p style="white-space:pre-wrap">${escapeHtml(message)}</p>`,
             }),
@@ -193,7 +251,7 @@ export async function POST(req: NextRequest) {
 
         if (!res.ok) {
             const detail = await res.text().catch(() => "");
-            console.error("[contact] Resend responded", res.status, detail);
+            console.error("[contact] Resend responded", res.status, detail.slice(0, 500));
 
             if (res.status === 401 || res.status === 403) {
                 /* 401 is a bad or revoked key. 403 is almost always the
@@ -224,6 +282,17 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ ok: true });
     } catch (error) {
+        if (error instanceof DOMException && error.name === "TimeoutError") {
+            console.error("[contact] Resend timed out after", UPSTREAM_TIMEOUT_MS, "ms");
+            return NextResponse.json(
+                {
+                    error: "Mail delivery is slow right now. Try again in a moment.",
+                    fallback: true,
+                    mailto: TO_EMAIL,
+                },
+                { status: 504 },
+            );
+        }
         console.error("[contact] Unexpected error:", error);
         return NextResponse.json(
             {

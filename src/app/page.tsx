@@ -56,7 +56,7 @@ export default function Home() {
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
             />
 
             {/* The colour. `TintController` renders nothing — it puts the
@@ -90,7 +90,7 @@ export default function Home() {
                 are bands of paper separated by their own margins, and each
                 one is as tall as its content needs, which is what stops the
                 page reading as five identical slides. */}
-            <main className="page-inset relative z-10">
+            <main id="main" tabIndex={-1} className="page-inset relative z-10 focus:outline-none!">
                 <Section id="home" labelledBy="home-title" first>
                     <Hero />
                 </Section>

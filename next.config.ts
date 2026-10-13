@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
+import { networkInterfaces } from "node:os";
 
 const isProd = process.env.NODE_ENV === "production";
+
+/* Every IPv4 address this machine answers on, read at boot so it follows
+   the network rather than being pinned to today's DHCP lease. */
+const LAN_HOSTS = Object.values(networkInterfaces())
+  .flat()
+  .filter((n) => n && n.family === "IPv4" && !n.internal)
+  .map((n) => n!.address);
 
 /* ============================================================
    SECURITY HEADERS
@@ -83,7 +91,10 @@ const CSP = [
   "media-src 'self'",
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
-  `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
+  /* Speed Insights serves its script same-origin from /_vercel in
+     production, but in dev it pulls a debug build off its own CDN — so
+     that host is allowed in dev and nowhere else. */
+  `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval' https://va.vercel-scripts.com"}`,
   `connect-src 'self'${isProd ? "" : " ws: wss:"}`,
   "worker-src 'self' blob:",
   "manifest-src 'self'",
@@ -96,6 +107,11 @@ const SECURITY_HEADERS = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-DNS-Prefetch-Control", value: "on" },
+  /* A window this site opens, or that opens it, gets no handle on the
+     other — closes the tabnabbing and cross-window leak class outright,
+     including for links that forget `rel="noopener"`. */
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
   {
     key: "Permissions-Policy",
     value: [
@@ -107,7 +123,10 @@ const SECURITY_HEADERS = [
       "magnetometer=()",
       "gyroscope=()",
       "accelerometer=()",
-      "interest-cohort=()",
+      /* `interest-cohort` was FLoC, which Chrome retired; it now only
+         logs "Unrecognized feature" on every load. Topics is its
+         successor and the one that actually opts out. */
+      "browsing-topics=()",
     ].join(", "),
   },
   ...(isProd
@@ -137,6 +156,13 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
 
+  /* `next dev` refuses its own scripts and HMR socket to any host but
+     localhost. Opening the "Network:" URL it prints — or the site on a
+     phone over Wi-Fi — therefore got the HTML without the JS: nothing
+     hydrated, and every section that fades in on scroll stayed at
+     opacity 0. This machine's own LAN addresses are trusted, in dev only. */
+  allowedDevOrigins: isProd ? undefined : LAN_HOSTS,
+
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
@@ -149,7 +175,19 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
 
   async headers() {
-    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+    return [
+      { source: "/:path*", headers: SECURITY_HEADERS },
+      /* The API answers one visitor about one submission. Nothing in
+         between — a CDN, a shared proxy — should keep a copy, and a
+         crawler that finds the URL has nothing to index there. */
+      {
+        source: "/api/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+          { key: "X-Robots-Tag", value: "noindex" },
+        ],
+      },
+    ];
   },
 
   /* The share cards set their headlines in the site's real display face,
@@ -166,7 +204,10 @@ const nextConfig: NextConfig = {
   },
   images: {
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 60,
+    /* Every image is a local file that changes only on deploy, so the
+       optimizer's output can be kept for a month rather than regenerated
+       every minute. */
+    minimumCacheTTL: 2678400,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
@@ -192,16 +233,6 @@ const nextConfig: NextConfig = {
       '@icons-pack/react-simple-icons',
     ],
   },
-
-  // Allowed Dev Origins (Root Level)
-  // This enables network access (e.g. 10.5.0.2) without CORS errors
-  allowedDevOrigins: [
-    "localhost:3000",
-    "10.5.0.2:3000",
-    "10.5.0.2",
-    "192.168.1.1:3000",
-    "192.168.0.1:3000"
-  ],
 };
 
 export default nextConfig;

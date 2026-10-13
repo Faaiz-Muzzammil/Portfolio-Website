@@ -193,14 +193,25 @@ export const projects: Project[] = [
 
 export const experience: Experience[] = [
     {
+        id: 4,
+        role: "Content Project Manager",
+        company: "Fireshow Media",
+        period: "May 2026 — Present",
+        location: "Austin, USA · Remote",
+        bullets: [
+            "Run content production for the studio, part-time, from brief to delivery.",
+            "Keep the schedule, the editors and the client sign-offs moving together.",
+        ],
+    },
+    {
         id: 1,
         role: "Digital Marketer",
         company: "MarketVerse AI",
-        period: "Jan 2025 — Present",
+        period: "Jan 2025 — 2026",
         location: "Austin, USA · Remote",
         bullets: [
-            "Run growth for an AI fintech platform. Signups up 45%, engagement up 30%.",
-            "Own the content calendar and the retention campaigns end to end.",
+            "Ran growth for an AI fintech platform. Signups up 45%, engagement up 30%.",
+            "Owned the content calendar and the retention campaigns end to end.",
         ],
     },
     {

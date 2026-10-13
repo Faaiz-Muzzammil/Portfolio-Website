@@ -98,13 +98,14 @@ export default async function ProjectDetail({
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
             />
 
             <ProjectHeader />
 
             {/* The same frosted panel the home page's sections use, so a
                 project reads as one more sheet on the same ground. */}
+            <main id="main" tabIndex={-1} className="focus:outline-none!">
             <article className="glass relative z-10 mx-3 my-8 max-w-3xl px-5 py-12 sm:mx-auto sm:my-14 sm:px-10 sm:py-16">
                 {/* Category only. Year and status used to sit here as pills as
                     well, and both are already rows in the metadata grid a few
@@ -296,6 +297,7 @@ export default async function ProjectDetail({
                     </div>
                 </Reveal>
             </article>
+            </main>
 
             <Footer />
         </>

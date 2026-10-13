@@ -1,25 +1,15 @@
 import { cn } from "@/lib/cn";
 import type { SectionId } from "@/lib/sections";
 import AnimatedText from "@/components/motion/AnimatedText";
-import Reveal from "@/components/motion/Reveal";
 
 type RunningHeadProps = {
     /**
      * Which department this is, as a section id — the ink the heading's
-     * heavy word is set in. It is a separate prop from `name` on purpose:
-     * `name` is display text and may be reworded, and a colour that moved
-     * because a label was retitled would be a very quiet bug.
+     * heavy word is set in. It is an id rather than display text on
+     * purpose: a colour that moved because a heading was reworded would be
+     * a very quiet bug.
      */
     dept: SectionId;
-    /** Where this department falls in the issue. Order carries meaning here. */
-    number: string;
-    /** The department's name, matching the nav exactly. */
-    name: string;
-    /**
-     * A true fact about what is in this department — a count, a span of
-     * years, a turnaround. The head carries data, never an ornament.
-     */
-    meta: string;
     title: string;
     /** The word the heading turns on. Set at the heavy end of the axis. */
     accentTitle?: string;
@@ -30,10 +20,11 @@ type RunningHeadProps = {
 /**
  * The head of a department.
  *
- * Number and name in mono on the left, the fact on the right, then the title
- * on the same left edge as everything below it. One structure repeated in all
- * four departments, so a reader learns it once on Work and never has to read
- * it again.
+ * Just the title, on the same left edge as everything below it. The mono line
+ * that used to sit above it — number and name on the left, a fact on the
+ * right — went: the nav already says where you are, and the title says what
+ * the department is about. One structure repeated in every department, so a
+ * reader learns it once on Work and never has to read it again.
  *
  * It draws no rule of its own. The section already opens on one that runs the
  * full width of the page, and a second rule 40px under it was two lines doing
@@ -46,9 +37,6 @@ type RunningHeadProps = {
  */
 export default function RunningHead({
     dept,
-    number,
-    name,
-    meta,
     title,
     accentTitle,
     id,
@@ -61,15 +49,6 @@ export default function RunningHead({
            per component is what makes a page look assembled rather than
            designed, however carefully each individual gap was picked. */
         <header className={cn("mb-14", className)}>
-            <Reveal y={0}>
-                <div className="flex items-baseline justify-between gap-8">
-                    <span className="coord text-coord text-ink">
-                        {number} — {name}
-                    </span>
-                    <span className="coord text-coord text-right text-ink-3">{meta}</span>
-                </div>
-            </Reveal>
-
             {/* Light phrase, heavy last word — the cover's setting, at
                 department size. The size gives the heading its rank over the
                 entries beneath it; the weight is what makes it a sentence
@@ -103,7 +82,7 @@ export default function RunningHead({
             <AnimatedText
                 as="h2"
                 id={id}
-                className="display-axis mt-8 max-w-[14ch] text-h1 text-balance text-ink"
+                className="display-axis max-w-[14ch] text-h1 text-balance text-ink"
             >
                 {title}
                 {accentTitle && (
