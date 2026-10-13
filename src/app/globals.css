@@ -2438,3 +2438,12 @@ summary {
   background: #FFFFFF;
   box-shadow: 0 0 0 1px var(--mk-line-2), var(--mk-crest-shadow);
 }
+
+/* The demo is ambient, not a player: iOS draws its own play button over
+   a video it has not started (Low Power Mode), so that is hidden too. */
+.mk-demo::-webkit-media-controls,
+.mk-demo::-webkit-media-controls-start-playback-button,
+.mk-demo::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+}

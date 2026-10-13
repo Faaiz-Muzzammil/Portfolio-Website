@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { ArrowUpRight, Sparkle } from "@phosphor-icons/react/dist/ssr";
 
 import Reveal from "@/components/motion/Reveal";
@@ -9,18 +9,17 @@ import Reveal from "@/components/motion/Reveal";
 const SITE_URL = "https://www.marketeer.studio";
 
 /**
- * The product demo, playing only while it is on screen.
+ * The product demo, always running and never showing a control.
  *
  * Muted, looped and inline so every browser will autoplay it. It is paused
  * whenever it scrolls out of view — a 1080p decode running under the rest of
- * the page is frames taken off the scroll for nobody — and it never starts
- * by itself for a reader who has asked for reduced motion: they get the
- * poster and the native controls, as does anyone whose browser refuses
- * autoplay.
+ * the page is frames taken off the scroll for nobody — and picked up again
+ * when it comes back. Where iOS refuses autoplay (Low Power Mode, a data
+ * saver) it is started on the reader's first touch instead, since a gesture
+ * anywhere on the page is enough to unlock muted playback.
  */
 function DemoVideo() {
     const ref = useRef<HTMLVideoElement>(null);
-    const [controls, setControls] = useState(false);
 
     useEffect(() => {
         const video = ref.current;
@@ -32,28 +31,36 @@ function DemoVideo() {
         video.muted = true;
         video.defaultMuted = true;
 
-        // Reduced motion never starts it; the reader gets the poster and a
-        // play button, so the demo is still theirs to watch.
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-            setControls(true);
-            return;
-        }
+        let visible = false;
+        const play = () => {
+            if (visible) video.play().catch(() => {});
+        };
+
+        // A gesture unlocks playback where autoplay was refused. Passive and
+        // listened for until the video is actually running.
+        const unlock = () => {
+            if (!visible) return;
+            video.play().then(removeUnlock, () => {});
+        };
+        const events = ["touchstart", "touchend", "click", "scroll"] as const;
+        const removeUnlock = () =>
+            events.forEach((e) => window.removeEventListener(e, unlock));
+        events.forEach((e) => window.addEventListener(e, unlock, { passive: true }));
+        video.addEventListener("playing", removeUnlock, { once: true });
 
         const io = new IntersectionObserver(
             ([entry]) => {
-                if (entry.isIntersecting) {
-                    // Low Power Mode and data savers refuse autoplay outright.
-                    // A refused play() would otherwise leave a still frame
-                    // with no way to start it, so hand over the controls.
-                    video.play().catch(() => setControls(true));
-                } else if (!video.controls) {
-                    video.pause();
-                }
+                visible = entry.isIntersecting;
+                if (visible) play();
+                else video.pause();
             },
             { threshold: 0.25 },
         );
         io.observe(video);
-        return () => io.disconnect();
+        return () => {
+            io.disconnect();
+            removeUnlock();
+        };
     }, []);
 
     return (
@@ -61,13 +68,16 @@ function DemoVideo() {
             ref={ref}
             src="/marketeer/demo.mp4"
             poster="/marketeer/demo-poster.webp"
+            autoPlay
             muted
             loop
             playsInline
-            controls={controls}
-            preload="metadata"
+            disablePictureInPicture
+            disableRemotePlayback
+            preload="auto"
+            tabIndex={-1}
             aria-label="Marketeer demo: a live Nvidia market tile is picked and the branded video is built and edited in the studio"
-            className="block aspect-video h-auto w-full"
+            className="mk-demo pointer-events-none block aspect-video h-auto w-full"
         />
     );
 }
