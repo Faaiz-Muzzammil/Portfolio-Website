@@ -4,9 +4,11 @@ import Link from "next/link";
 import { ArrowLeft, Moon, Sun } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
 
+import { transitionTheme } from "@/lib/theme-transition";
+
 /**
  * Slim chrome for project detail pages. The full SiteChrome doesn't belong
- * here — there are no sections to track and no voice commands to route.
+ * here — there are no sections to track.
  */
 export default function ProjectHeader() {
     const { setTheme, resolvedTheme } = useTheme();
@@ -33,7 +35,12 @@ export default function ProjectHeader() {
 
                 <button
                     type="button"
-                    onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
+                    onClick={() =>
+                        transitionTheme(
+                            setTheme,
+                            resolvedTheme === "light" ? "dark" : "light",
+                        )
+                    }
                     aria-label="Toggle colour theme"
                     className="grid size-9 place-items-center text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink"
                 >

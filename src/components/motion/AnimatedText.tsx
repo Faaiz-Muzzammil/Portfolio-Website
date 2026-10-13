@@ -116,8 +116,15 @@ export default function AnimatedText({
     /* createElement rather than <Tag>: @react-three/fiber augments
        JSX.IntrinsicElements, which collapses polymorphic `as` prop
        resolution to `never`. */
+    /* The ref is handed straight to createElement, and `react-hooks/refs`
+       flags it because `Tag` is typed ElementType: the rule cannot prove
+       the target is a host element, so it assumes a function component
+       that might read `ref.current` while rendering. Every call site
+       passes a DOM tag, so React attaches the ref itself and nothing
+       dereferences it during render — hence the directive below. */
     return createElement(
         Tag,
+        // eslint-disable-next-line react-hooks/refs -- see note above
         { ref, id, "data-animate": "lines", className: cn(className) },
         children,
     );

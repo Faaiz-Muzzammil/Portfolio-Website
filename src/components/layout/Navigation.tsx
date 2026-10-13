@@ -15,6 +15,7 @@ import { useTheme } from "next-themes";
 import { navItems } from "@/data";
 import { cn } from "@/lib/cn";
 import { springSnappy } from "@/lib/motion";
+import { transitionTheme } from "@/lib/theme-transition";
 
 const ICONS = {
     home: House,
@@ -26,8 +27,6 @@ const ICONS = {
 type NavigationProps = {
     activeId: string;
     onNavigate: (id: string) => void;
-    /** The voice assistant needs the whole bar's width when it opens. */
-    forceHidden?: boolean;
     className?: string;
 };
 
@@ -36,7 +35,7 @@ type NavigationProps = {
  * up — an icon on its own is a guess, and the coordinate face is the whole
  * point of the chrome. Below that the icons carry it alone, because
  * "Experience" alone is most of the width a phone has left once the
- * divider, the toggle, the CTA and the mic have taken theirs.
+ * divider, the toggle and the CTA have taken theirs.
  *
  * IT IS SIZED TWICE. Every control in here is 44px on a phone and 40 from
  * `sm` up, because a fingertip and a cursor are not the same instrument.
@@ -48,7 +47,6 @@ type NavigationProps = {
 export default function Navigation({
     activeId,
     onNavigate,
-    forceHidden = false,
     className,
 }: NavigationProps) {
     const { setTheme, resolvedTheme } = useTheme();
@@ -64,12 +62,25 @@ export default function Navigation({
     const measure = useCallback(() => {
         const el = itemRefs.current.get(activeId);
         if (!listRef.current || !el) {
-            setMarker((m) => ({ ...m, ready: false }));
+            setMarker((m) => (m.ready ? { ...m, ready: false } : m));
             return;
         }
-        setMarker({ x: el.offsetLeft, w: el.offsetWidth, ready: true });
+        const next = { x: el.offsetLeft, w: el.offsetWidth, ready: true };
+        /* Bail if the geometry is unchanged. A ResizeObserver fires on
+           every resize frame while a window is being dragged, and without
+           this each one re-rendered the nav with identical numbers. */
+        setMarker((m) =>
+            m.ready && m.x === next.x && m.w === next.w ? m : next,
+        );
     }, [activeId]);
 
+    /* eslint-disable-next-line react-hooks/set-state-in-effect -- this is
+       the measure-then-position pattern the rule has no exception for. The
+       marker's x and width can only be read from the laid-out DOM, so the
+       write cannot be hoisted out of an effect or derived during render;
+       `useLayoutEffect` is correct precisely because it lands before paint,
+       and the guard above makes the write a no-op once the geometry has
+       settled. */
     useLayoutEffect(measure, [measure]);
 
     useEffect(() => {
@@ -80,15 +91,12 @@ export default function Navigation({
         return () => ro.disconnect();
     }, [measure]);
 
-    const shown = !forceHidden;
-
     return (
         <m.nav
             aria-label="Sections"
             initial={false}
-            animate={{ y: shown ? 0 : -90, opacity: shown ? 1 : 0 }}
+            animate={{ y: 0, opacity: 1 }}
             transition={reduce ? { duration: 0 } : springSnappy}
-            style={{ pointerEvents: shown ? "auto" : "none" }}
             className={cn("pointer-events-auto", className)}
         >
             {/* Solid paper with a hairline, not frosted glass. A magazine's
@@ -166,7 +174,7 @@ export default function Navigation({
                                        mono, which on its own is about 92px
                                        of the ~135px a 320px viewport has
                                        left after the divider, the toggle,
-                                       the CTA and the mic have taken theirs.
+                                       and the CTA have taken theirs.
                                        Home and Work would fit; one of the
                                        three wearing a label and the others
                                        not is worse than none of them.
@@ -219,7 +227,12 @@ export default function Navigation({
                     nav never pops in after hydration. */}
                 <button
                     type="button"
-                    onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
+                    onClick={() =>
+                        transitionTheme(
+                            setTheme,
+                            resolvedTheme === "light" ? "dark" : "light",
+                        )
+                    }
                     aria-label="Toggle colour theme"
                     /* Square at 44 on a phone, 40×40 from `sm`. It was `w-9`
                        — 36px — which is the narrowest thing in the bar and

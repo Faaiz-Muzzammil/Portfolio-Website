@@ -33,8 +33,8 @@ export const stats: Stat[] = [
 
 export const socialLinks: SocialLink[] = [
     // TODO(faaiz): replace with your real profile URLs.
-    { name: "GitHub", url: "https://github.com/faaizmuzzammil", icon: "github" },
-    { name: "LinkedIn", url: "https://www.linkedin.com/in/faaizmuzzammil", icon: "linkedin" },
+    { name: "GitHub", url: "https://github.com/Faaiz-Muzzammil", icon: "github" },
+    { name: "LinkedIn", url: "https://www.linkedin.com/in/faaiz-muzzammil", icon: "linkedin" },
     { name: "Email", url: "mailto:faaizmuzzammil@gmail.com", icon: "mail" },
 ];
 

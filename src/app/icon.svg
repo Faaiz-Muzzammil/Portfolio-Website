@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Faaiz Muzzammil">
+    <!--
+        The tab mark.
+
+        THIS REPLACED THE CREATE-NEXT-APP DEFAULT, which had never been
+        touched since the initial commit — every tab, bookmark and history
+        entry for the site was showing the Next.js logo.
+
+        It is the site's one interactive device at 16px: a solid block of
+        ink with paper-coloured type on it. Hard corners, because nothing
+        on this site is rounded — it is set as print.
+
+        WHY A LETTER AND NOT THE COVER'S THREE RULES. The hero is three
+        stacked lines with the last one heavy, which abstracts into three
+        bars and would have been the more distinctive mark. Three
+        horizontal bars is also the universal hamburger glyph, and a
+        favicon that reads as a menu button is worse than a generic one.
+
+        The F is drawn as one polygon rather than set in Bricolage: at
+        16px the rendered glyph loses its apertures to the pixel grid,
+        and a geometric F with a 6-unit stem and a 3-unit gap between
+        the arms survives the downsample. The proportions here are the
+        source of truth — the raster icons in /public and the .ico are
+        generated from this same geometry by scripts/generate-icons.mjs.
+
+        The colours invert with the tab strip's theme, which Chrome and
+        Firefox honour inside an SVG favicon. A near-black chip on a dark
+        tab strip keeps only the white letter visible and loses its
+        silhouette; inverting to a paper chip keeps the mark reading as a
+        mark in both. Browsers with no SVG favicon support fall back to
+        favicon.ico, which is the light cut.
+    -->
+    <style>
+        .ground { fill: #0A0A0A; }
+        .mark { fill: #FFFFFF; }
+        @media (prefers-color-scheme: dark) {
+            .ground { fill: #FFFFFF; }
+            .mark { fill: #0A0A0A; }
+        }
+    </style>
+    <rect class="ground" width="32" height="32" />
+    <path class="mark" d="M8 6H25V12H14V15H22V20H14V26H8Z" />
+</svg>

@@ -33,10 +33,7 @@ const isProd = process.env.NODE_ENV === "production";
                 contact form being repointed at someone else's
                 collector.
 
-                `blob:` in `media-src` is load-bearing: the voice
-                assistant plays ElevenLabs audio from an object
-                URL, and `data:` alongside it is the silent WAV
-                that unlocks audio on iOS. `data:` in `img-src`
+                `data:` in `img-src`
                 is the grain and haze, which are inline SVG.
 
                 `'unsafe-eval'` is dev-only. Next's dev overlay
@@ -48,11 +45,8 @@ const isProd = process.env.NODE_ENV === "production";
                 on a page with a contact form on it.
 
      Permissions-Policy
-                The one worth reading. It denies camera,
-                geolocation, payment and the rest outright, and
-                allows `microphone` only on this origin — so the
-                voice assistant keeps working and an injected
-                frame cannot reach for the mic on its own.
+                The one worth reading. It denies microphone, camera,
+                geolocation, payment and the rest outright.
 
      HSTS       Only in production, and only sent over HTTPS
                 anyway. `preload` is deliberately omitted: it is
@@ -86,7 +80,7 @@ const CSP = [
   "frame-ancestors 'none'",
   "form-action 'self'",
   "img-src 'self' data: blob:",
-  "media-src 'self' data: blob:",
+  "media-src 'self'",
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
   `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
@@ -105,7 +99,7 @@ const SECURITY_HEADERS = [
   {
     key: "Permissions-Policy",
     value: [
-      "microphone=(self)",
+      "microphone=()",
       "camera=()",
       "geolocation=()",
       "payment=()",
@@ -128,6 +122,21 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   /* config options here */
+
+  /* THE WORKSPACE ROOT, PINNED, BECAUSE IT WAS BEING INFERRED WRONGLY.
+     There is a stray package-lock.json in C:\Users\lenovo, and with two
+     lockfiles in the ancestry Turbopack picked the one further up — so it
+     announced "inferred your workspace root ... selected the directory of
+     C:\Users\lenovo" on every dev boot and every build. That is not purely
+     cosmetic: the root is the base that module resolution and output file
+     tracing are taken relative to, so the OG fonts traced below were being
+     resolved against a directory that is not the project. Pinning it to
+     this file's own directory makes the root the project, whatever happens
+     to sit above it on disk. */
+  turbopack: {
+    root: __dirname,
+  },
+
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
@@ -141,6 +150,19 @@ const nextConfig: NextConfig = {
 
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+  },
+
+  /* The share cards set their headlines in the site's real display face,
+     which means reading two .ttf files off disk at render time. Every
+     route that draws one is prerendered, so in practice that read happens
+     during `next build`, where the repository is obviously present — but
+     file tracing only follows imports, and a `readFile` on a path built
+     at runtime is invisible to it. Without this entry a route that later
+     became dynamic would deploy without its fonts and throw on the first
+     request. Cheap insurance; the three files are 235KB total. */
+  outputFileTracingIncludes: {
+    "/opengraph-image": ["./src/app/_og/fonts/**"],
+    "/projects/[slug]/opengraph-image": ["./src/app/_og/fonts/**"],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -157,7 +179,7 @@ const nextConfig: NextConfig = {
     //
     // @phosphor-icons/react was the omission that mattered. It is the icon
     // set this site actually uses, and every client component that reaches
-    // for it — the nav, the contact form, the voice assistant — imports from
+    // for it — the nav and the contact form — imports from
     // the package root, which is a barrel re-exporting well over a thousand
     // components. Without this the whole barrel is walked at build time and,
     // in dev, shipped. Server components already dodge it by importing from

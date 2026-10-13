@@ -83,16 +83,34 @@ export const viewport: Viewport = {
     viewportFit: "cover",
 };
 
-const TITLE = "Faaiz Muzzammil — Full-stack Developer";
+/* WHAT A SHARED LINK SAYS BEFORE ANYONE OPENS IT.
+   ------------------------------------------------------------------
+   The title is the bold line WhatsApp, iMessage and Slack put above the
+   preview, and it is also the tab. Both truncate, from the right, so the
+   name goes first and the qualifiers after it — "Faaiz Muzzammil" is
+   still legible in a 20-character tab, which is the whole job there.
+
+   "& Marketer" is not padding. The site's claim is the cover's third
+   beat — that he does both — and a title naming only the development
+   half throws away the one thing that distinguishes it from every other
+   portfolio in the thread.
+
+   The description runs to about 110 characters because that is roughly
+   what WhatsApp shows before it ellipsises, and it is written to survive
+   being cut: the two concrete nouns land in the first half. */
+const TITLE = "Faaiz Muzzammil — Full-stack Developer & Marketer";
 const DESCRIPTION =
-    "Full-stack developer in Islamabad. I build apps and AI agents, then do the growth work that gets them used.";
+    "Full-stack developer in Islamabad. I build apps and AI agents — then do the growth work that gets them used.";
 
 export const metadata: Metadata = {
     metadataBase: new URL("https://faaizmuzzammil.dev"),
     title: { default: TITLE, template: "%s — Faaiz Muzzammil" },
     alternates: { canonical: "/" },
     description: DESCRIPTION,
-    manifest: "/manifest.json",
+    /* `manifest: "/manifest.json"` sat here and pointed at a 404 — the
+       app-router manifest.ts route is served as /manifest.webmanifest.
+       Next emits the correct <link> from the file convention on its own,
+       so stating it at all was the bug. */
     appleWebApp: {
         capable: true,
         statusBarStyle: "black-translucent",
@@ -114,13 +132,29 @@ export const metadata: Metadata = {
     ],
     authors: [{ name: personalInfo.name }],
     creator: personalInfo.name,
+    /* The card image itself is not named here. `opengraph-image.tsx` next
+       to this file is a file convention: Next renders it, hashes it, and
+       writes og:image along with og:image:width, og:image:height and
+       og:image:alt. Those two dimension tags are what make WhatsApp and
+       LinkedIn draw the large banner preview instead of the small square
+       thumbnail, and hand-writing an `images` entry here would replace
+       the generated set with one that has no dimensions. */
     openGraph: {
         title: TITLE,
         description: DESCRIPTION,
         type: "website",
         locale: "en_US",
         siteName: "Faaiz Muzzammil",
+        url: "/",
     },
+    /* No `images` key, deliberately. Next copies openGraph.images across
+       to twitter:image whenever twitter omits the property, so the one
+       card serves both — adding a twitter-image.tsx would mean a second
+       1200×630 render of an identical design on every build. `card` is
+       set because the default is `summary`, the small square crop.
+
+       No `site` or `creator`: there is no X account in the social links,
+       and an invented handle attributes the card to someone else. */
     twitter: {
         card: "summary_large_image",
         title: TITLE,
@@ -178,7 +212,6 @@ export default function RootLayout({
                     attribute="data-theme"
                     defaultTheme="system"
                     enableSystem
-                    disableTransitionOnChange
                 >
                     {/* The ground, in two fixed layers below all content: a
                         low-frequency haze that gives the black some weather,

@@ -618,7 +618,7 @@
   color: var(--tint-contact-ink);
 }
 
-/* Legacy aliases — the voice assistant reads the older token names. */
+/* Legacy aliases retained for existing surface styles. */
 :root,
 [data-theme="dark"] {
   --bg: var(--paper);
@@ -788,6 +788,35 @@ html {
      still answered — but "how much is left" now is not. */
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+/* Theme changes use a document snapshot so the paper, type, texture and
+   fixed furniture crossfade as one composition instead of revealing each
+   component's token update at a different moment. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 700ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: theme-transition-out;
+}
+
+::view-transition-new(root) {
+  animation-name: theme-transition-in;
+}
+
+@keyframes theme-transition-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes theme-transition-in {
+  from {
+    opacity: 0;
+  }
 }
 
 /* Chrome, Safari, Edge. `width`/`height` as well as `display`, because a
@@ -2076,43 +2105,6 @@ summary {
   background-size: 100% 1px;
 }
 
-/* ---- Voice assistant waveform (mobile CSS path) ----------------- */
-
-@keyframes wave {
-  0%,
-  100% {
-    height: 4px;
-  }
-  50% {
-    height: 16px;
-  }
-}
-
-.animate-wave-1 {
-  animation: wave 1s ease-in-out infinite;
-}
-
-.animate-wave-2 {
-  animation: wave 1s ease-in-out infinite;
-  animation-delay: 0.2s;
-}
-
-@keyframes halo {
-  0% {
-    transform: scale(0.9);
-    opacity: 0.55;
-  }
-  70%,
-  100% {
-    transform: scale(1.9);
-    opacity: 0;
-  }
-}
-
-.animate-halo {
-  animation: halo 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-}
-
 /* ============================================================
    UTILITIES
    ============================================================ */
@@ -2149,6 +2141,11 @@ summary {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto !important;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.01ms !important;
   }
 
   *,

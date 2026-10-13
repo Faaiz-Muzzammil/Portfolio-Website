@@ -115,5 +115,11 @@ export default function Parallax(props: ParallaxProps) {
     /* createElement rather than <Tag>: @react-three/fiber augments
        JSX.IntrinsicElements, which collapses polymorphic `as` prop
        resolution to `never`. */
+    /* `react-hooks/refs` flags the ref below because `Tag` is typed
+       ElementType: the rule cannot prove the target is a host element, so
+       it assumes a function component that might read `ref.current` while
+       rendering. Every call site passes a DOM tag, so React attaches the
+       ref itself and nothing dereferences it during render. */
+    // eslint-disable-next-line react-hooks/refs -- see note above
     return createElement(Tag, { ref, className }, children);
 }

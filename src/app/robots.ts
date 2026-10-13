@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: '/',
             disallow: '/private/',
         },
-        sitemap: 'https://faaizmuzzammil.dev/sitemap.xml', // Replace with actual domain
+        sitemap: 'https://faaizmuzzammil.dev/sitemap.xml',
     };
 }

@@ -1,11 +1,8 @@
 /**
  * Scrolling helpers.
  *
- * These used to route through a module-level Lenis handle so the nav and the
- * voice assistant could drive the smooth-scroll instance from outside its
- * provider's subtree. Lenis is gone and the document scrolls natively, so
- * there is nothing left to hold — just the offset maths, which still has to
- * live somewhere both callers can reach.
+ * The document scrolls natively, so this module only contains the shared
+ * offset and motion calculations used by navigation controls.
  */
 
 export function prefersReducedMotion() {

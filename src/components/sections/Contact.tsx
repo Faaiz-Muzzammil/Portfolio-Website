@@ -1,8 +1,8 @@
 "use client";
 
 import { AnimatePresence, m } from "framer-motion";
-import { ArrowUpRight, CheckCircle, PaperPlaneTilt, Warning } from "@phosphor-icons/react";
-import { useId, useState } from "react";
+import { CheckCircle, PaperPlaneTilt, Warning } from "@phosphor-icons/react";
+import { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -19,11 +19,13 @@ type Status =
     | { kind: "sent" }
     | { kind: "error"; message: string; mailto?: string };
 
+const SENT_NOTICE_MS = 5000;
+
 /* ---- THREE FIELDS ON ONE COLUMN -----------------------------------
  *
  * The department is a form and a way around the form, and that is all
  * it is now. What was here before was a sidebar and a form side by
- * side: a portrait, a name, a role, a place, an email, a voice note,
+ * side: a portrait, a name, a role, a place, an email,
  * an opening hours block and a four-option topic picker, in two
  * columns of nearly equal weight with a dead column between them. Two
  * columns of equal weight have no reading order, so the eye had to
@@ -40,9 +42,8 @@ type Status =
  *   THE TOPIC FIELD   A required select whose every answer is the
  *                     first line of the message anyway. See the note
  *                     in `validation/contact.ts`.
- *   VOICE AND HOURS   True, and nobody came here to read them. The mic
- *                     is in the top bar where it can be used; the
- *                     reply time is already in the running head.
+ *   HOURS             Nobody came here to read them. The reply time is
+ *                     already in the running head.
  *   THE STANDFIRST    "Freelance or full-time, or just a question" —
  *                     a paragraph restating the heading directly above
  *                     it.
@@ -95,6 +96,14 @@ const LABEL =
 export default function Contact() {
     const [status, setStatus] = useState<Status>({ kind: "idle" });
     const uid = useId();
+
+    /* The confirmation is a moment, not a fixture: it clears itself
+       after a few seconds so the form reads as ready for the next one. */
+    useEffect(() => {
+        if (status.kind !== "sent") return;
+        const timer = window.setTimeout(() => setStatus({ kind: "idle" }), SENT_NOTICE_MS);
+        return () => window.clearTimeout(timer);
+    }, [status.kind]);
 
     const {
         register,
@@ -262,27 +271,7 @@ export default function Contact() {
                         {fieldError("message")}
                     </div>
 
-                    {/* The foot. The direct address sits opposite the send
-                        because they are the two ways out of this department,
-                        and putting them on one rule says so — a reader who
-                        was never going to fill in a form finds the address in
-                        the place they were already looking for the button. */}
-                    <div className="mt-10 flex flex-wrap items-center justify-between gap-x-8 gap-y-6 border-t border-line pt-6">
-                        <a
-                            href={`mailto:${personalInfo.email}`}
-                            className="group/mail inline-flex items-baseline gap-1.5 text-body"
-                        >
-                            <span className="rule-draw break-all text-ink-2 transition-colors duration-300 group-hover/mail:text-ink group-active/mail:text-ink">
-                                {personalInfo.email}
-                            </span>
-                            <ArrowUpRight
-                                size={13}
-                                weight="bold"
-                                aria-hidden
-                                className="self-center text-ink-4 transition-[transform,color] duration-300 group-hover/mail:-translate-y-0.5 group-hover/mail:translate-x-0.5 group-hover/mail:text-ink"
-                            />
-                        </a>
-
+                    <div className="mt-10 flex justify-end border-t border-line pt-6">
                         <Magnetic strength={0.2} innerStrength={0.08}>
                             <button
                                 type="submit"
