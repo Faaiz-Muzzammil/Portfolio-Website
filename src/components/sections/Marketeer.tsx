@@ -178,16 +178,21 @@ export default function Marketeer() {
                     {AWARDS.map((a) => (
                         <li
                             key={a.event}
-                            className="flex items-start gap-3.5 border-t border-(--mk-line) py-5"
+                            className="flex items-center gap-3.5 border-t border-(--mk-line) py-5"
                         >
-                            <span className="mk-crest grid size-9 shrink-0 place-items-center rounded-full p-1">
+                            {/* The crests are square artwork on white, drawn
+                                to their edges, so each is set inside the
+                                disc's inscribed square (28px in 40px, just
+                                under 1/√2) — any larger and its corners cross
+                                the rim. The clip is the backstop. */}
+                            <span className="mk-crest grid size-10 shrink-0 place-items-center overflow-hidden rounded-full">
                                 <Image
                                     src={a.crest}
                                     alt=""
                                     width={64}
                                     height={64}
-                                    sizes="36px"
-                                    className="size-full object-contain"
+                                    sizes="28px"
+                                    className="size-7 object-contain"
                                 />
                             </span>
                             <span className="min-w-0 pt-0.5">
