@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Sparkle } from "@phosphor-icons/react/dist/ssr";
 
 import Reveal from "@/components/motion/Reveal";
@@ -14,20 +14,41 @@ const SITE_URL = "https://www.marketeer.studio";
  * Muted, looped and inline so every browser will autoplay it. It is paused
  * whenever it scrolls out of view — a 1080p decode running under the rest of
  * the page is frames taken off the scroll for nobody — and it never starts
- * at all for a reader who has asked for reduced motion; they get the poster.
+ * by itself for a reader who has asked for reduced motion: they get the
+ * poster and the native controls, as does anyone whose browser refuses
+ * autoplay.
  */
 function DemoVideo() {
     const ref = useRef<HTMLVideoElement>(null);
+    const [controls, setControls] = useState(false);
 
     useEffect(() => {
         const video = ref.current;
         if (!video) return;
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+        // React sets `muted` as a property after hydration rather than
+        // rendering the attribute, and iOS checks for it before it will
+        // autoplay — so it is set here, before the first play().
+        video.muted = true;
+        video.defaultMuted = true;
+
+        // Reduced motion never starts it; the reader gets the poster and a
+        // play button, so the demo is still theirs to watch.
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            setControls(true);
+            return;
+        }
 
         const io = new IntersectionObserver(
             ([entry]) => {
-                if (entry.isIntersecting) video.play().catch(() => {});
-                else video.pause();
+                if (entry.isIntersecting) {
+                    // Low Power Mode and data savers refuse autoplay outright.
+                    // A refused play() would otherwise leave a still frame
+                    // with no way to start it, so hand over the controls.
+                    video.play().catch(() => setControls(true));
+                } else if (!video.controls) {
+                    video.pause();
+                }
             },
             { threshold: 0.25 },
         );
@@ -43,6 +64,7 @@ function DemoVideo() {
             muted
             loop
             playsInline
+            controls={controls}
             preload="metadata"
             aria-label="Marketeer demo: a live Nvidia market tile is picked and the branded video is built and edited in the studio"
             className="block aspect-video h-auto w-full"
