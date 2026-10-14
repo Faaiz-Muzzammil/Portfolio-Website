@@ -192,7 +192,7 @@ export default function Hero() {
                             animationDelay: "200ms",
                         }}
                     >
-                        Full-stack apps and AI agents, plus the growth work that gets them used.
+                        Busy Building Stuff, Marketing and Winning Awards.
                     </p>
 
                     {/* One primary action and a quiet text link beside it. */}
